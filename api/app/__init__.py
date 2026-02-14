@@ -61,26 +61,5 @@ def create_app(config_override=None):
     def health():
         return {"status": "ok", "app": "Body Timeline"}
 
-    @app.route("/api/debug/storage")
-    def debug_storage():
-        """Temporary debug endpoint — remove after confirming storage works."""
-        cfg = app.config
-        info = {
-            "backend": cfg.get("STORAGE_BACKEND"),
-            "s3_bucket": cfg.get("S3_BUCKET"),
-            "s3_endpoint": cfg.get("S3_ENDPOINT_URL", "")[:50] + "..." if cfg.get("S3_ENDPOINT_URL") else "",
-            "s3_region": cfg.get("S3_REGION"),
-            "s3_key_set": bool(cfg.get("S3_ACCESS_KEY")),
-            "s3_secret_set": bool(cfg.get("S3_SECRET_KEY")),
-        }
-        try:
-            from app.services.storage import get_storage
-            storage = get_storage()
-            info["storage_class"] = type(storage).__name__
-            info["boto3_ok"] = True
-        except Exception as e:
-            info["storage_error"] = f"{type(e).__name__}: {e}"
-            info["boto3_ok"] = False
-        return info
 
     return app

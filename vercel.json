@@ -17,10 +17,6 @@
       "destination": "/api/index.py"
     },
     {
-      "source": "/api/debug/:path*",
-      "destination": "/api/index.py"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
