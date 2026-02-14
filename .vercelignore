@@ -1,0 +1,10 @@
+api/venv
+api/instance
+api/body_timeline.db
+api/uploads
+api/__pycache__
+api/tests
+api/.env
+web/node_modules
+web/.env
+*.pyc

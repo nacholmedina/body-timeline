@@ -1,0 +1,159 @@
+export const en = {
+	app: {
+		name: 'Body Timeline',
+		tagline: 'Track your physical progress',
+		description: 'Track physical progress, meals, weigh-ins, goals, workouts, and professional notes.'
+	},
+	nav: {
+		dashboard: 'Dashboard',
+		meals: 'Meals',
+		weighIns: 'Weigh-ins',
+		goals: 'Goals',
+		workouts: 'Workouts',
+		notifications: 'Notifications',
+		appointments: 'Appointments',
+		profile: 'Profile',
+		settings: 'Settings',
+		logout: 'Log out'
+	},
+	auth: {
+		login: 'Log in',
+		register: 'Sign up',
+		email: 'Email',
+		password: 'Password',
+		firstName: 'First name',
+		lastName: 'Last name',
+		loginTitle: 'Welcome back',
+		loginSubtitle: 'Sign in to your account',
+		registerTitle: 'Create account',
+		registerSubtitle: 'Start tracking your progress',
+		noAccount: "Don't have an account?",
+		hasAccount: 'Already have an account?',
+		forgotPassword: 'Forgot password?'
+	},
+	dashboard: {
+		title: 'Dashboard',
+		welcome: 'Welcome back',
+		mealsThisMonth: 'Meals this month',
+		workoutsThisMonth: 'Workouts this month',
+		goalsCompleted: 'Goals completed',
+		nextAppointment: 'Next appointment',
+		noAppointment: 'No upcoming appointments',
+		weightOverTime: 'Weight over time',
+		weeklyActivity: 'Weekly activity',
+		professionalNotes: 'Professional notes',
+		news: 'News & Tips',
+		noNotes: 'No new notes',
+		newsHydration: 'Stay hydrated',
+		newsHydrationBody: 'Drink at least 8 glasses of water daily for optimal performance.',
+		newsRest: 'Rest days matter',
+		newsRestBody: 'Recovery is just as important as your workouts. Give your body time to heal.',
+		newsMealPrep: 'Meal prep tips',
+		newsMealPrepBody: 'Preparing meals in advance helps maintain consistency with nutrition goals.'
+	},
+	meals: {
+		title: 'Meals',
+		addMeal: 'Add meal',
+		description: 'Description',
+		eatenAt: 'Eaten at',
+		notes: 'Notes',
+		photos: 'Photos',
+		noMeals: 'No meals logged yet',
+		draftOffline: 'Draft (offline)',
+		addPhoto: 'Add photo',
+		removePhoto: 'Remove'
+	},
+	weighIns: {
+		title: 'Weigh-ins',
+		addWeighIn: 'Add weigh-in',
+		weight: 'Weight (kg)',
+		recordedAt: 'Recorded at',
+		noWeighIns: 'No weigh-ins yet'
+	},
+	goals: {
+		title: 'Goals',
+		addGoal: 'Add goal',
+		goalTitle: 'Goal title',
+		period: 'Period',
+		weekly: 'Weekly',
+		monthly: 'Monthly',
+		yearly: 'Yearly',
+		targetDate: 'Target date',
+		completed: 'Completed',
+		pending: 'Pending',
+		noGoals: 'No goals set yet'
+	},
+	workouts: {
+		title: 'Workouts',
+		addWorkout: 'Add workout',
+		startTime: 'Start time',
+		endTime: 'End time',
+		exercises: 'Exercises',
+		noWorkouts: 'No workouts logged yet',
+		exercise: 'Exercise'
+	},
+	notifications: {
+		title: 'Notifications',
+		markRead: 'Mark as read',
+		noNotifications: 'No notifications',
+		createNote: 'Create note',
+		noteTitle: 'Title',
+		noteMessage: 'Message',
+		patientIds: 'Patient IDs (comma-separated)',
+		send: 'Send'
+	},
+	appointments: {
+		title: 'Appointments',
+		noAppointments: 'No appointments scheduled',
+		scheduled: 'Scheduled',
+		completed: 'Completed',
+		cancelled: 'Cancelled',
+		new: 'New',
+		upcoming: 'Upcoming',
+		patientId: 'Patient ID',
+		appointmentTitle: 'Title',
+		dateTime: 'Date & Time',
+		duration: 'Duration (min)'
+	},
+	roles: {
+		patient: 'Patient',
+		professional: 'Professional',
+		devadmin: 'Admin'
+	},
+	profile: {
+		title: 'Profile',
+		editProfile: 'Edit profile',
+		bio: 'Bio',
+		phone: 'Phone',
+		dateOfBirth: 'Date of birth',
+		height: 'Height (cm)'
+	},
+	settings: {
+		title: 'Settings',
+		theme: 'Theme',
+		language: 'Language',
+		dark: 'Dark',
+		light: 'Light'
+	},
+	common: {
+		save: 'Save',
+		cancel: 'Cancel',
+		delete: 'Delete',
+		edit: 'Edit',
+		loading: 'Loading...',
+		error: 'An error occurred',
+		success: 'Success',
+		confirm: 'Confirm',
+		back: 'Back',
+		noData: 'No data available',
+		offline: 'You are offline',
+		syncing: 'Syncing...',
+		syncComplete: 'Sync complete',
+		filter: 'Filter',
+		all: 'All',
+		day: 'Day',
+		week: 'Week',
+		month: 'Month',
+		year: 'Year'
+	}
+} as const;

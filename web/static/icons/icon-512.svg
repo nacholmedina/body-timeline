@@ -1,0 +1,10 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg { fill: #1b87f5; }
+      .text { font-family: Arial, sans-serif; font-size: 256px; font-weight: bold; fill: white; text-anchor: middle; dominant-baseline: middle; }
+    </style>
+  </defs>
+  <rect class="bg" width="512" height="512" rx="96" />
+  <text class="text" x="256" y="256">BT</text>
+</svg>

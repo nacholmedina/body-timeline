@@ -1,0 +1,29 @@
+{
+	"name": "Body Timeline",
+	"short_name": "Timeline",
+	"description": "Track physical progress, meals, weigh-ins, goals, workouts, and professional notes.",
+	"start_url": "/app/dashboard",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#1b87f5",
+	"orientation": "portrait-primary",
+	"scope": "/",
+	"id": "com.bodytimeline.app",
+	"categories": ["health", "fitness", "lifestyle"],
+	"icons": [
+		{
+			"src": "/icons/icon-192.svg",
+			"sizes": "192x192",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/icons/icon-512.svg",
+			"sizes": "512x512",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		}
+	],
+	"screenshots": [],
+	"prefer_related_applications": false
+}

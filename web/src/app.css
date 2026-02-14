@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	:root {
+		--bg-primary: #ffffff;
+		--bg-secondary: #f8fafc;
+		--bg-card: #ffffff;
+		--text-primary: #0f172a;
+		--text-secondary: #64748b;
+		--border-color: #e2e8f0;
+	}
+
+	.dark {
+		--bg-primary: #0f172a;
+		--bg-secondary: #1e293b;
+		--bg-card: #1e293b;
+		--text-primary: #f1f5f9;
+		--text-secondary: #94a3b8;
+		--border-color: #334155;
+	}
+
+	body {
+		background-color: var(--bg-primary);
+		color: var(--text-primary);
+		font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	}
+}
+
+@layer components {
+	.card {
+		@apply rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 shadow-sm;
+	}
+
+	.btn-primary {
+		@apply rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white
+		       transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2
+		       focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50;
+	}
+
+	.btn-secondary {
+		@apply rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-2.5
+		       text-sm font-medium text-[var(--text-primary)] transition-colors
+		       hover:bg-[var(--bg-secondary)] focus:outline-none focus:ring-2
+		       focus:ring-brand-500 focus:ring-offset-2;
+	}
+
+	.input {
+		@apply w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)]
+		       px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]
+		       focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+	}
+
+	.label {
+		@apply mb-1.5 block text-sm font-medium text-[var(--text-primary)];
+	}
+}
