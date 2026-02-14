@@ -7,8 +7,22 @@
 	import { formatDateTime } from '$lib/utils';
 	import {
 		UtensilsCrossed, Dumbbell, Target, Calendar,
-		Bell, TrendingUp, Newspaper
+		Bell, TrendingUp, Newspaper, BarChart3, List
 	} from 'lucide-svelte';
+	import {
+		Chart as ChartJS,
+		CategoryScale,
+		LinearScale,
+		PointElement,
+		LineElement,
+		BarElement,
+		Filler,
+		Tooltip,
+		Legend
+	} from 'chart.js';
+	import { Line, Bar } from 'svelte-chartjs';
+
+	ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Filler, Tooltip, Legend);
 
 	let summary: any = null;
 	let weightData: any[] = [];
@@ -16,11 +30,96 @@
 	let notifications: any[] = [];
 	let loading = true;
 
+	let weightView: 'chart' | 'list' = 'chart';
+	let activityView: 'chart' | 'list' = 'chart';
+
 	$: news = [
 		{ title: $t('dashboard.newsHydration'), body: $t('dashboard.newsHydrationBody') },
 		{ title: $t('dashboard.newsRest'), body: $t('dashboard.newsRestBody') },
 		{ title: $t('dashboard.newsMealPrep'), body: $t('dashboard.newsMealPrepBody') },
 	];
+
+	$: isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+	$: weightChartData = {
+		labels: weightData.map((p) => new Date(p.date).toLocaleDateString()),
+		datasets: [
+			{
+				label: $t('dashboard.weightOverTime'),
+				data: weightData.map((p) => p.weight_kg),
+				borderColor: '#6366f1',
+				backgroundColor: 'rgba(99, 102, 241, 0.1)',
+				fill: true,
+				tension: 0.3,
+				pointRadius: 4,
+				pointBackgroundColor: '#6366f1',
+				pointBorderColor: '#fff',
+				pointBorderWidth: 2
+			}
+		]
+	};
+
+	$: weightChartOptions = {
+		responsive: true,
+		maintainAspectRatio: false,
+		plugins: {
+			legend: { display: false },
+			tooltip: {
+				callbacks: {
+					label: (ctx: any) => `${ctx.parsed.y} kg`
+				}
+			}
+		},
+		scales: {
+			x: {
+				ticks: { color: isDark ? '#9ca3af' : '#6b7280', maxRotation: 45, font: { size: 10 } },
+				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
+			},
+			y: {
+				ticks: {
+					color: isDark ? '#9ca3af' : '#6b7280',
+					callback: (v: any) => `${v} kg`
+				},
+				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
+			}
+		}
+	};
+
+	$: activityChartData = {
+		labels: activityData.map((w) => w.week),
+		datasets: [
+			{
+				label: $t('dashboard.weeklyActivity'),
+				data: activityData.map((w) => w.count),
+				backgroundColor: 'rgba(99, 102, 241, 0.7)',
+				borderColor: '#6366f1',
+				borderWidth: 1,
+				borderRadius: 6
+			}
+		]
+	};
+
+	$: activityChartOptions = {
+		responsive: true,
+		maintainAspectRatio: false,
+		plugins: {
+			legend: { display: false }
+		},
+		scales: {
+			x: {
+				ticks: { color: isDark ? '#9ca3af' : '#6b7280', maxRotation: 45, font: { size: 10 } },
+				grid: { display: false }
+			},
+			y: {
+				beginAtZero: true,
+				ticks: {
+					color: isDark ? '#9ca3af' : '#6b7280',
+					stepSize: 1
+				},
+				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
+			}
+		}
+	};
 
 	onMount(async () => {
 		try {
@@ -114,19 +213,47 @@
 		<div class="grid gap-6 lg:grid-cols-2">
 			<!-- Weight Chart -->
 			<div class="card">
-				<div class="mb-4 flex items-center gap-2">
-					<TrendingUp size={18} class="text-brand-600" />
-					<h3 class="font-semibold text-[var(--text-primary)]">{$t('dashboard.weightOverTime')}</h3>
+				<div class="mb-4 flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						<TrendingUp size={18} class="text-brand-600" />
+						<h3 class="font-semibold text-[var(--text-primary)]">{$t('dashboard.weightOverTime')}</h3>
+					</div>
+					{#if weightData.length > 0}
+						<div class="flex rounded-lg border border-[var(--border-color)] overflow-hidden">
+							<button
+								on:click={() => (weightView = 'chart')}
+								class="p-1.5 transition-colors {weightView === 'chart'
+									? 'bg-brand-600 text-white'
+									: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+							>
+								<BarChart3 size={14} />
+							</button>
+							<button
+								on:click={() => (weightView = 'list')}
+								class="p-1.5 transition-colors {weightView === 'list'
+									? 'bg-brand-600 text-white'
+									: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+							>
+								<List size={14} />
+							</button>
+						</div>
+					{/if}
 				</div>
 				{#if weightData.length > 0}
-					<div class="space-y-2">
-						{#each weightData.slice(-10) as point}
-							<div class="flex items-center justify-between text-sm">
-								<span class="text-[var(--text-secondary)]">{new Date(point.date).toLocaleDateString()}</span>
-								<span class="font-medium text-[var(--text-primary)]">{point.weight_kg} kg</span>
-							</div>
-						{/each}
-					</div>
+					{#if weightView === 'chart'}
+						<div class="h-56">
+							<Line data={weightChartData} options={weightChartOptions} />
+						</div>
+					{:else}
+						<div class="space-y-2 max-h-56 overflow-y-auto">
+							{#each weightData.slice(-10) as point}
+								<div class="flex items-center justify-between text-sm">
+									<span class="text-[var(--text-secondary)]">{new Date(point.date).toLocaleDateString()}</span>
+									<span class="font-medium text-[var(--text-primary)]">{point.weight_kg} kg</span>
+								</div>
+							{/each}
+						</div>
+					{/if}
 				{:else}
 					<p class="text-sm text-[var(--text-secondary)]">{$t('common.noData')}</p>
 				{/if}
@@ -134,25 +261,53 @@
 
 			<!-- Activity Chart -->
 			<div class="card">
-				<div class="mb-4 flex items-center gap-2">
-					<Dumbbell size={18} class="text-brand-600" />
-					<h3 class="font-semibold text-[var(--text-primary)]">{$t('dashboard.weeklyActivity')}</h3>
+				<div class="mb-4 flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						<Dumbbell size={18} class="text-brand-600" />
+						<h3 class="font-semibold text-[var(--text-primary)]">{$t('dashboard.weeklyActivity')}</h3>
+					</div>
+					{#if activityData.length > 0}
+						<div class="flex rounded-lg border border-[var(--border-color)] overflow-hidden">
+							<button
+								on:click={() => (activityView = 'chart')}
+								class="p-1.5 transition-colors {activityView === 'chart'
+									? 'bg-brand-600 text-white'
+									: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+							>
+								<BarChart3 size={14} />
+							</button>
+							<button
+								on:click={() => (activityView = 'list')}
+								class="p-1.5 transition-colors {activityView === 'list'
+									? 'bg-brand-600 text-white'
+									: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+							>
+								<List size={14} />
+							</button>
+						</div>
+					{/if}
 				</div>
 				{#if activityData.length > 0}
-					<div class="space-y-2">
-						{#each activityData as week}
-							<div class="flex items-center gap-3">
-								<span class="w-20 text-xs text-[var(--text-secondary)]">{week.week}</span>
-								<div class="flex-1 h-5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-									<div
-										class="h-full bg-brand-500 rounded-full transition-all"
-										style="width: {Math.min(100, week.count * 14)}%"
-									></div>
+					{#if activityView === 'chart'}
+						<div class="h-56">
+							<Bar data={activityChartData} options={activityChartOptions} />
+						</div>
+					{:else}
+						<div class="space-y-2 max-h-56 overflow-y-auto">
+							{#each activityData as week}
+								<div class="flex items-center gap-3">
+									<span class="w-20 text-xs text-[var(--text-secondary)]">{week.week}</span>
+									<div class="flex-1 h-5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+										<div
+											class="h-full bg-brand-500 rounded-full transition-all"
+											style="width: {Math.min(100, week.count * 14)}%"
+										></div>
+									</div>
+									<span class="text-sm font-medium text-[var(--text-primary)] w-8">{week.count}</span>
 								</div>
-								<span class="text-sm font-medium text-[var(--text-primary)] w-8">{week.count}</span>
-							</div>
-						{/each}
-					</div>
+							{/each}
+						</div>
+					{/if}
 				{:else}
 					<p class="text-sm text-[var(--text-secondary)]">{$t('common.noData')}</p>
 				{/if}
