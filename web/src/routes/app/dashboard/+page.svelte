@@ -72,13 +72,14 @@
 		},
 		scales: {
 			x: {
-				ticks: { color: isDark ? '#9ca3af' : '#6b7280', maxRotation: 45, font: { size: 10 } },
+				ticks: { color: isDark ? '#9ca3af' : '#6b7280', maxRotation: 45, font: { size: 10 }, maxTicksLimit: 5, autoSkip: true },
 				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
 			},
 			y: {
 				ticks: {
 					color: isDark ? '#9ca3af' : '#6b7280',
-					callback: (v: any) => `${v} kg`
+					callback: (v: any) => `${v} kg`,
+					maxTicksLimit: 7
 				},
 				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
 			}
