@@ -16,6 +16,7 @@
 	let bio = $authStore.user?.profile?.bio || '';
 	let phone = $authStore.user?.profile?.phone || '';
 	let dateOfBirth = $authStore.user?.profile?.date_of_birth || '';
+	let gender = $authStore.user?.gender || '';
 	let heightCm = $authStore.user?.profile?.height_cm?.toString() || '';
 
 	let weightStats: {
@@ -37,6 +38,7 @@
 			const res = await api.get('/auth/me');
 			authStore.updateUser(res.user);
 			avatarUrl = res.user.profile?.avatar_url || '';
+			gender = res.user.gender || '';
 			weightStats = res.user.weight_stats || weightStats;
 			myProfessional = res.user.my_professional || null;
 		} catch (err) {
@@ -69,6 +71,7 @@
 			const res = await api.patch('/auth/me', {
 				first_name: firstName,
 				last_name: lastName,
+				gender: gender || null,
 				bio: bio || null,
 				phone: phone || null,
 				date_of_birth: dateOfBirth || null,
@@ -211,6 +214,16 @@
 				<label for="lastName" class="label">{$t('auth.lastName')}</label>
 				<input id="lastName" type="text" bind:value={lastName} class="input" required />
 			</div>
+		</div>
+
+		<div>
+			<label for="gender" class="label">{$t('profile.gender')}</label>
+			<select id="gender" bind:value={gender} class="input">
+				<option value="">{$t('profile.genderPlaceholder')}</option>
+				<option value="male">{$t('profile.genderMale')}</option>
+				<option value="female">{$t('profile.genderFemale')}</option>
+				<option value="other">{$t('profile.genderOther')}</option>
+			</select>
 		</div>
 
 		<div>

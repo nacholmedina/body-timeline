@@ -35,6 +35,9 @@ export const es = {
 	dashboard: {
 		title: 'Panel',
 		welcome: 'Bienvenido',
+		welcomeMale: 'Bienvenido',
+		welcomeFemale: 'Bienvenida',
+		welcomeOther: 'Te damos la bienvenida',
 		mealsThisMonth: 'Comidas este mes',
 		workoutsThisMonth: 'Entrenamientos este mes',
 		goalsCompleted: 'Metas completadas',
@@ -64,7 +67,8 @@ export const es = {
 		addPhoto: 'Agregar foto',
 		takePhoto: 'Tomar foto',
 		choosePhoto: 'Galería',
-		removePhoto: 'Quitar'
+		removePhoto: 'Quitar',
+		maxPhotos: 'Máximo 3 fotos alcanzado'
 	},
 	weighIns: {
 		title: 'Pesajes',
@@ -172,6 +176,11 @@ export const es = {
 		phone: 'Teléfono',
 		dateOfBirth: 'Fecha de nacimiento',
 		height: 'Altura (cm)',
+		gender: 'Género',
+		genderMale: 'Masculino',
+		genderFemale: 'Femenino',
+		genderOther: 'Otro',
+		genderPlaceholder: 'Seleccionar género',
 		initialWeight: 'Peso inicial',
 		currentWeight: 'Peso actual',
 		myProfessional: 'Mi profesional'

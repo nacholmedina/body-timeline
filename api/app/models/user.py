@@ -19,6 +19,7 @@ class User(db.Model):
     )
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
+    gender = db.Column(db.String(20), nullable=True)  # male, female, other
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(
         db.DateTime(timezone=True),
@@ -51,6 +52,7 @@ class User(db.Model):
             "role": self.role,
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "gender": self.gender,
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat(),
         }

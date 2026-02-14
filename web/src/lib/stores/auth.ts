@@ -7,6 +7,7 @@ interface User {
 	role: 'devadmin' | 'professional' | 'patient';
 	first_name: string;
 	last_name: string;
+	gender?: string;
 	is_active: boolean;
 	created_at: string;
 	profile?: {

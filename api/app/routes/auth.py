@@ -65,6 +65,7 @@ def register():
     password = data.get("password", "")
     first_name = (data.get("first_name") or "").strip()
     last_name = (data.get("last_name") or "").strip()
+    gender = (data.get("gender") or "").strip() or None
 
     if not email or not validate_email(email):
         return validation_error("Valid email is required", "email")
@@ -82,6 +83,7 @@ def register():
         email=email,
         first_name=first_name,
         last_name=last_name,
+        gender=gender,
         role="patient",
     )
     user.set_password(password)
@@ -168,6 +170,8 @@ def update_me():
         if not lname:
             return validation_error("Last name cannot be empty", "last_name")
         user.last_name = lname
+    if "gender" in data:
+        user.gender = (data["gender"] or "").strip() or None
 
     profile = user.profile
     if not profile:

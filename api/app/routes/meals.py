@@ -143,6 +143,9 @@ def upload_meal_photo(meal_id):
     if current_user.role == "professional":
         return api_error("Professionals cannot modify meals", 403)
 
+    if len(meal.photos) >= 3:
+        return api_error("Maximum 3 photos per meal", 400)
+
     file = request.files.get("photo")
     if not file:
         return validation_error("Photo file is required", "photo")

@@ -11,6 +11,7 @@
 	let password = '';
 	let firstName = '';
 	let lastName = '';
+	let gender = '';
 	let error = '';
 	let loading = false;
 
@@ -22,7 +23,8 @@
 				email,
 				password,
 				first_name: firstName,
-				last_name: lastName
+				last_name: lastName,
+				gender: gender || undefined
 			});
 			authStore.login(data.user, data.access_token, data.refresh_token);
 			goto('/app/dashboard');
@@ -69,6 +71,16 @@
 					<label for="lastName" class="label">{$t('auth.lastName')}</label>
 					<input id="lastName" type="text" bind:value={lastName} class="input" required />
 				</div>
+			</div>
+
+			<div>
+				<label for="gender" class="label">{$t('profile.gender')}</label>
+				<select id="gender" bind:value={gender} class="input">
+					<option value="">{$t('profile.genderPlaceholder')}</option>
+					<option value="male">{$t('profile.genderMale')}</option>
+					<option value="female">{$t('profile.genderFemale')}</option>
+					<option value="other">{$t('profile.genderOther')}</option>
+				</select>
 			</div>
 
 			<div>

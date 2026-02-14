@@ -39,6 +39,11 @@
 		{ title: $t('dashboard.newsMealPrep'), body: $t('dashboard.newsMealPrepBody') },
 	];
 
+	$: welcomeKey = $authStore.user?.gender === 'male' ? 'dashboard.welcomeMale'
+		: $authStore.user?.gender === 'female' ? 'dashboard.welcomeFemale'
+		: $authStore.user?.gender === 'other' ? 'dashboard.welcomeOther'
+		: 'dashboard.welcome';
+
 	$: isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
 	$: weightChartData = {
@@ -156,7 +161,7 @@
 	<!-- Welcome -->
 	<div>
 		<h1 class="text-2xl font-bold text-[var(--text-primary)]">
-			{$t('dashboard.welcome')}, {$authStore.user?.first_name}!
+			{$t(welcomeKey)}, {$authStore.user?.first_name}!
 		</h1>
 		<p class="text-sm text-[var(--text-secondary)]">{$t('app.description')}</p>
 	</div>

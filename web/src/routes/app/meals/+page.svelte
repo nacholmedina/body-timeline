@@ -25,6 +25,21 @@
 	let formError = '';
 	let fileInput: HTMLInputElement;
 	let cameraInput: HTMLInputElement;
+	const MAX_PHOTOS = 3;
+
+	// Lightbox
+	let lightboxUrl = '';
+	let lightboxAlt = '';
+
+	function openLightbox(url: string, alt: string) {
+		lightboxUrl = url;
+		lightboxAlt = alt;
+	}
+
+	function closeLightbox() {
+		lightboxUrl = '';
+		lightboxAlt = '';
+	}
 
 	// Filters
 	let filter: 'all' | 'day' | 'week' | 'month' | 'year' = 'all';
@@ -62,7 +77,9 @@
 	function handlePhotoSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (!input.files?.length) return;
-		for (const file of Array.from(input.files)) {
+		const remaining = MAX_PHOTOS - selectedPhotos.length;
+		const files = Array.from(input.files).slice(0, remaining);
+		for (const file of files) {
 			selectedPhotos = [...selectedPhotos, file];
 			photoPreviews = [...photoPreviews, URL.createObjectURL(file)];
 		}
@@ -225,24 +242,28 @@
 						{/each}
 					</div>
 				{/if}
-				<div class="flex gap-2">
-					<button
-						type="button"
-						on:click={() => cameraInput.click()}
-						class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border-color)] px-3 py-3 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-500 transition-colors"
-					>
-						<Camera size={18} />
-						{$t('meals.takePhoto')}
-					</button>
-					<button
-						type="button"
-						on:click={() => fileInput.click()}
-						class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border-color)] px-3 py-3 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-500 transition-colors"
-					>
-						<ImagePlus size={18} />
-						{$t('meals.choosePhoto')}
-					</button>
-				</div>
+				{#if selectedPhotos.length < MAX_PHOTOS}
+					<div class="flex gap-2">
+						<button
+							type="button"
+							on:click={() => cameraInput.click()}
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border-color)] px-3 py-3 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-500 transition-colors"
+						>
+							<Camera size={18} />
+							{$t('meals.takePhoto')}
+						</button>
+						<button
+							type="button"
+							on:click={() => fileInput.click()}
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border-color)] px-3 py-3 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-500 transition-colors"
+						>
+							<ImagePlus size={18} />
+							{$t('meals.choosePhoto')}
+						</button>
+					</div>
+				{:else}
+					<p class="text-xs text-[var(--text-secondary)]">{$t('meals.maxPhotos')}</p>
+				{/if}
 			</div>
 
 			<div class="flex gap-3">
@@ -279,11 +300,17 @@
 						{#if meal.photos?.length > 0}
 							<div class="mt-2 flex gap-2 overflow-x-auto">
 								{#each meal.photos as photo}
-									<img
-										src={photoUrl(photo.url)}
-										alt={photo.caption || meal.description}
-										class="h-16 w-16 rounded-lg object-cover border border-[var(--border-color)] flex-shrink-0"
-									/>
+									<button
+										type="button"
+										on:click={() => openLightbox(photoUrl(photo.url), photo.caption || meal.description)}
+										class="flex-shrink-0 rounded-lg overflow-hidden border border-[var(--border-color)] hover:ring-2 hover:ring-brand-400 transition-shadow cursor-pointer"
+									>
+										<img
+											src={photoUrl(photo.url)}
+											alt={photo.caption || meal.description}
+											class="h-16 w-16 object-cover"
+										/>
+									</button>
 								{/each}
 							</div>
 						{/if}
@@ -306,3 +333,26 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Lightbox Modal -->
+{#if lightboxUrl}
+	<button
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-zoom-out"
+		on:click={closeLightbox}
+		aria-label="Close"
+	>
+		<button
+			type="button"
+			on:click|stopPropagation={closeLightbox}
+			class="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+		>
+			<X size={22} />
+		</button>
+		<img
+			src={lightboxUrl}
+			alt={lightboxAlt}
+			class="max-h-[85vh] max-w-full rounded-lg object-contain"
+			on:click|stopPropagation
+		/>
+	</button>
+{/if}

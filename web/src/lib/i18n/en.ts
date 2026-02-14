@@ -35,6 +35,9 @@ export const en = {
 	dashboard: {
 		title: 'Dashboard',
 		welcome: 'Welcome back',
+		welcomeMale: 'Welcome back',
+		welcomeFemale: 'Welcome back',
+		welcomeOther: 'Welcome back',
 		mealsThisMonth: 'Meals this month',
 		workoutsThisMonth: 'Workouts this month',
 		goalsCompleted: 'Goals completed',
@@ -64,7 +67,8 @@ export const en = {
 		addPhoto: 'Add photo',
 		takePhoto: 'Take photo',
 		choosePhoto: 'Gallery',
-		removePhoto: 'Remove'
+		removePhoto: 'Remove',
+		maxPhotos: 'Maximum 3 photos reached'
 	},
 	weighIns: {
 		title: 'Weigh-ins',
@@ -172,6 +176,11 @@ export const en = {
 		phone: 'Phone',
 		dateOfBirth: 'Date of birth',
 		height: 'Height (cm)',
+		gender: 'Gender',
+		genderMale: 'Male',
+		genderFemale: 'Female',
+		genderOther: 'Other',
+		genderPlaceholder: 'Select gender',
 		initialWeight: 'Initial weight',
 		currentWeight: 'Current weight',
 		myProfessional: 'My professional'
