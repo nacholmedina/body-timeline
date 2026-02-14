@@ -10,6 +10,7 @@
 	import { BRANDING } from '$lib/config/branding';
 	import { Menu, X, User, Settings, LogOut, ShieldAlert } from 'lucide-svelte';
 	import { browser } from '$app/environment';
+	import { photoUrl } from '$lib/api/client';
 
 	let mobileMenuOpen = false;
 	let avatarMenuOpen = false;
@@ -95,9 +96,13 @@
 				<div class="relative ml-2">
 					<button
 						on:click={toggleAvatarMenu}
-						class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300 hover:ring-2 hover:ring-brand-400 transition-shadow"
+						class="flex h-8 w-8 items-center justify-center rounded-full overflow-hidden bg-brand-100 text-sm font-medium text-brand-700 dark:bg-brand-900 dark:text-brand-300 hover:ring-2 hover:ring-brand-400 transition-shadow"
 					>
-						{$authStore.user?.first_name?.[0] || '?'}{$authStore.user?.last_name?.[0] || ''}
+						{#if $authStore.user?.profile?.avatar_url}
+							<img src={photoUrl($authStore.user.profile.avatar_url)} alt="" class="h-full w-full object-cover" />
+						{:else}
+							{$authStore.user?.first_name?.[0] || '?'}{$authStore.user?.last_name?.[0] || ''}
+						{/if}
 					</button>
 
 					{#if avatarMenuOpen}

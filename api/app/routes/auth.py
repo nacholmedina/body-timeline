@@ -7,6 +7,7 @@ from flask_jwt_extended import (
 from app.extensions import db
 from app.models.user import User, Profile, ProfessionalPatient
 from app.models.weigh_in import WeighIn
+from app.services.storage import get_storage
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import validate_email, validate_password
 
@@ -182,4 +183,35 @@ def update_me():
     data["weight_stats"] = _weight_stats(user.id)
     if user.role == "patient":
         data["my_professional"] = _my_professional(user.id)
+    return jsonify(user=data)
+
+
+@bp.route("/me/avatar", methods=["POST"])
+@jwt_required()
+def upload_avatar():
+    file = request.files.get("photo")
+    if not file:
+        return validation_error("Photo file is required", "photo")
+
+    storage = get_storage()
+    profile = current_user.profile
+    if not profile:
+        profile = Profile(user_id=current_user.id)
+        db.session.add(profile)
+
+    # Delete old avatar if exists
+    if profile.avatar_storage_key:
+        try:
+            storage.delete(profile.avatar_storage_key)
+        except Exception:
+            pass
+
+    result = storage.upload(file, folder="avatars")
+    profile.avatar_storage_key = result["storage_key"]
+    db.session.commit()
+
+    data = current_user.to_dict(include_profile=True)
+    data["weight_stats"] = _weight_stats(current_user.id)
+    if current_user.role == "patient":
+        data["my_professional"] = _my_professional(current_user.id)
     return jsonify(user=data)

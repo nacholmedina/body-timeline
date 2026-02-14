@@ -5,9 +5,13 @@
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDate } from '$lib/utils';
-	import { User, Scale, Stethoscope, Mail, Phone } from 'lucide-svelte';
+	import { User, Scale, Stethoscope, Mail, Phone, Camera } from 'lucide-svelte';
+	import { photoUrl } from '$lib/api/client';
 
 	let firstName = $authStore.user?.first_name || '';
+	let avatarUrl = $authStore.user?.profile?.avatar_url || '';
+	let avatarInput: HTMLInputElement;
+	let uploadingAvatar = false;
 	let lastName = $authStore.user?.last_name || '';
 	let bio = $authStore.user?.profile?.bio || '';
 	let phone = $authStore.user?.profile?.phone || '';
@@ -31,11 +35,27 @@
 	async function loadProfile() {
 		try {
 			const res = await api.get('/auth/me');
-		authStore.updateUser(res.user);
+			authStore.updateUser(res.user);
+			avatarUrl = res.user.profile?.avatar_url || '';
 			weightStats = res.user.weight_stats || weightStats;
 			myProfessional = res.user.my_professional || null;
 		} catch (err) {
 			console.error('Profile load error:', err);
+		}
+	}
+
+	async function handleAvatarUpload() {
+		const file = avatarInput?.files?.[0];
+		if (!file) return;
+		uploadingAvatar = true;
+		try {
+			const res = await api.upload('/auth/me/avatar', file);
+			authStore.updateUser(res.user);
+			avatarUrl = res.user.profile?.avatar_url || '';
+		} catch (err) {
+			console.error('Avatar upload error:', err);
+		} finally {
+			uploadingAvatar = false;
 		}
 	}
 
@@ -74,9 +94,33 @@
 
 	<!-- Avatar -->
 	<div class="flex items-center gap-4">
-		<div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900">
-			<User size={36} class="text-brand-600 dark:text-brand-400" />
-		</div>
+		<button
+			on:click={() => avatarInput.click()}
+			class="relative group h-20 w-20 rounded-full overflow-hidden shrink-0"
+			disabled={uploadingAvatar}
+		>
+			{#if avatarUrl}
+				<img src={photoUrl(avatarUrl)} alt="Avatar" class="h-full w-full object-cover" />
+			{:else}
+				<div class="flex h-full w-full items-center justify-center bg-brand-100 dark:bg-brand-900">
+					<User size={36} class="text-brand-600 dark:text-brand-400" />
+				</div>
+			{/if}
+			<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+				{#if uploadingAvatar}
+					<div class="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+				{:else}
+					<Camera size={20} class="text-white" />
+				{/if}
+			</div>
+		</button>
+		<input
+			bind:this={avatarInput}
+			type="file"
+			accept="image/*"
+			class="hidden"
+			on:change={handleAvatarUpload}
+		/>
 		<div>
 			<p class="text-lg font-semibold text-[var(--text-primary)]">{firstName} {lastName}</p>
 			<p class="text-sm text-[var(--text-secondary)]">{$authStore.user?.email}</p>

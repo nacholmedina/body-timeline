@@ -84,6 +84,14 @@ class Profile(db.Model):
     user = db.relationship("User", back_populates="profile")
 
     def to_dict(self):
+        from app.services.storage import get_storage
+        avatar_url = None
+        if self.avatar_storage_key:
+            try:
+                avatar_url = get_storage().get_url(self.avatar_storage_key)
+            except Exception:
+                pass
+
         return {
             "id": str(self.id),
             "bio": self.bio,
@@ -91,6 +99,7 @@ class Profile(db.Model):
             "date_of_birth": self.date_of_birth.isoformat() if self.date_of_birth else None,
             "height_cm": float(self.height_cm) if self.height_cm else None,
             "avatar_storage_key": self.avatar_storage_key,
+            "avatar_url": avatar_url,
         }
 
 

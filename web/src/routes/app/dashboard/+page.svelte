@@ -131,7 +131,7 @@
 
 			const [summaryRes, weightRes, activityRes, notifsRes] = await Promise.all([
 				api.get('/dashboard/summary', params),
-				api.get('/dashboard/weight-series', { ...params, days: '90' }),
+				api.get('/dashboard/weight-series', { ...params, days: '365' }),
 				api.get('/dashboard/activity-series', { ...params, weeks: '12' }),
 				api.get('/notifications', { limit: '5' }).catch(() => ({ data: [] })),
 			]);

@@ -15,6 +15,7 @@ interface User {
 		date_of_birth?: string;
 		height_cm?: number;
 		avatar_storage_key?: string;
+		avatar_url?: string;
 	};
 	weight_stats?: {
 		initial_weight_kg: number | null;
