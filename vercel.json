@@ -1,7 +1,12 @@
 {
-  "installCommand": "cd web && npm install",
-  "buildCommand": "cd web && npm run build",
-  "framework": "sveltekit",
+  "buildCommand": "cd web && npm install && npm run build",
+  "outputDirectory": "web/build",
+  "functions": {
+    "api/index.py": {
+      "runtime": "@vercel/python@6.12.0",
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
     {
       "source": "/api/v1/:path*",
