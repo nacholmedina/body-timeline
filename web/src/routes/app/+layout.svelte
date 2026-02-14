@@ -40,7 +40,7 @@
 
 	<div class="lg:pl-64">
 		<!-- Top bar -->
-		<header class="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-3 lg:px-6">
+		<header class="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-3 lg:px-6 lg:py-5">
 			<div class="flex items-center gap-3">
 				<button
 					on:click={() => (mobileMenuOpen = !mobileMenuOpen)}

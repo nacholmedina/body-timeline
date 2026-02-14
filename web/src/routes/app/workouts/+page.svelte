@@ -78,11 +78,11 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-bold text-[var(--text-primary)]">{$t('workouts.title')}</h1>
-		<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2">
+	<div class="flex items-center justify-between gap-3">
+		<h1 class="text-2xl font-bold text-[var(--text-primary)] min-w-0 truncate">{$t('workouts.title')}</h1>
+		<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2 shrink-0">
 			<Plus size={18} />
-			{$t('workouts.addWorkout')}
+			<span class="hidden sm:inline">{$t('workouts.addWorkout')}</span>
 		</button>
 	</div>
 

@@ -19,17 +19,17 @@
 </script>
 
 <nav class="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border-color)] bg-[var(--bg-card)] lg:hidden safe-area-bottom">
-	<div class="flex items-center justify-around py-2">
+	<div class="flex items-center justify-around py-2 px-1">
 		{#each items as item}
 			<a
 				href={item.href}
-				class="flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors
+				class="flex flex-col items-center gap-0.5 px-1 py-1 min-w-0 flex-1 text-[0.65rem] font-medium transition-colors
 				       {isActive(item.href, pathname)
 					? 'text-brand-600 dark:text-brand-400'
 					: 'text-[var(--text-secondary)]'}"
 			>
-				<svelte:component this={item.icon} size={22} />
-				<span>{$t(item.label)}</span>
+				<svelte:component this={item.icon} size={20} />
+				<span class="truncate w-full text-center">{$t(item.label)}</span>
 			</a>
 		{/each}
 	</div>
