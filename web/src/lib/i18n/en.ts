@@ -61,6 +61,8 @@ export const en = {
 		noMeals: 'No meals logged yet',
 		draftOffline: 'Draft (offline)',
 		addPhoto: 'Add photo',
+		takePhoto: 'Take photo',
+		choosePhoto: 'Gallery',
 		removePhoto: 'Remove'
 	},
 	weighIns: {

@@ -61,6 +61,8 @@ export const es = {
 		noMeals: 'Aún no se registraron comidas',
 		draftOffline: 'Borrador (sin conexión)',
 		addPhoto: 'Agregar foto',
+		takePhoto: 'Tomar foto',
+		choosePhoto: 'Galería',
 		removePhoto: 'Quitar'
 	},
 	weighIns: {

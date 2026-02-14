@@ -6,7 +6,7 @@
 	import { formatDateTime } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
-	import { Plus, Trash2, UtensilsCrossed, Camera, X } from 'lucide-svelte';
+	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 
 	let meals: any[] = [];
@@ -24,6 +24,7 @@
 	let formLoading = false;
 	let formError = '';
 	let fileInput: HTMLInputElement;
+	let cameraInput: HTMLInputElement;
 
 	// Filters
 	let filter: 'all' | 'day' | 'week' | 'month' | 'year' = 'all';
@@ -190,6 +191,16 @@
 			<!-- Photo upload -->
 			<div>
 				<label class="label">{$t('meals.photos')}</label>
+				<!-- Camera capture input (opens camera directly on mobile) -->
+				<input
+					bind:this={cameraInput}
+					type="file"
+					accept="image/*"
+					capture="environment"
+					on:change={handlePhotoSelect}
+					class="hidden"
+				/>
+				<!-- Gallery picker input -->
 				<input
 					bind:this={fileInput}
 					type="file"
@@ -214,14 +225,24 @@
 						{/each}
 					</div>
 				{/if}
-				<button
-					type="button"
-					on:click={() => fileInput.click()}
-					class="flex items-center gap-2 rounded-lg border-2 border-dashed border-[var(--border-color)] px-4 py-3 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-500 transition-colors"
-				>
-					<Camera size={18} />
-					{$t('meals.addPhoto')}
-				</button>
+				<div class="flex gap-2">
+					<button
+						type="button"
+						on:click={() => cameraInput.click()}
+						class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border-color)] px-3 py-3 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-500 transition-colors"
+					>
+						<Camera size={18} />
+						{$t('meals.takePhoto')}
+					</button>
+					<button
+						type="button"
+						on:click={() => fileInput.click()}
+						class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border-color)] px-3 py-3 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-500 transition-colors"
+					>
+						<ImagePlus size={18} />
+						{$t('meals.choosePhoto')}
+					</button>
+				</div>
 			</div>
 
 			<div class="flex gap-3">
