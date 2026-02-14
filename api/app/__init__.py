@@ -19,7 +19,11 @@ def create_app(config_override=None):
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
-    cors.init_app(app, resources={r"/api/*": {"origins": app.config["FRONTEND_URL"].split(",")}})
+    allowed_origins = [o.strip() for o in app.config["FRONTEND_URL"].split(",")]
+    # Also accept Vercel preview deployment URLs
+    if any("vercel.app" in o for o in allowed_origins):
+        allowed_origins.append(r"https://.*\.vercel\.app")
+    cors.init_app(app, resources={r"/api/*": {"origins": allowed_origins}})
 
     # Reset storage on new app context
     with app.app_context():

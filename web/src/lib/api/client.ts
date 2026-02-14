@@ -143,7 +143,11 @@ export const api = new ApiClient();
 export function photoUrl(url: string): string {
 	if (!url) return '';
 	if (url.startsWith('http')) return url;
-	// Relative path — prepend API server origin
-	const origin = new URL(BASE).origin;
-	return `${origin}${url}`;
+	// Relative path — prepend API server origin (or use current origin if BASE is relative)
+	try {
+		const origin = new URL(BASE).origin;
+		return `${origin}${url}`;
+	} catch {
+		return url;
+	}
 }
