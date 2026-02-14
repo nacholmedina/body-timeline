@@ -66,7 +66,7 @@ class Profile(db.Model):
     user_id = db.Column(GUID, db.ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     avatar_storage_key = db.Column(db.String(500), nullable=True)
     bio = db.Column(db.Text, nullable=True)
-    phone = db.Column(db.String(30), nullable=True)
+    phone = db.Column(db.String(30), nullable=True, unique=True)
     date_of_birth = db.Column(db.Date, nullable=True)
     height_cm = db.Column(db.Numeric(5, 1), nullable=True)
     created_at = db.Column(
