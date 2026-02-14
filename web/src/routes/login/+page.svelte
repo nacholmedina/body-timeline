@@ -6,9 +6,11 @@
 	import { api, ApiError } from '$lib/api/client';
 	import ThemeToggle from '$components/ThemeToggle.svelte';
 	import LanguageToggle from '$components/LanguageToggle.svelte';
+	import { Eye, EyeOff } from 'lucide-svelte';
 
 	let email = '';
 	let password = '';
+	let showPassword = false;
 	let error = '';
 	let loading = false;
 
@@ -62,7 +64,20 @@
 
 			<div>
 				<label for="password" class="label">{$t('auth.password')}</label>
-				<input id="password" type="password" bind:value={password} class="input" required autocomplete="current-password" />
+				<div class="relative">
+					{#if showPassword}
+						<input id="password" type="text" bind:value={password} class="input pr-10" required autocomplete="current-password" />
+					{:else}
+						<input id="password" type="password" bind:value={password} class="input pr-10" required autocomplete="current-password" />
+					{/if}
+					<button
+						type="button"
+						on:click={() => (showPassword = !showPassword)}
+						class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+					>
+						{#if showPassword}<EyeOff size={18} />{:else}<Eye size={18} />{/if}
+					</button>
+				</div>
 			</div>
 
 			<button type="submit" class="btn-primary w-full" disabled={loading}>

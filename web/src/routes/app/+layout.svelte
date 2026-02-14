@@ -8,12 +8,37 @@
 	import ThemeToggle from '$components/ThemeToggle.svelte';
 	import LanguageToggle from '$components/LanguageToggle.svelte';
 	import { BRANDING } from '$lib/config/branding';
-	import { Menu, X, User, Settings, LogOut } from 'lucide-svelte';
+	import { Menu, X, User, Settings, LogOut, ShieldAlert } from 'lucide-svelte';
+	import { browser } from '$app/environment';
 
 	let mobileMenuOpen = false;
 	let avatarMenuOpen = false;
+	let isImpersonating = false;
+	let impersonatingName = '';
+
+	if (browser) {
+		const saved = sessionStorage.getItem('bt_impersonation');
+		if (saved) {
+			isImpersonating = true;
+		}
+	}
+
+	$: if (browser && isImpersonating && $authStore.user) {
+		impersonatingName = `${$authStore.user.first_name} ${$authStore.user.last_name}`;
+	}
+
+	function stopImpersonation() {
+		const saved = sessionStorage.getItem('bt_impersonation');
+		if (saved) {
+			const adminState = JSON.parse(saved);
+			authStore.login(adminState.user, adminState.accessToken, adminState.refreshToken);
+			sessionStorage.removeItem('bt_impersonation');
+			window.location.href = '/app/admin/users';
+		}
+	}
 
 	function handleLogout() {
+		sessionStorage.removeItem('bt_impersonation');
 		authStore.logout();
 		window.location.href = '/login';
 	}
@@ -36,11 +61,24 @@
 <svelte:window on:click={() => (avatarMenuOpen = false)} />
 
 {#if $authStore.isAuthenticated}
+	{#if isImpersonating}
+		<div class="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 bg-amber-500 text-white px-4 py-2 text-sm font-medium">
+			<ShieldAlert size={16} />
+			<span>{$t('admin.impersonating')} <strong>{impersonatingName}</strong></span>
+			<button
+				on:click={stopImpersonation}
+				class="ml-2 rounded-lg bg-white/20 px-3 py-1 text-xs font-semibold hover:bg-white/30 transition-colors"
+			>
+				{$t('admin.stopImpersonating')}
+			</button>
+		</div>
+	{/if}
+
 	<Sidebar />
 
-	<div class="lg:pl-64">
+	<div class="lg:pl-64" class:pt-10={isImpersonating}>
 		<!-- Top bar -->
-		<header class="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-3 lg:px-6 lg:py-5">
+		<header class="sticky z-30 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-3 lg:px-6 lg:py-5" class:top-10={isImpersonating} class:top-0={!isImpersonating}>
 			<div class="flex items-center gap-3">
 				<button
 					on:click={() => (mobileMenuOpen = !mobileMenuOpen)}

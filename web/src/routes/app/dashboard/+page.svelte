@@ -247,7 +247,7 @@
 						</div>
 					{:else}
 						<div class="space-y-2 max-h-56 overflow-y-auto">
-							{#each weightData.slice(-10) as point}
+							{#each [...weightData].reverse().slice(0, 10) as point}
 								<div class="flex items-center justify-between text-sm">
 									<span class="text-[var(--text-secondary)]">{new Date(point.date).toLocaleDateString()}</span>
 									<span class="font-medium text-[var(--text-primary)]">{point.weight_kg} kg</span>
