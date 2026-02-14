@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { t } from '$i18n/index';
 	import { authStore } from '$stores/auth';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { User } from 'lucide-svelte';
+	import { formatDate } from '$lib/utils';
+	import { User, Scale, Stethoscope, Mail, Phone } from 'lucide-svelte';
 
 	let firstName = $authStore.user?.first_name || '';
 	let lastName = $authStore.user?.last_name || '';
@@ -12,9 +14,32 @@
 	let dateOfBirth = $authStore.user?.profile?.date_of_birth || '';
 	let heightCm = $authStore.user?.profile?.height_cm?.toString() || '';
 
+	let weightStats: {
+		initial_weight_kg: number | null;
+		initial_weight_date: string | null;
+		current_weight_kg: number | null;
+		current_weight_date: string | null;
+	} = $authStore.user?.weight_stats || { initial_weight_kg: null, initial_weight_date: null, current_weight_kg: null, current_weight_date: null };
+
+	let myProfessional: { first_name: string; last_name: string; email: string; phone?: string; bio?: string } | null =
+		$authStore.user?.my_professional || null;
+
 	let loading = false;
 	let error = '';
 	let success = false;
+
+	async function loadProfile() {
+		try {
+			const res = await api.get('/auth/me');
+		authStore.updateUser(res.user);
+			weightStats = res.user.weight_stats || weightStats;
+			myProfessional = res.user.my_professional || null;
+		} catch (err) {
+			console.error('Profile load error:', err);
+		}
+	}
+
+	onMount(loadProfile);
 
 	async function saveProfile() {
 		loading = true;
@@ -60,6 +85,70 @@
 			</span>
 		</div>
 	</div>
+
+	<!-- Weight stats -->
+	{#if weightStats.initial_weight_kg || weightStats.current_weight_kg}
+		<div class="grid grid-cols-2 gap-3">
+			<div class="card flex items-center gap-3">
+				<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950 shrink-0">
+					<Scale size={20} class="text-brand-500" />
+				</div>
+				<div class="min-w-0">
+					<p class="text-xs text-[var(--text-secondary)]">{$t('profile.initialWeight')}</p>
+					{#if weightStats.initial_weight_kg}
+						<p class="text-lg font-bold text-[var(--text-primary)]">{weightStats.initial_weight_kg} kg</p>
+						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.initial_weight_date || '')}</p>
+					{:else}
+						<p class="text-sm text-[var(--text-secondary)]">—</p>
+					{/if}
+				</div>
+			</div>
+			<div class="card flex items-center gap-3">
+				<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 dark:bg-green-950 shrink-0">
+					<Scale size={20} class="text-green-500" />
+				</div>
+				<div class="min-w-0">
+					<p class="text-xs text-[var(--text-secondary)]">{$t('profile.currentWeight')}</p>
+					{#if weightStats.current_weight_kg}
+						<p class="text-lg font-bold text-[var(--text-primary)]">{weightStats.current_weight_kg} kg</p>
+						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.current_weight_date || '')}</p>
+					{:else}
+						<p class="text-sm text-[var(--text-secondary)]">—</p>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- My professional -->
+	{#if myProfessional}
+		<div class="card space-y-3">
+			<div class="flex items-center gap-3">
+				<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-950 shrink-0">
+					<Stethoscope size={20} class="text-purple-500" />
+				</div>
+				<div>
+					<p class="text-xs text-[var(--text-secondary)]">{$t('profile.myProfessional')}</p>
+					<p class="font-semibold text-[var(--text-primary)]">{myProfessional.first_name} {myProfessional.last_name}</p>
+				</div>
+			</div>
+			<div class="space-y-1.5 pl-[52px]">
+				<div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+					<Mail size={14} class="shrink-0" />
+					<span class="truncate">{myProfessional.email}</span>
+				</div>
+				{#if myProfessional.phone}
+					<div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+						<Phone size={14} class="shrink-0" />
+						<span>{myProfessional.phone}</span>
+					</div>
+				{/if}
+				{#if myProfessional.bio}
+					<p class="text-sm text-[var(--text-secondary)] italic">{myProfessional.bio}</p>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	<form on:submit|preventDefault={saveProfile} class="card space-y-4">
 		{#if error}

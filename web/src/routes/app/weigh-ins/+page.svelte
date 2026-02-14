@@ -3,11 +3,10 @@
 	import { t } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime } from '$lib/utils';
+	import { formatDate } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { Plus, Scale, Trash2, TrendingDown, TrendingUp } from 'lucide-svelte';
-	import DateTimePicker from '$components/DateTimePicker.svelte';
 
 	let weighIns: any[] = [];
 	let loading = true;
@@ -15,8 +14,7 @@
 	let showForm = false;
 
 	let weightKg = '';
-	let recordedAt = new Date().toISOString().slice(0, 16);
-	let notes = '';
+	let recordedAt = new Date().toISOString().slice(0, 10);
 	let formLoading = false;
 	let formError = '';
 
@@ -37,8 +35,7 @@
 		formLoading = true;
 		const payload = {
 			weight_kg: parseFloat(weightKg),
-			recorded_at: new Date(recordedAt).toISOString(),
-			notes: notes || undefined
+			recorded_at: new Date(recordedAt + 'T00:00:00').toISOString()
 		};
 
 		if (!$onlineStore) {
@@ -49,9 +46,9 @@
 		}
 
 		try {
-			const res = await api.post('/weigh-ins', payload);
-			weighIns = [res.data, ...weighIns];
+			await api.post('/weigh-ins', payload);
 			resetForm();
+			await loadWeighIns();
 		} catch (err) {
 			formError = err instanceof ApiError ? err.message : 'Failed';
 		} finally {
@@ -67,8 +64,7 @@
 	function resetForm() {
 		showForm = false;
 		weightKg = '';
-		recordedAt = new Date().toISOString().slice(0, 16);
-		notes = '';
+		recordedAt = new Date().toISOString().slice(0, 10);
 		formLoading = false;
 	}
 
@@ -89,11 +85,11 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-bold text-[var(--text-primary)]">{$t('weighIns.title')}</h1>
-		<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2">
+	<div class="flex items-center justify-between gap-3">
+		<h1 class="text-2xl font-bold text-[var(--text-primary)] min-w-0 truncate">{$t('weighIns.title')}</h1>
+		<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2 shrink-0">
 			<Plus size={18} />
-			{$t('weighIns.addWeighIn')}
+			<span class="hidden sm:inline">{$t('weighIns.addWeighIn')}</span>
 		</button>
 	</div>
 
@@ -107,12 +103,8 @@
 				<input id="weight" type="number" step="0.1" bind:value={weightKg} class="input" required />
 			</div>
 			<div>
-				<label class="label">{$t('weighIns.recordedAt')}</label>
-				<DateTimePicker bind:value={recordedAt} id="recordedAt" required />
-			</div>
-			<div>
-				<label for="notes" class="label">{$t('meals.notes')}</label>
-				<textarea id="notes" bind:value={notes} class="input" rows="2"></textarea>
+				<label for="recordedAt" class="label">{$t('weighIns.recordedAt')}</label>
+				<input id="recordedAt" type="date" bind:value={recordedAt} class="input" required />
 			</div>
 			<div class="flex gap-3">
 				<button type="submit" class="btn-primary" disabled={formLoading}>
@@ -148,7 +140,7 @@
 						</div>
 						<div>
 							<p class="text-xl font-bold text-[var(--text-primary)]">{wi.weight_kg} kg</p>
-							<p class="text-xs text-[var(--text-secondary)]">{formatDateTime(wi.recorded_at)}</p>
+							<p class="text-xs text-[var(--text-secondary)]">{formatDate(wi.recorded_at)}</p>
 						</div>
 					</div>
 					{#if !wi.id?.startsWith('draft-')}

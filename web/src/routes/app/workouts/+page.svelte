@@ -34,14 +34,14 @@
 		formError = '';
 		formLoading = true;
 		try {
-			const res = await api.post('/workouts', {
+			await api.post('/workouts', {
 				started_at: new Date(startedAt).toISOString(),
 				ended_at: endedAt ? new Date(endedAt).toISOString() : undefined,
 				notes: notes || undefined,
 				items: []
 			});
-			workouts = [res.data, ...workouts];
 			resetForm();
+			await loadWorkouts();
 		} catch (err) {
 			formError = err instanceof ApiError ? err.message : 'Failed';
 		} finally {

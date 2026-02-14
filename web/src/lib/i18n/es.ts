@@ -126,7 +126,10 @@ export const es = {
 		bio: 'Bio',
 		phone: 'Teléfono',
 		dateOfBirth: 'Fecha de nacimiento',
-		height: 'Altura (cm)'
+		height: 'Altura (cm)',
+		initialWeight: 'Peso inicial',
+		currentWeight: 'Peso actual',
+		myProfessional: 'Mi profesional'
 	},
 	settings: {
 		title: 'Configuración',

@@ -16,6 +16,19 @@ interface User {
 		height_cm?: number;
 		avatar_storage_key?: string;
 	};
+	weight_stats?: {
+		initial_weight_kg: number | null;
+		initial_weight_date: string | null;
+		current_weight_kg: number | null;
+		current_weight_date: string | null;
+	};
+	my_professional?: {
+		first_name: string;
+		last_name: string;
+		email: string;
+		phone?: string;
+		bio?: string;
+	} | null;
 }
 
 interface AuthState {

@@ -70,12 +70,12 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-bold text-[var(--text-primary)]">{$t('notifications.title')}</h1>
+	<div class="flex items-center justify-between gap-3">
+		<h1 class="text-2xl font-bold text-[var(--text-primary)] min-w-0 truncate">{$t('notifications.title')}</h1>
 		{#if isProfessional}
-			<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2">
+			<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2 shrink-0">
 				<Plus size={18} />
-				{$t('notifications.createNote')}
+				<span class="hidden sm:inline">{$t('notifications.createNote')}</span>
 			</button>
 		{/if}
 	</div>

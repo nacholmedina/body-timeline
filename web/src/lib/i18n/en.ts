@@ -126,7 +126,10 @@ export const en = {
 		bio: 'Bio',
 		phone: 'Phone',
 		dateOfBirth: 'Date of birth',
-		height: 'Height (cm)'
+		height: 'Height (cm)',
+		initialWeight: 'Initial weight',
+		currentWeight: 'Current weight',
+		myProfessional: 'My professional'
 	},
 	settings: {
 		title: 'Settings',

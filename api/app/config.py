@@ -1,9 +1,12 @@
 import os
 from datetime import timedelta
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Explicitly load .env from the api/ directory so it works regardless of cwd
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(_env_path, override=True)
 
 # ── Branding ──────────────────────────────────────────────
 APP_NAME = "Body Timeline"
