@@ -18,6 +18,9 @@ from app.routes.exercise_definitions import bp as exercise_definitions_bp
 from app.routes.exercise_logs import bp as exercise_logs_bp
 from app.routes.exercise_requests_new import bp as exercise_requests_new_bp
 
+# Temporary migration endpoint
+from app.routes.migration import bp as migration_bp
+
 
 def register_blueprints(app):
     prefix = "/api/v1"
@@ -40,3 +43,6 @@ def register_blueprints(app):
     app.register_blueprint(exercise_definitions_bp, url_prefix=f"{prefix}/exercise-definitions")
     app.register_blueprint(exercise_logs_bp, url_prefix=f"{prefix}/exercise-logs")
     app.register_blueprint(exercise_requests_new_bp, url_prefix=f"{prefix}/exercise-requests")
+
+    # Temporary migration endpoint (DELETE AFTER USE!)
+    app.register_blueprint(migration_bp, url_prefix=f"{prefix}/migration")
