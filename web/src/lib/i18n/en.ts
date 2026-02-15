@@ -217,7 +217,8 @@ export const en = {
 		year: 'Year',
 		optional: 'optional',
 		failedToLoad: 'Failed to load',
-		failed: 'Failed'
+		failed: 'Failed',
+		send: 'Send'
 	},
 	professional: {
 		title: 'My Patients',

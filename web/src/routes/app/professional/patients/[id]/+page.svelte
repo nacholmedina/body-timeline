@@ -45,6 +45,10 @@
 	let lightboxPhotos: string[] = [];
 	let lightboxIndex = 0;
 
+	// Section collapse state
+	let mealsCollapsed = false;
+	let workoutsCollapsed = false;
+
 	// Collapsible card state
 	let expandedMealIds = new Set<string>();
 	let expandedWorkoutIds = new Set<string>();
@@ -203,6 +207,8 @@
 			const mealIndex = meals.findIndex(m => m.id === selectedMeal.id);
 			if (mealIndex !== -1) {
 				meals[mealIndex].comments = res.data || [];
+				meals[mealIndex].comment_count = (res.data || []).length;
+				meals = meals;
 			}
 		} catch (err: any) {
 			commentError = err.message || 'Failed to send comment';
@@ -373,13 +379,18 @@
 			<div class="space-y-4">
 				<!-- Recent Meals -->
 				<div class="card">
-					<div class="mb-4 flex items-center justify-between">
+					<button
+						on:click={() => (mealsCollapsed = !mealsCollapsed)}
+						class="mb-4 flex w-full items-center justify-between"
+					>
 						<div class="flex items-center gap-2">
 							<UtensilsCrossed size={18} class="text-brand-600" />
 							<h3 class="font-semibold text-[var(--text-primary)]">{$t('nav.meals')}</h3>
+							<span class="text-xs text-[var(--text-secondary)]">({meals.length})</span>
 						</div>
-					</div>
-					{#if meals.length > 0}
+						<ChevronDown size={18} class="text-[var(--text-secondary)] transition-transform {mealsCollapsed ? '' : 'rotate-180'}" />
+					</button>
+					{#if !mealsCollapsed && meals.length > 0}
 						<div class="space-y-4">
 							{#each meals as meal}
 								<div class="rounded-lg border border-[var(--border-color)] p-4">
@@ -398,10 +409,10 @@
 										</div>
 										<button
 											on:click={() => openCommentModal(meal)}
-											class="flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700"
+											class="flex items-center gap-1 text-sm {meal.comment_count > 0 ? 'text-brand-600 hover:text-brand-700' : 'text-[var(--text-secondary)] hover:text-brand-600'}"
 										>
 											<MessageSquare size={16} />
-											{meal.comments?.length || 0}
+											{meal.comment_count || 0}
 										</button>
 									</div>
 
@@ -446,18 +457,25 @@
 								</div>
 							{/each}
 						</div>
-					{:else}
+					{:else if !mealsCollapsed}
 						<p class="text-sm text-[var(--text-secondary)]">{$t('meals.noMeals')}</p>
 					{/if}
 				</div>
 
 				<!-- Recent Workouts -->
 				<div class="card">
-					<div class="mb-4 flex items-center gap-2">
-						<Dumbbell size={18} class="text-brand-600" />
-						<h3 class="font-semibold text-[var(--text-primary)]">{$t('nav.workouts')}</h3>
-					</div>
-					{#if workouts.length > 0}
+					<button
+						on:click={() => (workoutsCollapsed = !workoutsCollapsed)}
+						class="mb-4 flex w-full items-center justify-between"
+					>
+						<div class="flex items-center gap-2">
+							<Dumbbell size={18} class="text-brand-600" />
+							<h3 class="font-semibold text-[var(--text-primary)]">{$t('nav.workouts')}</h3>
+							<span class="text-xs text-[var(--text-secondary)]">({workouts.length})</span>
+						</div>
+						<ChevronDown size={18} class="text-[var(--text-secondary)] transition-transform {workoutsCollapsed ? '' : 'rotate-180'}" />
+					</button>
+					{#if !workoutsCollapsed && workouts.length > 0}
 						<div class="space-y-3">
 							{#each workouts as workout}
 								<div class="rounded-lg border border-[var(--border-color)] p-3">
@@ -484,7 +502,7 @@
 								</div>
 							{/each}
 						</div>
-					{:else}
+					{:else if !workoutsCollapsed}
 						<p class="text-sm text-[var(--text-secondary)]">{$t('workouts.noWorkouts')}</p>
 					{/if}
 				</div>
@@ -572,7 +590,7 @@
 						{:else}
 							<Send size={16} />
 						{/if}
-						{sendingComment ? 'Sending...' : $t('common.send')}
+						{sendingComment ? $t('common.loading') : $t('common.send')}
 					</button>
 				</div>
 			</div>

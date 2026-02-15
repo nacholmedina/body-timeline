@@ -365,7 +365,7 @@
 					<div class="ml-2 flex gap-1">
 						{#if !meal.id?.startsWith('draft-')}
 							<!-- Comment toggle button -->
-							{@const commentCount = mealComments[meal.id]?.length || 0}
+							{@const commentCount = meal.comment_count || 0}
 							<button
 								on:click={() => toggleComments(meal.id)}
 								class="rounded-lg p-2 transition-colors {commentCount > 0

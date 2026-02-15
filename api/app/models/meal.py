@@ -39,6 +39,7 @@ class Meal(db.Model):
             "description": self.description,
             "eaten_at": self.eaten_at.isoformat(),
             "notes": self.notes,
+            "comment_count": len(self.comments),
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }

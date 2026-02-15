@@ -217,7 +217,8 @@ export const es = {
 		year: 'Año',
 		optional: 'opcional',
 		failedToLoad: 'Error al cargar',
-		failed: 'Error'
+		failed: 'Error',
+		send: 'Enviar'
 	},
 	professional: {
 		title: 'Mis Pacientes',

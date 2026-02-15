@@ -196,8 +196,10 @@ def list_assignments():
     results = []
     for a in items:
         d = a.to_dict()
-        d["professional_name"] = f"{a.professional.first_name} {a.professional.last_name}"
-        d["patient_name"] = f"{a.patient.first_name} {a.patient.last_name}"
+        pro = a.professional
+        pat = a.patient
+        d["professional_name"] = f"{pro.first_name} {pro.last_name}" if pro else "Unknown"
+        d["patient_name"] = f"{pat.first_name} {pat.last_name}" if pat else "Unknown"
         results.append(d)
 
     return jsonify(data=results)

@@ -24,6 +24,7 @@
 
 	let assignments: Assignment[] = [];
 	let loading = true;
+	let error = '';
 
 	// Create modal
 	let showCreate = false;
@@ -36,10 +37,12 @@
 
 	async function loadAssignments() {
 		loading = true;
+		error = '';
 		try {
 			const res = await api.get('/admin/assignments');
-			assignments = res.data;
+			assignments = res.data || [];
 		} catch (err) {
+			error = err instanceof ApiError ? err.message : $t('common.failedToLoad');
 			console.error('Failed to load assignments', err);
 		} finally {
 			loading = false;
@@ -112,6 +115,8 @@
 	<div class="flex justify-center py-12">
 		<div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent"></div>
 	</div>
+{:else if error}
+	<div class="rounded-lg bg-red-50 dark:bg-red-950 p-4 text-sm text-red-600 dark:text-red-400">{error}</div>
 {:else if assignments.length === 0}
 	<div class="card p-8 text-center text-[var(--text-secondary)]">{$t('admin.noAssignments')}</div>
 {:else}
