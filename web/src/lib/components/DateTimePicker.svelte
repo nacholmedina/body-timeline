@@ -34,7 +34,7 @@
 		type="date"
 		value={datePart}
 		on:input={onDateChange}
-		class="input"
+		class="input date-input"
 		{required}
 	/>
 	<input
@@ -42,6 +42,15 @@
 		type="time"
 		value={timePart}
 		on:input={onTimeChange}
-		class="input"
+		class="input date-input"
 	/>
 </div>
+
+<style>
+	.date-input::-webkit-calendar-picker-indicator {
+		filter: invert(0.5);
+	}
+	:global(.dark) .date-input::-webkit-calendar-picker-indicator {
+		filter: invert(0.7);
+	}
+</style>

@@ -10,7 +10,8 @@
 	import { BRANDING } from '$lib/config/branding';
 	import { Menu, X, User, Settings, LogOut, ShieldAlert } from 'lucide-svelte';
 	import { browser } from '$app/environment';
-	import { photoUrl } from '$lib/api/client';
+	import { api, photoUrl } from '$lib/api/client';
+	import { unreadCount } from '$stores/notifications';
 
 	let mobileMenuOpen = false;
 	let avatarMenuOpen = false;
@@ -49,12 +50,20 @@
 		avatarMenuOpen = !avatarMenuOpen;
 	}
 
+	async function fetchUnreadCount() {
+		try {
+			const res = await api.get('/notifications/unread-count');
+			unreadCount.set(res.count || 0);
+		} catch {}
+	}
+
 	onMount(() => {
 		const unsubscribe = authStore.subscribe((state) => {
 			if (!state.isAuthenticated) {
 				goto('/login');
 			}
 		});
+		fetchUnreadCount();
 		return unsubscribe;
 	});
 </script>

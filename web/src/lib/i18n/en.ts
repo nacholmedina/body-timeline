@@ -55,7 +55,20 @@ export const en = {
 		newsRest: 'Rest days matter',
 		newsRestBody: 'Recovery is just as important as your workouts. Give your body time to heal.',
 		newsMealPrep: 'Meal prep tips',
-		newsMealPrepBody: 'Preparing meals in advance helps maintain consistency with nutrition goals.'
+		newsMealPrepBody: 'Preparing meals in advance helps maintain consistency with nutrition goals.',
+		proWelcome: 'Welcome',
+		proDescription: 'Manage your patients, appointments, and activity.',
+		patients: 'Patients',
+		todaysAppointments: "Today's appointments",
+		noAppointmentsToday: 'No appointments today',
+		pendingInvitations: 'Pending invitations',
+		upcomingThisWeek: 'Upcoming this week',
+		recentActivity: 'Recent patient activity',
+		mealsLast7d: 'Meals (7 days)',
+		workoutsLast7d: 'Workouts (7 days)',
+		quickActions: 'Quick actions',
+		viewPatients: 'View patients',
+		viewCalendar: 'View calendar'
 	},
 	meals: {
 		title: 'Meals',
@@ -109,7 +122,15 @@ export const en = {
 		noteTitle: 'Title',
 		noteMessage: 'Message',
 		patientIds: 'Patient IDs (comma-separated)',
-		send: 'Send'
+		send: 'Send',
+		mealCommentTitle: '{name} commented on your meal',
+		mealCommentBody: 'Your professional commented on your meal: {preview}',
+		professionalInvitationTitle: 'Professional Invitation from {name}',
+		professionalInvitationBody: '{name} has invited you to be their patient. Check your invitations to accept or reject.',
+		assignmentRemovedTitle: 'Patient Assignment Removed',
+		assignmentRemovedBody: '{name} has accepted an invitation from another professional and is no longer your patient.',
+		goalCreatedTitle: '{name} set a goal for you',
+		goalCreatedBody: 'Your professional set a new goal: {goal}'
 	},
 	appointments: {
 		title: 'Appointments',
@@ -122,7 +143,16 @@ export const en = {
 		patientId: 'Patient ID',
 		appointmentTitle: 'Title',
 		dateTime: 'Date & Time',
-		duration: 'Duration (min)'
+		duration: 'Duration (min)',
+		cancel: 'Cancel appointment',
+		reschedule: 'Reschedule',
+		delete: 'Delete',
+		confirmCancel: 'Are you sure you want to cancel this appointment?',
+		confirmDelete: 'Are you sure you want to delete this appointment?',
+		cancelled_success: 'Appointment cancelled',
+		deleted_success: 'Appointment deleted',
+		rescheduled_success: 'Appointment rescheduled',
+		selectPatient: 'Select patient'
 	},
 	admin: {
 		title: 'Admin Panel',

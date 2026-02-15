@@ -11,9 +11,79 @@ from app.models.meal import Meal
 from app.models.workout import Workout
 from app.models.appointment import Appointment
 from app.models.notification import Notification, NotificationRecipient
-from app.services.rbac import can_access_patient_data
+from app.models.user import User, ProfessionalPatient
+from app.models.patient_invitation import PatientInvitation
+from app.services.rbac import can_access_patient_data, get_accessible_patient_ids
 
 bp = Blueprint("dashboard", __name__)
+
+
+@bp.route("/professional-summary", methods=["GET"])
+@jwt_required()
+def professional_summary():
+    """Summary for professional / admin dashboard."""
+    if current_user.role not in ("professional", "devadmin"):
+        return jsonify(error="Forbidden"), 403
+
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
+
+    # Patient count
+    if current_user.role == "professional":
+        patient_count = ProfessionalPatient.query.filter_by(
+            professional_id=current_user.id, is_active=True
+        ).count()
+    else:
+        patient_count = User.query.filter_by(role="patient", is_active=True).count()
+
+    # Today's appointments
+    appt_query = Appointment.query.filter(
+        Appointment.scheduled_at >= today_start,
+        Appointment.scheduled_at < today_end,
+        Appointment.status == "scheduled",
+    )
+    if current_user.role == "professional":
+        appt_query = appt_query.filter_by(professional_id=current_user.id)
+    todays_appointments = appt_query.order_by(Appointment.scheduled_at.asc()).all()
+
+    # Upcoming appointments (next 7 days, excluding today)
+    week_end = today_start + timedelta(days=7)
+    upcoming_query = Appointment.query.filter(
+        Appointment.scheduled_at >= today_end,
+        Appointment.scheduled_at < week_end,
+        Appointment.status == "scheduled",
+    )
+    if current_user.role == "professional":
+        upcoming_query = upcoming_query.filter_by(professional_id=current_user.id)
+    upcoming_count = upcoming_query.count()
+
+    # Pending invitations
+    pending_invitations = PatientInvitation.query.filter_by(
+        professional_id=current_user.id, status="pending"
+    ).count() if current_user.role == "professional" else 0
+
+    # Recent patient activity (meals + workouts in last 7 days)
+    patient_ids = get_accessible_patient_ids(current_user)
+    week_ago = now - timedelta(days=7)
+
+    recent_meals_q = Meal.query.filter(Meal.eaten_at >= week_ago)
+    recent_workouts_q = Workout.query.filter(Workout.started_at >= week_ago)
+    if patient_ids is not None:
+        recent_meals_q = recent_meals_q.filter(Meal.patient_id.in_(patient_ids))
+        recent_workouts_q = recent_workouts_q.filter(Workout.patient_id.in_(patient_ids))
+
+    recent_meals = recent_meals_q.count()
+    recent_workouts = recent_workouts_q.count()
+
+    return jsonify(
+        patient_count=patient_count,
+        todays_appointments=[a.to_dict() for a in todays_appointments],
+        upcoming_appointments_count=upcoming_count,
+        pending_invitations=pending_invitations,
+        recent_meals_7d=recent_meals,
+        recent_workouts_7d=recent_workouts,
+    )
 
 
 @bp.route("/summary", methods=["GET"])

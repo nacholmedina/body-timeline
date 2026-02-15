@@ -54,11 +54,11 @@ def accept_invitation(invitation_id):
         # Soft delete old assignment
         old_assignment.is_active = False
 
-        # Notify old professional
+        # Notify old professional (type key for frontend i18n)
         notification = Notification(
             author_id=current_user.id,
-            title="Patient Assignment Removed",
-            body=f"{current_user.first_name} {current_user.last_name} has accepted an invitation from another professional and is no longer your patient.",
+            title="assignment_removed",
+            body="",
         )
         db.session.add(notification)
         db.session.flush()

@@ -3,7 +3,7 @@
 	import { t, locale } from '$i18n/index';
 	import { api, ApiError, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime, formatDate } from '$lib/utils';
+	import { formatDateTime, formatDate, localNow } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, ChevronDown } from 'lucide-svelte';
@@ -17,7 +17,7 @@
 
 	// Form state
 	let description = '';
-	let eatenAt = new Date().toISOString().slice(0, 16);
+	let eatenAt = localNow();
 	let notes = '';
 	let selectedPhotos: File[] = [];
 	let photoPreviews: string[] = [];
@@ -165,7 +165,7 @@
 	function resetForm() {
 		showForm = false;
 		description = '';
-		eatenAt = new Date().toISOString().slice(0, 16);
+		eatenAt = localNow();
 		notes = '';
 		photoPreviews.forEach((url) => URL.revokeObjectURL(url));
 		selectedPhotos = [];

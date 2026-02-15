@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required, current_user
 
 from app.extensions import db
 from app.models.goal import Goal
+from app.models.notification import Notification, NotificationRecipient
 from app.services.rbac import can_access_patient_data, get_accessible_patient_ids
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import parse_date, get_pagination_params
@@ -76,6 +77,23 @@ def create_goal():
         target_date=parse_date(data.get("target_date")),
     )
     db.session.add(goal)
+
+    # Notify patient when a professional creates a goal for them
+    if current_user.role != "patient" and str(current_user.id) != str(patient_id):
+        notification = Notification(
+            author_id=current_user.id,
+            title="goal_created",
+            body=title,
+        )
+        db.session.add(notification)
+        db.session.flush()
+
+        recipient = NotificationRecipient(
+            notification_id=notification.id,
+            patient_id=patient_id,
+        )
+        db.session.add(recipient)
+
     db.session.commit()
     return jsonify(data=goal.to_dict()), 201
 

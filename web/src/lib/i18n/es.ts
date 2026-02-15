@@ -55,7 +55,20 @@ export const es = {
 		newsRest: 'Los días de descanso importan',
 		newsRestBody: 'La recuperación es tan importante como el entrenamiento. Dale tiempo a tu cuerpo para sanar.',
 		newsMealPrep: 'Consejos de meal prep',
-		newsMealPrepBody: 'Preparar las comidas con anticipación ayuda a mantener la consistencia con los objetivos nutricionales.'
+		newsMealPrepBody: 'Preparar las comidas con anticipación ayuda a mantener la consistencia con los objetivos nutricionales.',
+		proWelcome: 'Bienvenido',
+		proDescription: 'Gestioná tus pacientes, turnos y actividad.',
+		patients: 'Pacientes',
+		todaysAppointments: 'Turnos de hoy',
+		noAppointmentsToday: 'Sin turnos hoy',
+		pendingInvitations: 'Invitaciones pendientes',
+		upcomingThisWeek: 'Próximos esta semana',
+		recentActivity: 'Actividad reciente de pacientes',
+		mealsLast7d: 'Comidas (7 días)',
+		workoutsLast7d: 'Entrenamientos (7 días)',
+		quickActions: 'Acciones rápidas',
+		viewPatients: 'Ver pacientes',
+		viewCalendar: 'Ver calendario'
 	},
 	meals: {
 		title: 'Comidas',
@@ -109,7 +122,15 @@ export const es = {
 		noteTitle: 'Título',
 		noteMessage: 'Mensaje',
 		patientIds: 'IDs de pacientes (separados por coma)',
-		send: 'Enviar'
+		send: 'Enviar',
+		mealCommentTitle: '{name} comentó en tu comida',
+		mealCommentBody: 'Tu profesional comentó en tu comida: {preview}',
+		professionalInvitationTitle: 'Invitación profesional de {name}',
+		professionalInvitationBody: '{name} te ha invitado a ser su paciente. Revisá tus invitaciones para aceptar o rechazar.',
+		assignmentRemovedTitle: 'Asignación de paciente eliminada',
+		assignmentRemovedBody: '{name} aceptó una invitación de otro profesional y ya no es tu paciente.',
+		goalCreatedTitle: '{name} te asignó una meta',
+		goalCreatedBody: 'Tu profesional te asignó una nueva meta: {goal}'
 	},
 	appointments: {
 		title: 'Turnos',
@@ -122,7 +143,16 @@ export const es = {
 		patientId: 'ID del paciente',
 		appointmentTitle: 'Título',
 		dateTime: 'Fecha y hora',
-		duration: 'Duración (min)'
+		duration: 'Duración (min)',
+		cancel: 'Cancelar turno',
+		reschedule: 'Reprogramar',
+		delete: 'Eliminar',
+		confirmCancel: '¿Estás seguro de que querés cancelar este turno?',
+		confirmDelete: '¿Estás seguro de que querés eliminar este turno?',
+		cancelled_success: 'Turno cancelado',
+		deleted_success: 'Turno eliminado',
+		rescheduled_success: 'Turno reprogramado',
+		selectPatient: 'Seleccionar paciente'
 	},
 	admin: {
 		title: 'Panel de Admin',

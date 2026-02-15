@@ -3,7 +3,7 @@
 	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDate } from '$lib/utils';
+	import { formatDate, localToday } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { Plus, Scale, Trash2, TrendingDown, TrendingUp } from 'lucide-svelte';
@@ -14,7 +14,7 @@
 	let showForm = false;
 
 	let weightKg = '';
-	let recordedAt = new Date().toISOString().slice(0, 10);
+	let recordedAt = localToday();
 	let formLoading = false;
 	let formError = '';
 
@@ -64,7 +64,7 @@
 	function resetForm() {
 		showForm = false;
 		weightKg = '';
-		recordedAt = new Date().toISOString().slice(0, 10);
+		recordedAt = localToday();
 		formLoading = false;
 	}
 

@@ -141,11 +141,11 @@ def send_invitation():
     if pending:
         return api_error("Invitation already sent to this patient", 400)
 
-    # Create notification
+    # Create notification (type key for frontend i18n)
     notification = Notification(
         author_id=current_user.id,
-        title=f"Professional Invitation from {current_user.first_name} {current_user.last_name}",
-        body=f"{current_user.first_name} {current_user.last_name} has invited you to be their patient. Check your invitations to accept or reject.",
+        title="professional_invitation",
+        body="",
     )
     db.session.add(notification)
     db.session.flush()

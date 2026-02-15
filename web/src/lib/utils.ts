@@ -5,6 +5,18 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+/** Returns current local datetime as "YYYY-MM-DDTHH:mm" for datetime inputs. */
+export function localNow(): string {
+	const d = new Date();
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Returns current local date as "YYYY-MM-DD" for date inputs. */
+export function localToday(): string {
+	return localNow().slice(0, 10);
+}
+
 export function formatDate(date: string | Date, locale = 'en'): string {
 	const d = typeof date === 'string' ? new Date(date) : date;
 	return d.toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-US', {

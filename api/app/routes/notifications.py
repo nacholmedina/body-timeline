@@ -116,6 +116,19 @@ def mark_read(notification_id):
     return jsonify(message="Marked as read")
 
 
+@bp.route("/mark-all-read", methods=["POST"])
+@jwt_required()
+def mark_all_read():
+    if current_user.role != "patient":
+        return api_error("Only patients can mark notifications as read", 403)
+
+    NotificationRecipient.query.filter_by(
+        patient_id=current_user.id, is_read=False
+    ).update({"is_read": True, "read_at": datetime.now(timezone.utc)})
+    db.session.commit()
+    return jsonify(message="All marked as read")
+
+
 @bp.route("/unread-count", methods=["GET"])
 @jwt_required()
 def unread_count():

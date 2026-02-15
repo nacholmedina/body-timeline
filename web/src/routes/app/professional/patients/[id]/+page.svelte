@@ -8,7 +8,8 @@
 	import { formatDateTime, formatDate } from '$lib/utils';
 	import {
 		ArrowLeft, TrendingUp, UtensilsCrossed, Dumbbell, Calendar, Scale,
-		MessageSquare, X, Send, ChevronLeft, ChevronRight, AlertCircle, ChevronDown
+		MessageSquare, X, Send, ChevronLeft, ChevronRight, AlertCircle, ChevronDown,
+		Target, Plus, Check, Circle, Trash2
 	} from 'lucide-svelte';
 	import {
 		Chart as ChartJS,
@@ -31,8 +32,19 @@
 	let workouts: any[] = [];
 	let weighIns: any[] = [];
 	let loading = true;
-	let tab: 'overview' | 'timeline' = 'overview';
+	let tab: 'overview' | 'timeline' | 'goals' = 'overview';
 	let timelineFilter: 'all' | 'day' | 'week' | 'month' | 'year' = 'all';
+
+	// Goals state
+	let goals: any[] = [];
+	let goalsLoading = false;
+	let showGoalForm = false;
+	let goalTitle = '';
+	let goalDescription = '';
+	let goalPeriod = 'weekly';
+	let goalTargetDate = '';
+	let goalFormLoading = false;
+	let goalFormError = '';
 
 	// Comment modal state
 	let showCommentModal = false;
@@ -149,6 +161,11 @@
 		loadData();
 	}
 
+	// Load goals when tab switches to goals
+	$: if (mounted && tab === 'goals') {
+		loadGoals();
+	}
+
 	async function loadData() {
 		try {
 			loading = true;
@@ -171,6 +188,58 @@
 			console.error('Failed to load patient data:', err);
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function loadGoals() {
+		goalsLoading = true;
+		try {
+			const res = await api.get('/goals', { patient_id: patientId });
+			goals = res.data || [];
+		} catch (err) {
+			console.error('Failed to load goals:', err);
+		} finally {
+			goalsLoading = false;
+		}
+	}
+
+	async function createGoalForPatient() {
+		goalFormError = '';
+		goalFormLoading = true;
+		try {
+			const res = await api.post('/goals', {
+				patient_id: patientId,
+				title: goalTitle,
+				description: goalDescription || undefined,
+				period: goalPeriod,
+				target_date: goalTargetDate || undefined
+			});
+			goals = [res.data, ...goals];
+			showGoalForm = false;
+			goalTitle = '';
+			goalDescription = '';
+			goalPeriod = 'weekly';
+			goalTargetDate = '';
+		} catch (err: any) {
+			goalFormError = err.message || 'Failed';
+		} finally {
+			goalFormLoading = false;
+		}
+	}
+
+	async function toggleGoal(id: string) {
+		try {
+			const res = await api.post(`/goals/${id}/toggle`);
+			goals = goals.map((g) => (g.id === id ? res.data : g));
+		} catch {}
+	}
+
+	async function deleteGoal(id: string) {
+		try {
+			await api.delete(`/goals/${id}`);
+			goals = goals.filter((g) => g.id !== id);
+		} catch (err) {
+			console.error('Failed to delete goal:', err);
 		}
 	}
 
@@ -311,6 +380,14 @@
 					: 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}"
 			>
 				{$t('professional.timeline')}
+			</button>
+			<button
+				on:click={() => (tab = 'goals')}
+				class="px-4 py-2 text-sm font-medium transition-colors border-b-2 {tab === 'goals'
+					? 'border-brand-600 text-brand-600'
+					: 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}"
+			>
+				{$t('goals.title')}
 			</button>
 		</div>
 
@@ -554,6 +631,104 @@
 					{/if}
 				</div>
 			</div>
+		{:else if tab === 'goals'}
+			<!-- Goals Tab -->
+			<div class="space-y-4">
+				<div class="flex items-center justify-between">
+					<h3 class="text-lg font-semibold text-[var(--text-primary)]">{$t('goals.title')}</h3>
+					<button on:click={() => (showGoalForm = !showGoalForm)} class="btn-primary flex items-center gap-2">
+						<Plus size={18} />
+						<span class="hidden sm:inline">{$t('goals.addGoal')}</span>
+					</button>
+				</div>
+
+				{#if showGoalForm}
+					<form on:submit|preventDefault={createGoalForPatient} class="card space-y-4">
+						{#if goalFormError}
+							<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">{goalFormError}</div>
+						{/if}
+						<div>
+							<label for="goalTitle" class="label">{$t('goals.goalTitle')}</label>
+							<input id="goalTitle" type="text" bind:value={goalTitle} class="input" required />
+						</div>
+						<div>
+							<label for="goalDesc" class="label">{$t('meals.description')}</label>
+							<textarea id="goalDesc" bind:value={goalDescription} class="input" rows="2"></textarea>
+						</div>
+						<div class="grid grid-cols-2 gap-3">
+							<div>
+								<label for="goalPeriod" class="label">{$t('goals.period')}</label>
+								<select id="goalPeriod" bind:value={goalPeriod} class="input">
+									<option value="weekly">{$t('goals.weekly')}</option>
+									<option value="monthly">{$t('goals.monthly')}</option>
+									<option value="yearly">{$t('goals.yearly')}</option>
+								</select>
+							</div>
+							<div>
+								<label for="goalTargetDate" class="label">{$t('goals.targetDate')}</label>
+								<input id="goalTargetDate" type="date" bind:value={goalTargetDate} class="input date-input" />
+							</div>
+						</div>
+						<div class="flex gap-3">
+							<button type="submit" class="btn-primary" disabled={goalFormLoading}>
+								{goalFormLoading ? $t('common.loading') : $t('common.save')}
+							</button>
+							<button type="button" on:click={() => (showGoalForm = false)} class="btn-secondary">{$t('common.cancel')}</button>
+						</div>
+					</form>
+				{/if}
+
+				{#if goalsLoading}
+					<div class="flex items-center justify-center py-12">
+						<div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600"></div>
+					</div>
+				{:else if goals.length === 0}
+					<div class="py-12 text-center">
+						<Target size={48} class="mx-auto mb-4 text-[var(--text-secondary)] opacity-50" />
+						<p class="text-[var(--text-secondary)]">{$t('goals.noGoals')}</p>
+					</div>
+				{:else}
+					<div class="space-y-3">
+						{#each goals as goal (goal.id)}
+							<div class="card flex items-start gap-3">
+								<button
+									on:click={() => toggleGoal(goal.id)}
+									class="mt-0.5 flex-shrink-0 rounded-lg p-1 transition-colors
+									       {goal.is_completed ? 'text-accent-500' : 'text-[var(--text-secondary)] hover:text-accent-500'}"
+								>
+									{#if goal.is_completed}
+										<Check size={22} />
+									{:else}
+										<Circle size={22} />
+									{/if}
+								</button>
+								<div class="flex-1 min-w-0">
+									<h3 class="font-medium {goal.is_completed ? 'line-through text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}">
+										{goal.title}
+									</h3>
+									{#if goal.description}
+										<p class="mt-1 text-sm text-[var(--text-secondary)]">{goal.description}</p>
+									{/if}
+									<div class="mt-2 flex gap-2">
+										<span class="inline-flex items-center rounded-full bg-brand-50 dark:bg-brand-950 px-2 py-0.5 text-xs font-medium text-brand-700 dark:text-brand-300">
+											{$t(`goals.${goal.period}`)}
+										</span>
+										{#if goal.target_date}
+											<span class="text-xs text-[var(--text-secondary)]">{formatDate(goal.target_date, $locale)}</span>
+										{/if}
+									</div>
+								</div>
+								<button
+									on:click={() => deleteGoal(goal.id)}
+									class="flex-shrink-0 rounded-lg p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
+								>
+									<Trash2 size={16} />
+								</button>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
 		{/if}
 	{:else}
 		<div class="card p-12 text-center">
@@ -682,5 +857,11 @@
 <style>
 	.input {
 		@apply rounded-lg border border-[var(--border-color)] bg-white dark:bg-gray-900 px-3 py-2 text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+	}
+	.date-input::-webkit-calendar-picker-indicator {
+		filter: invert(0.5);
+	}
+	:global(.dark) .date-input::-webkit-calendar-picker-indicator {
+		filter: invert(0.7);
 	}
 </style>

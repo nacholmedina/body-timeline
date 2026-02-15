@@ -5,10 +5,11 @@
 	import { authStore } from '$stores/auth';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime } from '$lib/utils';
-	import { Calendar, Clock, User, Plus } from 'lucide-svelte';
+	import { Calendar, Clock, User, Plus, XCircle, RefreshCw, Trash2 } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 
 	let appointments: any[] = [];
+	let patients: any[] = [];
 	let loading = true;
 	let error = '';
 	let filter: 'upcoming' | 'all' = 'upcoming';
@@ -24,6 +25,21 @@
 	let formLoading = false;
 	let formError = '';
 
+	// Reschedule modal
+	let showRescheduleModal = false;
+	let rescheduleAppt: any = null;
+	let rescheduleDateTime = '';
+	let rescheduling = false;
+	let rescheduleError = '';
+
+	// Auto-fill title when patient changes
+	$: if (patientId && patients.length > 0) {
+		const patient = patients.find((p: any) => p.id === patientId);
+		if (patient && !apptTitle) {
+			apptTitle = `${patient.first_name} ${patient.last_name}`;
+		}
+	}
+
 	async function loadAppointments() {
 		loading = true;
 		try {
@@ -35,6 +51,16 @@
 			error = err instanceof ApiError ? err.message : 'Failed to load';
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function loadPatients() {
+		if (!canCreate) return;
+		try {
+			const res = await api.get('/professional/patients');
+			patients = res.data || [];
+		} catch (err) {
+			console.error('Failed to load patients:', err);
 		}
 	}
 
@@ -64,6 +90,54 @@
 		}
 	}
 
+	async function cancelAppointment(appt: any) {
+		if (!confirm($t('appointments.confirmCancel'))) return;
+		try {
+			await api.patch(`/appointments/${appt.id}`, { status: 'cancelled' });
+			appointments = appointments.map(a => a.id === appt.id ? { ...a, status: 'cancelled' } : a);
+		} catch (err) {
+			console.error('Failed to cancel:', err);
+		}
+	}
+
+	async function deleteAppointment(appt: any) {
+		if (!confirm($t('appointments.confirmDelete'))) return;
+		try {
+			await api.delete(`/appointments/${appt.id}`);
+			appointments = appointments.filter(a => a.id !== appt.id);
+		} catch (err) {
+			console.error('Failed to delete:', err);
+		}
+	}
+
+	function openReschedule(appt: any) {
+		rescheduleAppt = appt;
+		const d = new Date(appt.scheduled_at);
+		const pad = (n: number) => String(n).padStart(2, '0');
+		rescheduleDateTime = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		rescheduleError = '';
+		showRescheduleModal = true;
+	}
+
+	async function rescheduleAppointment() {
+		if (!rescheduleDateTime) return;
+		rescheduling = true;
+		rescheduleError = '';
+		try {
+			const res = await api.patch(`/appointments/${rescheduleAppt.id}`, {
+				scheduled_at: new Date(rescheduleDateTime).toISOString()
+			});
+			appointments = appointments.map(a => a.id === rescheduleAppt.id ? res.data : a)
+				.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+			showRescheduleModal = false;
+			rescheduleAppt = null;
+		} catch (err) {
+			rescheduleError = err instanceof ApiError ? err.message : 'Failed';
+		} finally {
+			rescheduling = false;
+		}
+	}
+
 	function statusColor(status: string): string {
 		switch (status) {
 			case 'scheduled': return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
@@ -73,7 +147,14 @@
 		}
 	}
 
-	onMount(loadAppointments);
+	function handlePatientChange() {
+		apptTitle = '';
+	}
+
+	onMount(() => {
+		loadAppointments();
+		loadPatients();
+	});
 </script>
 
 <svelte:head>
@@ -112,8 +193,13 @@
 				<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">{formError}</div>
 			{/if}
 			<div>
-				<label for="patientId" class="label">{$t('appointments.patientId')}</label>
-				<input id="patientId" type="text" bind:value={patientId} class="input" required placeholder="Patient UUID" />
+				<label for="patientId" class="label">{$t('appointments.selectPatient')}</label>
+				<select id="patientId" bind:value={patientId} on:change={handlePatientChange} class="input" required>
+					<option value="">{$t('professional.selectPatient')}</option>
+					{#each patients as p}
+						<option value={p.id}>{p.first_name} {p.last_name}</option>
+					{/each}
+				</select>
 			</div>
 			<div>
 				<label for="apptTitle" class="label">{$t('appointments.appointmentTitle')}</label>
@@ -150,7 +236,7 @@
 			{#each appointments as appt (appt.id)}
 				<div class="card">
 					<div class="flex items-start justify-between">
-						<div>
+						<div class="flex-1 min-w-0">
 							<h3 class="font-medium text-[var(--text-primary)]">{appt.title}</h3>
 							<div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
 								<span class="flex items-center gap-1">
@@ -172,12 +258,74 @@
 								<p class="mt-2 text-sm text-[var(--text-secondary)]">{appt.notes}</p>
 							{/if}
 						</div>
-						<span class="rounded-full px-2.5 py-0.5 text-xs font-medium {statusColor(appt.status)}">
-							{$t(`appointments.${appt.status}`)}
-						</span>
+						<div class="flex items-center gap-2 shrink-0 ml-3">
+							<span class="rounded-full px-2.5 py-0.5 text-xs font-medium {statusColor(appt.status)}">
+								{$t(`appointments.${appt.status}`)}
+							</span>
+							{#if canCreate && appt.status === 'scheduled'}
+								<button
+									on:click={() => openReschedule(appt)}
+									class="rounded-lg p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+									title={$t('appointments.reschedule')}
+								>
+									<RefreshCw size={16} />
+								</button>
+								<button
+									on:click={() => cancelAppointment(appt)}
+									class="rounded-lg p-1.5 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950 transition-colors"
+									title={$t('appointments.cancel')}
+								>
+									<XCircle size={16} />
+								</button>
+							{/if}
+							{#if canCreate}
+								<button
+									on:click={() => deleteAppointment(appt)}
+									class="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+									title={$t('appointments.delete')}
+								>
+									<Trash2 size={16} />
+								</button>
+							{/if}
+						</div>
 					</div>
 				</div>
 			{/each}
 		</div>
 	{/if}
 </div>
+
+<!-- Reschedule Modal -->
+{#if showRescheduleModal && rescheduleAppt}
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+		<div class="w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
+			<h2 class="text-lg font-bold text-[var(--text-primary)] mb-4">{$t('appointments.reschedule')}</h2>
+			<p class="text-sm text-[var(--text-secondary)] mb-4">{rescheduleAppt.title}</p>
+
+			{#if rescheduleError}
+				<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400 mb-4">{rescheduleError}</div>
+			{/if}
+
+			<div class="mb-4">
+				<label class="label">{$t('appointments.dateTime')}</label>
+				<DateTimePicker bind:value={rescheduleDateTime} id="reschedule" required />
+			</div>
+
+			<div class="flex gap-3">
+				<button
+					on:click={rescheduleAppointment}
+					class="btn-primary flex-1"
+					disabled={rescheduling}
+				>
+					{rescheduling ? $t('common.loading') : $t('common.save')}
+				</button>
+				<button
+					on:click={() => { showRescheduleModal = false; rescheduleAppt = null; }}
+					class="btn-secondary flex-1"
+				>
+					{$t('common.cancel')}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

@@ -54,11 +54,12 @@ def create_comment(meal_id):
     db.session.add(comment)
     db.session.flush()
 
-    # Create notification for patient
+    # Create notification for patient (type key for frontend i18n)
+    preview = comment_text[:100] + ("..." if len(comment_text) > 100 else "")
     notification = Notification(
         author_id=current_user.id,
-        title=f"{current_user.first_name} {current_user.last_name} commented on your meal",
-        body=f"Your professional has commented on your meal: {comment_text[:100]}{'...' if len(comment_text) > 100 else ''}",
+        title="meal_comment",
+        body=preview,
     )
     db.session.add(notification)
     db.session.flush()

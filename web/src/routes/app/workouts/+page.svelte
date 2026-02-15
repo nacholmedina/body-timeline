@@ -3,7 +3,7 @@
 	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime } from '$lib/utils';
+	import { formatDateTime, localNow } from '$lib/utils';
 	import { Plus, Dumbbell, Trash2, Clock } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 
@@ -12,7 +12,7 @@
 	let error = '';
 	let showForm = false;
 
-	let startedAt = new Date().toISOString().slice(0, 16);
+	let startedAt = localNow();
 	let endedAt = '';
 	let notes = '';
 	let formLoading = false;
@@ -56,7 +56,7 @@
 
 	function resetForm() {
 		showForm = false;
-		startedAt = new Date().toISOString().slice(0, 16);
+		startedAt = localNow();
 		endedAt = '';
 		notes = '';
 		formLoading = false;

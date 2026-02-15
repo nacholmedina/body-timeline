@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { t } from '$i18n/index';
 	import { authStore } from '$stores/auth';
+	import { unreadCount } from '$stores/notifications';
 	import { BRANDING } from '$lib/config/branding';
 	import {
 		LayoutDashboard, UtensilsCrossed, Scale, Target,
@@ -10,7 +11,9 @@
 
 	export let mobile = false;
 
-	const navItems = [
+	const patientOnlyItems = ['/app/meals', '/app/weigh-ins', '/app/goals', '/app/workouts'];
+
+	const allNavItems = [
 		{ href: '/app/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
 		{ href: '/app/meals', icon: UtensilsCrossed, label: 'nav.meals' },
 		{ href: '/app/weigh-ins', icon: Scale, label: 'nav.weighIns' },
@@ -19,6 +22,10 @@
 		{ href: '/app/notifications', icon: Bell, label: 'nav.notifications' },
 		{ href: '/app/appointments', icon: Calendar, label: 'nav.appointments' },
 	];
+
+	$: navItems = $authStore.user?.role === 'patient'
+		? allNavItems
+		: allNavItems.filter(item => !patientOnlyItems.includes(item.href));
 
 	$: isAdmin = $authStore.user?.role === 'devadmin';
 	$: isProfessional = $authStore.user?.role === 'professional';
@@ -59,7 +66,14 @@
 					? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
 					: 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'}"
 			>
-				<svelte:component this={item.icon} size={20} />
+				<div class="relative">
+					<svelte:component this={item.icon} size={20} />
+					{#if item.href === '/app/notifications' && $unreadCount > 0}
+						<span class="absolute -top-1.5 -right-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[0.6rem] font-bold text-white">
+							{$unreadCount > 99 ? '99+' : $unreadCount}
+						</span>
+					{/if}
+				</div>
 				{$t(item.label)}
 			</a>
 		{/each}

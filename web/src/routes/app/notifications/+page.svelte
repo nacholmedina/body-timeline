@@ -7,8 +7,45 @@
 	import { timeAgo } from '$lib/utils';
 	import { locale } from '$i18n/index';
 	import { Bell, CheckCircle, Send, Plus, Mail, Check, X } from 'lucide-svelte';
+	import { unreadCount } from '$lib/stores/notifications';
+
+	function detectType(title: string): string | null {
+		if (title === 'meal_comment') return 'meal_comment';
+		if (title === 'professional_invitation') return 'professional_invitation';
+		if (title === 'assignment_removed') return 'assignment_removed';
+		if (title === 'goal_created') return 'goal_created';
+		if (title.includes('commented on your meal')) return 'meal_comment';
+		if (title.includes('Professional Invitation from')) return 'professional_invitation';
+		if (title === 'Patient Assignment Removed') return 'assignment_removed';
+		return null;
+	}
 
 	let notifications: any[] = [];
+
+	// Reactive translated notifications — $t in a reactive block ensures Svelte tracks locale changes
+	$: displayNotifications = notifications.map(notif => {
+		const type = detectType(notif.title);
+		const name = notif.author_name || '';
+		let displayTitle = notif.title;
+		let displayBody = notif.body;
+
+		if (type === 'meal_comment') {
+			displayTitle = $t('notifications.mealCommentTitle').replace('{name}', name);
+			const preview = notif.body?.replace(/^Your professional has commented on your meal:\s*/, '') || '';
+			displayBody = $t('notifications.mealCommentBody').replace('{name}', name).replace('{preview}', preview);
+		} else if (type === 'professional_invitation') {
+			displayTitle = $t('notifications.professionalInvitationTitle').replace('{name}', name);
+			displayBody = $t('notifications.professionalInvitationBody').replace('{name}', name);
+		} else if (type === 'assignment_removed') {
+			displayTitle = $t('notifications.assignmentRemovedTitle');
+			displayBody = $t('notifications.assignmentRemovedBody').replace('{name}', name);
+		} else if (type === 'goal_created') {
+			displayTitle = $t('notifications.goalCreatedTitle').replace('{name}', name);
+			displayBody = $t('notifications.goalCreatedBody').replace('{name}', name).replace('{goal}', notif.body || '');
+		}
+
+		return { ...notif, displayTitle, displayBody };
+	});
 	let invitations: any[] = [];
 	let loading = true;
 	let error = '';
@@ -88,7 +125,17 @@
 		}
 	}
 
-	onMount(loadNotifications);
+	onMount(async () => {
+		await loadNotifications();
+		// Mark all as read on the backend and reset badge
+		if (isPatient) {
+			try {
+				await api.post('/notifications/mark-all-read');
+				notifications = notifications.map(n => ({ ...n, is_read: true }));
+			} catch {}
+		}
+		unreadCount.set(0);
+	});
 </script>
 
 <svelte:head>
@@ -192,17 +239,17 @@
 		</div>
 	{:else}
 		<div class="space-y-3">
-			{#each notifications as notif (notif.id)}
+			{#each displayNotifications as notif (notif.id)}
 				<div class="card {!notif.is_read && isPatient ? 'border-brand-300 dark:border-brand-700 bg-brand-50/50 dark:bg-brand-950/50' : ''}">
 					<div class="flex items-start justify-between">
 						<div class="flex-1">
 							<div class="flex items-center gap-2">
-								<h3 class="font-medium text-[var(--text-primary)]">{notif.title}</h3>
+								<h3 class="font-medium text-[var(--text-primary)]">{notif.displayTitle}</h3>
 								{#if notif.is_read}
 									<CheckCircle size={14} class="text-accent-500" />
 								{/if}
 							</div>
-							<p class="mt-1 text-sm text-[var(--text-secondary)]">{notif.body}</p>
+							<p class="mt-1 text-sm text-[var(--text-secondary)]">{notif.displayBody}</p>
 							<div class="mt-2 flex items-center gap-3 text-xs text-[var(--text-secondary)]">
 								{#if notif.author_name}
 									<span class="font-medium text-brand-600 dark:text-brand-400">{notif.author_name}</span>

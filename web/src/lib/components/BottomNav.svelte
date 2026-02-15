@@ -1,15 +1,27 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { t } from '$i18n/index';
-	import { LayoutDashboard, UtensilsCrossed, Target, Dumbbell, Bell } from 'lucide-svelte';
+	import { authStore } from '$stores/auth';
+	import { unreadCount } from '$stores/notifications';
+	import { LayoutDashboard, UtensilsCrossed, Target, Dumbbell, Bell, Calendar, Users } from 'lucide-svelte';
 
-	const items = [
+	const patientItems = [
 		{ href: '/app/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
 		{ href: '/app/meals', icon: UtensilsCrossed, label: 'nav.meals' },
 		{ href: '/app/goals', icon: Target, label: 'nav.goals' },
 		{ href: '/app/workouts', icon: Dumbbell, label: 'nav.workouts' },
 		{ href: '/app/notifications', icon: Bell, label: 'nav.notifications' },
 	];
+
+	const proItems = [
+		{ href: '/app/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
+		{ href: '/app/appointments', icon: Calendar, label: 'nav.appointments' },
+		{ href: '/app/professional', icon: Users, label: 'nav.myPatients' },
+		{ href: '/app/notifications', icon: Bell, label: 'nav.notifications' },
+	];
+
+	$: isPatient = $authStore.user?.role === 'patient';
+	$: items = isPatient ? patientItems : proItems;
 
 	$: pathname = $page.url.pathname;
 
@@ -28,7 +40,14 @@
 					? 'text-brand-600 dark:text-brand-400'
 					: 'text-[var(--text-secondary)]'}"
 			>
-				<svelte:component this={item.icon} size={20} />
+				<div class="relative">
+					<svelte:component this={item.icon} size={20} />
+					{#if item.href === '/app/notifications' && $unreadCount > 0}
+						<span class="absolute -top-1 -right-1.5 flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-full bg-red-500 px-0.5 text-[0.5rem] font-bold text-white">
+							{$unreadCount > 99 ? '99+' : $unreadCount}
+						</span>
+					{/if}
+				</div>
 				<span>{$t(item.label)}</span>
 			</a>
 		{/each}
