@@ -68,6 +68,12 @@ def seed():
         print(f"  Professional:  professional@wellvio.app / Professional123!")
         print(f"  Patient:       patient@wellvio.app / Patient123!")
 
+        # Seed exercise catalog
+        print("\nSeeding exercise catalog...")
+        from app.services.exercise_seed import seed_exercise_catalog
+        count = seed_exercise_catalog()
+        print(f"  Created {count} system exercises")
+
 
 if __name__ == "__main__":
     seed()

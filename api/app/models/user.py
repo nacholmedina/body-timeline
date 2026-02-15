@@ -37,7 +37,8 @@ class User(db.Model):
     meals = db.relationship("Meal", back_populates="patient", cascade="all, delete-orphan")
     weigh_ins = db.relationship("WeighIn", back_populates="patient", cascade="all, delete-orphan")
     goals = db.relationship("Goal", back_populates="patient", cascade="all, delete-orphan")
-    workouts = db.relationship("Workout", back_populates="patient", cascade="all, delete-orphan")
+    # Old workout tracking - migrated to exercise logs
+    # workouts = db.relationship("Workout", back_populates="patient", cascade="all, delete-orphan")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)

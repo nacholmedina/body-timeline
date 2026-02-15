@@ -30,6 +30,11 @@ const ACTION_MAP: Record<string, Record<string, { method: string; path: (p: any)
 		create: { method: 'post', path: () => '/goals' },
 		update: { method: 'patch', path: (p) => `/goals/${p.id}` },
 		delete: { method: 'delete', path: (p) => `/goals/${p.id}` }
+	},
+	exercise: {
+		create: { method: 'post', path: () => '/exercise-logs' },
+		update: { method: 'patch', path: (p) => `/exercise-logs/${p.id}` },
+		delete: { method: 'delete', path: (p) => `/exercise-logs/${p.id}` }
 	}
 };
 

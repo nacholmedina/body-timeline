@@ -5,7 +5,7 @@ interface WellvioDB extends DBSchema {
 		key: number;
 		value: {
 			id?: number;
-			type: 'meal' | 'weighIn' | 'workout' | 'goal';
+			type: 'meal' | 'weighIn' | 'workout' | 'goal' | 'exercise';
 			action: 'create' | 'update' | 'delete';
 			payload: any;
 			createdAt: string;

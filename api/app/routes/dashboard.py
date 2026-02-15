@@ -8,7 +8,8 @@ from app.extensions import db
 from app.models.weigh_in import WeighIn
 from app.models.goal import Goal
 from app.models.meal import Meal
-from app.models.workout import Workout
+# Old workout model - commented out after migration to new exercise tracking
+# from app.models.workout import Workout
 from app.models.appointment import Appointment
 from app.models.notification import Notification, NotificationRecipient
 from app.models.user import User, ProfessionalPatient
@@ -68,13 +69,14 @@ def professional_summary():
     week_ago = now - timedelta(days=7)
 
     recent_meals_q = Meal.query.filter(Meal.eaten_at >= week_ago)
-    recent_workouts_q = Workout.query.filter(Workout.started_at >= week_ago)
+    # Old workout tracking - migrated to exercise logs
+    # recent_workouts_q = Workout.query.filter(Workout.started_at >= week_ago)
     if patient_ids is not None:
         recent_meals_q = recent_meals_q.filter(Meal.patient_id.in_(patient_ids))
-        recent_workouts_q = recent_workouts_q.filter(Workout.patient_id.in_(patient_ids))
+        # recent_workouts_q = recent_workouts_q.filter(Workout.patient_id.in_(patient_ids))
 
     recent_meals = recent_meals_q.count()
-    recent_workouts = recent_workouts_q.count()
+    recent_workouts = 0  # recent_workouts_q.count()
 
     return jsonify(
         patient_count=patient_count,
@@ -105,9 +107,10 @@ def summary():
         Meal.patient_id == patient_id, Meal.eaten_at >= month_start
     ).count()
 
-    workouts_count = Workout.query.filter(
-        Workout.patient_id == patient_id, Workout.started_at >= month_start
-    ).count()
+    # Old workout tracking - migrated to exercise logs
+    workouts_count = 0  # Workout.query.filter(
+    #     Workout.patient_id == patient_id, Workout.started_at >= month_start
+    # ).count()
 
     goals_total = Goal.query.filter_by(patient_id=patient_id).count()
     goals_done = Goal.query.filter_by(patient_id=patient_id, is_completed=True).count()
@@ -182,13 +185,10 @@ def activity_series():
     weeks = int(request.args.get("weeks", 12))
     since = datetime.now(timezone.utc) - timedelta(weeks=weeks)
 
-    workouts = (
-        Workout.query.filter(
-            Workout.patient_id == patient_id, Workout.started_at >= since
-        )
-        .order_by(Workout.started_at.asc())
-        .all()
-    )
+    # Old workout tracking - migrated to exercise logs
+    workouts = []  # Workout.query.filter(
+    #     Workout.patient_id == patient_id, Workout.started_at >= since
+    # ).order_by(Workout.started_at.asc()).all()
 
     # Group by ISO week
     weekly = {}

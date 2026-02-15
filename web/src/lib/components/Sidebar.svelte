@@ -11,14 +11,14 @@
 
 	export let mobile = false;
 
-	const patientOnlyItems = ['/app/meals', '/app/weigh-ins', '/app/goals', '/app/workouts'];
+	const patientOnlyItems = ['/app/meals', '/app/weigh-ins', '/app/goals', '/app/exercises'];
 
 	const allNavItems = [
 		{ href: '/app/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
 		{ href: '/app/meals', icon: UtensilsCrossed, label: 'nav.meals' },
 		{ href: '/app/weigh-ins', icon: Scale, label: 'nav.weighIns' },
 		{ href: '/app/goals', icon: Target, label: 'nav.goals' },
-		{ href: '/app/workouts', icon: Dumbbell, label: 'nav.workouts' },
+		{ href: '/app/exercises', icon: Dumbbell, label: 'nav.exercises' },
 		{ href: '/app/notifications', icon: Bell, label: 'nav.notifications' },
 		{ href: '/app/appointments', icon: Calendar, label: 'nav.appointments' },
 	];
