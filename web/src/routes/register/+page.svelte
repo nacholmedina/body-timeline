@@ -48,9 +48,7 @@
 
 	<div class="w-full max-w-sm">
 		<div class="mb-8 text-center">
-			<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 text-white text-2xl font-bold">
-				Wv
-			</div>
+			<img src="/brand-icon-64.png" alt="Wellvio" class="mx-auto mb-4 h-16 w-16 rounded-2xl" />
 			<h1 class="text-2xl font-bold text-[var(--text-primary)]">{$t('auth.registerTitle')}</h1>
 			<p class="mt-1 text-sm text-[var(--text-secondary)]">{$t('auth.registerSubtitle')}</p>
 		</div>

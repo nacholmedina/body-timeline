@@ -50,9 +50,7 @@
 <aside class="{mobile ? 'flex flex-col h-full' : 'hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0'} border-r border-[var(--border-color)] bg-[var(--bg-secondary)]">
 	<!-- Logo -->
 	<div class="flex items-center gap-3 px-6 py-5 border-b border-[var(--border-color)]">
-		<div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-sm">
-			Wv
-		</div>
+		<img src="/brand-icon-64.png" alt="Wellvio" class="h-9 w-9 rounded-lg" />
 		<span class="text-lg font-semibold text-[var(--text-primary)]">{BRANDING.appName}</span>
 	</div>
 
