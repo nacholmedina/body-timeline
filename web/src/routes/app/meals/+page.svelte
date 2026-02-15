@@ -197,11 +197,11 @@
 	</div>
 
 	<!-- Filters -->
-	<div class="flex gap-2 overflow-x-auto">
+	<div class="flex gap-2">
 		{#each ['all', 'day', 'week', 'month', 'year'] as f}
 			<button
 				on:click={() => (filter = f)}
-				class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors
+				class="flex-1 rounded-full px-2 py-1.5 text-sm font-medium transition-colors
 				       {filter === f
 					? 'bg-brand-600 text-white'
 					: 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)]'}"

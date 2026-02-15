@@ -83,25 +83,28 @@
 /* Mist floating animations */
 @keyframes mist-drift-1 {
 	0%, 100% { transform: translate(0, 0) scale(1); }
-	25% { transform: translate(40px, 30px) scale(1.05); }
-	50% { transform: translate(-20px, 60px) scale(0.95); }
-	75% { transform: translate(30px, -20px) scale(1.02); }
+	20% { transform: translate(60px, 40px) scale(1.08); }
+	40% { transform: translate(-30px, 80px) scale(0.94); }
+	60% { transform: translate(50px, -30px) scale(1.05); }
+	80% { transform: translate(-40px, 20px) scale(0.97); }
 }
 
 @keyframes mist-drift-2 {
 	0%, 100% { transform: translate(0, 0) scale(1); }
-	25% { transform: translate(-30px, -40px) scale(1.08); }
-	50% { transform: translate(50px, 20px) scale(0.96); }
-	75% { transform: translate(-40px, 40px) scale(1.04); }
+	20% { transform: translate(-50px, -50px) scale(1.1); }
+	40% { transform: translate(70px, 30px) scale(0.93); }
+	60% { transform: translate(-60px, 60px) scale(1.06); }
+	80% { transform: translate(40px, -40px) scale(0.96); }
 }
 
 @keyframes mist-drift-3 {
 	0%, 100% { transform: translate(0, 0) scale(1); }
-	25% { transform: translate(50px, -30px) scale(1.06); }
-	50% { transform: translate(-30px, -50px) scale(0.97); }
-	75% { transform: translate(-20px, 30px) scale(1.03); }
+	20% { transform: translate(70px, -40px) scale(1.07); }
+	40% { transform: translate(-40px, -60px) scale(0.95); }
+	60% { transform: translate(-30px, 50px) scale(1.04); }
+	80% { transform: translate(50px, 30px) scale(0.92); }
 }
 
-.mist-blob-1 { animation: mist-drift-1 20s ease-in-out infinite; }
-.mist-blob-2 { animation: mist-drift-2 25s ease-in-out infinite; }
-.mist-blob-3 { animation: mist-drift-3 30s ease-in-out infinite; }
+.mist-blob-1 { animation: mist-drift-1 15s ease-in-out infinite; }
+.mist-blob-2 { animation: mist-drift-2 18s ease-in-out infinite; }
+.mist-blob-3 { animation: mist-drift-3 22s ease-in-out infinite; }
