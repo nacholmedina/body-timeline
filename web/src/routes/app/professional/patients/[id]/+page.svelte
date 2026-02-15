@@ -5,7 +5,8 @@
 	import { t, locale } from '$i18n/index';
 	import { api, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime, formatDate } from '$lib/utils';
+	import { formatDateTime, formatDate, formatWeight, displayWeight, weightUnit } from '$lib/utils';
+	import { unitStore } from '$stores/units';
 	import {
 		ArrowLeft, TrendingUp, UtensilsCrossed, Dumbbell, Calendar, Scale,
 		MessageSquare, X, Send, ChevronLeft, ChevronRight, AlertCircle, ChevronDown,
@@ -92,7 +93,7 @@
 		datasets: [
 			{
 				label: $t('dashboard.weightOverTime'),
-				data: weightData.map((p) => p.weight_kg),
+				data: weightData.map((p) => displayWeight(p.weight_kg, $unitStore)),
 				borderColor: '#6366f1',
 				backgroundColor: 'rgba(99, 102, 241, 0.1)',
 				fill: true,
@@ -112,7 +113,7 @@
 			legend: { display: false },
 			tooltip: {
 				callbacks: {
-					label: (ctx: any) => `${ctx.parsed.y} kg`
+					label: (ctx: any) => `${ctx.parsed.y} ${weightUnit($unitStore)}`
 				}
 			}
 		},
@@ -124,7 +125,7 @@
 			y: {
 				ticks: {
 					color: isDark ? '#9ca3af' : '#6b7280',
-					callback: (v: any) => `${v} kg`,
+					callback: (v: any) => `${v} ${weightUnit($unitStore)}`,
 					maxTicksLimit: 7
 				},
 				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
@@ -419,7 +420,7 @@
 								<span class="text-sm text-[var(--text-secondary)]">{$t('professional.latestWeight')}</span>
 							</div>
 							<span class="text-lg font-bold text-[var(--text-primary)]">
-								{weightData.length > 0 ? `${weightData[weightData.length - 1].weight_kg} kg` : '-'}
+								{weightData.length > 0 ? formatWeight(weightData[weightData.length - 1].weight_kg, $unitStore) : '-'}
 							</span>
 						</div>
 						<div class="flex items-center justify-between">
@@ -569,7 +570,7 @@
 								<div class="rounded-lg border border-[var(--border-color)] p-3">
 									<div class="flex items-center justify-between">
 										<div>
-											<p class="text-lg font-bold text-[var(--text-primary)]">{wi.weight_kg} kg</p>
+											<p class="text-lg font-bold text-[var(--text-primary)]">{formatWeight(wi.weight_kg, $unitStore)}</p>
 											<p class="text-sm text-[var(--text-secondary)]">
 												{formatDateTime(wi.recorded_at, $locale)}
 											</p>

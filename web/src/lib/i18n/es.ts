@@ -88,7 +88,7 @@ export const es = {
 	weighIns: {
 		title: 'Pesajes',
 		addWeighIn: 'Agregar pesaje',
-		weight: 'Peso (kg)',
+		weight: 'Peso',
 		recordedAt: 'Registrado el',
 		noWeighIns: 'Aún no hay pesajes'
 	},
@@ -207,7 +207,9 @@ export const es = {
 		bio: 'Bio',
 		phone: 'Teléfono',
 		dateOfBirth: 'Fecha de nacimiento',
-		height: 'Altura (cm)',
+		height: 'Altura',
+		heightFeet: 'Pies',
+		heightInches: 'Pulgadas',
 		gender: 'Género',
 		genderMale: 'Masculino',
 		genderFemale: 'Femenino',
@@ -222,7 +224,10 @@ export const es = {
 		theme: 'Tema',
 		language: 'Idioma',
 		dark: 'Oscuro',
-		light: 'Claro'
+		light: 'Claro',
+		units: 'Unidades',
+		metric: 'Métrico',
+		imperial: 'Imperial'
 	},
 	common: {
 		save: 'Guardar',

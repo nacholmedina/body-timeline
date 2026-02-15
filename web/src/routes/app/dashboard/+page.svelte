@@ -4,7 +4,8 @@
 	import { authStore } from '$stores/auth';
 	import { api } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime, formatDate } from '$lib/utils';
+	import { formatDateTime, formatDate, formatWeight, displayWeight, weightUnit } from '$lib/utils';
+	import { unitStore } from '$stores/units';
 	import {
 		UtensilsCrossed, Dumbbell, Target, Calendar,
 		Bell, TrendingUp, Newspaper, BarChart3, List,
@@ -90,7 +91,7 @@
 		datasets: [
 			{
 				label: $t('dashboard.weightOverTime'),
-				data: weightData.map((p) => p.weight_kg),
+				data: weightData.map((p) => displayWeight(p.weight_kg, $unitStore)),
 				borderColor: '#6366f1',
 				backgroundColor: 'rgba(99, 102, 241, 0.1)',
 				fill: true,
@@ -110,7 +111,7 @@
 			legend: { display: false },
 			tooltip: {
 				callbacks: {
-					label: (ctx: any) => `${ctx.parsed.y} kg`
+					label: (ctx: any) => `${ctx.parsed.y} ${weightUnit($unitStore)}`
 				}
 			}
 		},
@@ -122,7 +123,7 @@
 			y: {
 				ticks: {
 					color: isDark ? '#9ca3af' : '#6b7280',
-					callback: (v: any) => `${v} kg`,
+					callback: (v: any) => `${v} ${weightUnit($unitStore)}`,
 					maxTicksLimit: 7
 				},
 				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
@@ -297,7 +298,7 @@
 							{#each [...weightData].reverse().slice(0, 10) as point}
 								<div class="flex items-center justify-between text-sm">
 									<span class="text-[var(--text-secondary)]">{formatDate(point.date, $locale)}</span>
-									<span class="font-medium text-[var(--text-primary)]">{point.weight_kg} kg</span>
+									<span class="font-medium text-[var(--text-primary)]">{formatWeight(point.weight_kg, $unitStore)}</span>
 								</div>
 							{/each}
 						</div>

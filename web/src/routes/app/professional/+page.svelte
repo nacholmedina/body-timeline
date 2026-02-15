@@ -4,6 +4,8 @@
 	import { t, locale } from '$i18n/index';
 	import { api } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
+	import { formatWeight } from '$lib/utils';
+	import { unitStore } from '$stores/units';
 	import { Users, UserPlus, Mail, TrendingUp, UtensilsCrossed, Dumbbell, Calendar as CalendarIcon } from 'lucide-svelte';
 
 	let patients: any[] = [];
@@ -171,7 +173,7 @@
 									<p class="text-xs text-[var(--text-secondary)]">{$t('professional.latestWeight')}</p>
 								</div>
 								<p class="text-sm font-bold text-[var(--text-primary)]">
-									{patient.latest_weight ? `${patient.latest_weight} kg` : '-'}
+									{patient.latest_weight ? formatWeight(patient.latest_weight, $unitStore) : '-'}
 								</p>
 							</div>
 							<div class="text-center">

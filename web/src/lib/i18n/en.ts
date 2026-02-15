@@ -88,7 +88,7 @@ export const en = {
 	weighIns: {
 		title: 'Weigh-ins',
 		addWeighIn: 'Add weigh-in',
-		weight: 'Weight (kg)',
+		weight: 'Weight',
 		recordedAt: 'Recorded at',
 		noWeighIns: 'No weigh-ins yet'
 	},
@@ -207,7 +207,9 @@ export const en = {
 		bio: 'Bio',
 		phone: 'Phone',
 		dateOfBirth: 'Date of birth',
-		height: 'Height (cm)',
+		height: 'Height',
+		heightFeet: 'Feet',
+		heightInches: 'Inches',
 		gender: 'Gender',
 		genderMale: 'Male',
 		genderFemale: 'Female',
@@ -222,7 +224,10 @@ export const en = {
 		theme: 'Theme',
 		language: 'Language',
 		dark: 'Dark',
-		light: 'Light'
+		light: 'Light',
+		units: 'Units',
+		metric: 'Metric',
+		imperial: 'Imperial'
 	},
 	common: {
 		save: 'Save',

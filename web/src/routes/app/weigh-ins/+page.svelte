@@ -3,9 +3,10 @@
 	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDate, localToday } from '$lib/utils';
+	import { formatDate, localToday, formatWeight, lbsToKg, weightUnit } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
+	import { unitStore } from '$stores/units';
 	import { Plus, Scale, Trash2, TrendingDown, TrendingUp } from 'lucide-svelte';
 
 	let weighIns: any[] = [];
@@ -33,8 +34,9 @@
 	async function createWeighIn() {
 		formError = '';
 		formLoading = true;
+		const rawValue = parseFloat(weightKg);
 		const payload = {
-			weight_kg: parseFloat(weightKg),
+			weight_kg: $unitStore === 'imperial' ? lbsToKg(rawValue) : rawValue,
 			recorded_at: new Date(recordedAt + 'T00:00:00').toISOString()
 		};
 
@@ -99,7 +101,7 @@
 				<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">{formError}</div>
 			{/if}
 			<div>
-				<label for="weight" class="label">{$t('weighIns.weight')}</label>
+				<label for="weight" class="label">{$t('weighIns.weight')} ({weightUnit($unitStore)})</label>
 				<input id="weight" type="number" step="0.1" bind:value={weightKg} class="input" required />
 			</div>
 			<div>
@@ -139,7 +141,7 @@
 							{/if}
 						</div>
 						<div>
-							<p class="text-xl font-bold text-[var(--text-primary)]">{wi.weight_kg} kg</p>
+							<p class="text-xl font-bold text-[var(--text-primary)]">{formatWeight(wi.weight_kg, $unitStore)}</p>
 							<p class="text-xs text-[var(--text-secondary)]">{formatDate(wi.recorded_at, $locale)}</p>
 						</div>
 					</div>

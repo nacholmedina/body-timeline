@@ -4,7 +4,8 @@
 	import { authStore } from '$stores/auth';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDate } from '$lib/utils';
+	import { formatDate, formatWeight, formatHeight, cmToFeetInches, feetInchesToCm, weightUnit } from '$lib/utils';
+	import { unitStore } from '$stores/units';
 	import { User, Scale, Stethoscope, Mail, Phone, Camera } from 'lucide-svelte';
 	import { photoUrl } from '$lib/api/client';
 
@@ -18,6 +19,19 @@
 	let dateOfBirth = $authStore.user?.profile?.date_of_birth || '';
 	let gender = $authStore.user?.gender || '';
 	let heightCm = $authStore.user?.profile?.height_cm?.toString() || '';
+	// Imperial height fields
+	let heightFeet = '';
+	let heightInches = '';
+	let heightImperialInit = false;
+	$: if ($unitStore === 'metric') {
+		heightImperialInit = false;
+	}
+	$: if ($unitStore === 'imperial' && heightCm && !heightImperialInit) {
+		const h = cmToFeetInches(parseFloat(heightCm));
+		heightFeet = String(h.feet);
+		heightInches = String(h.inches);
+		heightImperialInit = true;
+	}
 
 	let weightStats: {
 		initial_weight_kg: number | null;
@@ -75,7 +89,9 @@
 				bio: bio || null,
 				phone: phone || null,
 				date_of_birth: dateOfBirth || null,
-				height_cm: heightCm ? parseFloat(heightCm) : null
+				height_cm: $unitStore === 'imperial'
+				? (heightFeet || heightInches ? parseFloat(feetInchesToCm(parseInt(heightFeet) || 0, parseInt(heightInches) || 0).toFixed(1)) : null)
+				: (heightCm ? parseFloat(heightCm) : null)
 			});
 			authStore.updateUser(res.user);
 			success = true;
@@ -143,7 +159,7 @@
 				<div class="min-w-0">
 					<p class="text-xs text-[var(--text-secondary)]">{$t('profile.initialWeight')}</p>
 					{#if weightStats.initial_weight_kg}
-						<p class="text-lg font-bold text-[var(--text-primary)]">{weightStats.initial_weight_kg} kg</p>
+						<p class="text-lg font-bold text-[var(--text-primary)]">{formatWeight(weightStats.initial_weight_kg, $unitStore)}</p>
 						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.initial_weight_date || '', $locale)}</p>
 					{:else}
 						<p class="text-sm text-[var(--text-secondary)]">—</p>
@@ -157,7 +173,7 @@
 				<div class="min-w-0">
 					<p class="text-xs text-[var(--text-secondary)]">{$t('profile.currentWeight')}</p>
 					{#if weightStats.current_weight_kg}
-						<p class="text-lg font-bold text-[var(--text-primary)]">{weightStats.current_weight_kg} kg</p>
+						<p class="text-lg font-bold text-[var(--text-primary)]">{formatWeight(weightStats.current_weight_kg, $unitStore)}</p>
 						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.current_weight_date || '', $locale)}</p>
 					{:else}
 						<p class="text-sm text-[var(--text-secondary)]">—</p>
@@ -242,10 +258,23 @@
 			</div>
 		</div>
 
-		<div>
-			<label for="height" class="label">{$t('profile.height')}</label>
-			<input id="height" type="number" step="0.1" bind:value={heightCm} class="input" />
-		</div>
+		{#if $unitStore === 'imperial'}
+			<div class="grid grid-cols-2 gap-3">
+				<div>
+					<label for="heightFeet" class="label">{$t('profile.heightFeet')}</label>
+					<input id="heightFeet" type="number" step="1" min="0" max="8" bind:value={heightFeet} class="input" />
+				</div>
+				<div>
+					<label for="heightInches" class="label">{$t('profile.heightInches')}</label>
+					<input id="heightInches" type="number" step="1" min="0" max="11" bind:value={heightInches} class="input" />
+				</div>
+			</div>
+		{:else}
+			<div>
+				<label for="height" class="label">{$t('profile.height')} (cm)</label>
+				<input id="height" type="number" step="0.1" bind:value={heightCm} class="input" />
+			</div>
+		{/if}
 
 		<button type="submit" class="btn-primary w-full" disabled={loading}>
 			{loading ? $t('common.loading') : $t('common.save')}

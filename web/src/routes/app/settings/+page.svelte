@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { t, locale } from '$i18n/index';
 	import { themeStore } from '$stores/theme';
+	import { unitStore } from '$stores/units';
 	import { BRANDING } from '$lib/config/branding';
-	import { Sun, Moon, Globe } from 'lucide-svelte';
+	import { Sun, Moon, Globe, Ruler } from 'lucide-svelte';
 </script>
 
 <svelte:head>
@@ -62,6 +63,33 @@
 			>
 				<Globe size={18} />
 				Espa&ntilde;ol
+			</button>
+		</div>
+	</div>
+
+	<!-- Units -->
+	<div class="card">
+		<h3 class="mb-4 font-semibold text-[var(--text-primary)]">{$t('settings.units')}</h3>
+		<div class="flex gap-3">
+			<button
+				on:click={() => unitStore.set('metric')}
+				class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors
+				       {$unitStore === 'metric'
+					? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
+					: 'border-[var(--border-color)] text-[var(--text-secondary)]'}"
+			>
+				<Ruler size={18} />
+				{$t('settings.metric')} (kg, cm)
+			</button>
+			<button
+				on:click={() => unitStore.set('imperial')}
+				class="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors
+				       {$unitStore === 'imperial'
+					? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
+					: 'border-[var(--border-color)] text-[var(--text-secondary)]'}"
+			>
+				<Ruler size={18} />
+				{$t('settings.imperial')} (lbs, ft)
 			</button>
 		</div>
 	</div>

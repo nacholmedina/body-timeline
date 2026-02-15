@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type { UnitSystem } from '$stores/units';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -58,4 +59,58 @@ export function timeAgo(date: string | Date, locale = 'en'): string {
 		}
 	}
 	return locale === 'es' ? 'justo ahora' : 'just now';
+}
+
+// ── Unit conversion ──
+
+const KG_TO_LBS = 2.20462;
+const CM_TO_INCH = 0.393701;
+
+export function kgToLbs(kg: number): number {
+	return kg * KG_TO_LBS;
+}
+
+export function lbsToKg(lbs: number): number {
+	return lbs / KG_TO_LBS;
+}
+
+export function cmToFeetInches(cm: number): { feet: number; inches: number } {
+	const totalInches = cm * CM_TO_INCH;
+	let feet = Math.floor(totalInches / 12);
+	let inches = Math.round(totalInches % 12);
+	if (inches === 12) {
+		feet += 1;
+		inches = 0;
+	}
+	return { feet, inches };
+}
+
+export function feetInchesToCm(feet: number, inches: number): number {
+	return (feet * 12 + inches) / CM_TO_INCH;
+}
+
+export function formatWeight(kg: number | null | undefined, system: UnitSystem): string {
+	if (kg == null) return '—';
+	if (system === 'imperial') {
+		return `${kgToLbs(kg).toFixed(1)} lbs`;
+	}
+	return `${Number(kg).toFixed(1)} kg`;
+}
+
+export function formatHeight(cm: number | null | undefined, system: UnitSystem): string {
+	if (cm == null) return '—';
+	if (system === 'imperial') {
+		const { feet, inches } = cmToFeetInches(cm);
+		return `${feet}'${inches}"`;
+	}
+	return `${Number(cm).toFixed(1)} cm`;
+}
+
+export function weightUnit(system: UnitSystem): string {
+	return system === 'imperial' ? 'lbs' : 'kg';
+}
+
+export function displayWeight(kg: number, system: UnitSystem): number {
+	if (system === 'imperial') return parseFloat(kgToLbs(kg).toFixed(1));
+	return parseFloat(Number(kg).toFixed(1));
 }
