@@ -12,7 +12,7 @@
 		professional_name: string;
 		patient_name: string;
 		is_active: boolean;
-		created_at: string;
+		assigned_at: string;
 	}
 
 	interface UserOption {
@@ -136,7 +136,7 @@
 						<tr class="border-b border-[var(--border-color)] hover:bg-[var(--bg-secondary)] transition-colors">
 							<td class="px-4 py-3 font-medium text-[var(--text-primary)]">{assignment.professional_name}</td>
 							<td class="px-4 py-3 text-[var(--text-primary)]">{assignment.patient_name}</td>
-							<td class="px-4 py-3 text-[var(--text-secondary)]">{formatDate(assignment.created_at, $locale)}</td>
+							<td class="px-4 py-3 text-[var(--text-secondary)]">{formatDate(assignment.assigned_at, $locale)}</td>
 							<td class="px-4 py-3 text-right">
 								<button
 									on:click={() => removeAssignment(assignment.id)}
