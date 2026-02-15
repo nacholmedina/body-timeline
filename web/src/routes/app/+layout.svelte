@@ -165,10 +165,10 @@
 
 		<!-- Main content -->
 		<main class="relative px-4 py-6 pb-24 lg:px-6 lg:pb-6" style="min-height: calc(100vh - 4rem);">
-			<div class="pointer-events-none absolute inset-0 overflow-hidden dark:hidden" aria-hidden="true">
-				<div class="mist-blob-1 absolute -top-20 -left-20 h-[500px] w-[500px] rounded-full bg-brand-400/20 blur-[100px]"></div>
-				<div class="mist-blob-2 absolute top-40 -right-20 h-[400px] w-[400px] rounded-full bg-brand-300/[0.15] blur-[90px]"></div>
-				<div class="mist-blob-3 absolute -bottom-20 left-1/3 h-[450px] w-[450px] rounded-full bg-brand-500/[0.12] blur-[100px]"></div>
+			<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+				<div class="mist-blob-1 absolute -top-20 -left-20 h-[500px] w-[500px] rounded-full bg-brand-400/20 dark:bg-brand-500/[0.08] blur-[100px]"></div>
+				<div class="mist-blob-2 absolute top-40 -right-20 h-[400px] w-[400px] rounded-full bg-brand-300/[0.15] dark:bg-indigo-500/[0.07] blur-[90px]"></div>
+				<div class="mist-blob-3 absolute -bottom-20 left-1/3 h-[450px] w-[450px] rounded-full bg-brand-500/[0.12] dark:bg-brand-400/[0.06] blur-[100px]"></div>
 			</div>
 			<div class="relative">
 				<slot />
