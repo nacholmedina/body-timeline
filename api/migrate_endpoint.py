@@ -2,7 +2,6 @@
 One-time migration endpoint - DELETE AFTER USE
 """
 from flask import Flask, jsonify
-from flask_migrate import upgrade as flask_migrate_upgrade
 import os
 import sys
 
@@ -10,15 +9,22 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app import create_app
+from app.extensions import db
 
 app = create_app()
 
 @app.route('/', methods=['GET', 'POST'])
 def migrate():
-    """Run database migrations"""
+    """Create missing tables"""
     try:
         with app.app_context():
-            flask_migrate_upgrade()
-        return jsonify({"message": "Migrations applied successfully"}), 200
+            # Import all models to ensure they're registered
+            from app.models.meal_comment import MealComment
+            from app.models.patient_invitation import PatientInvitation
+
+            # Create all tables (will skip existing ones)
+            db.create_all()
+
+        return jsonify({"message": "Tables created successfully"}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "type": type(e).__name__}), 500
