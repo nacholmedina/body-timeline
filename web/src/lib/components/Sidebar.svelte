@@ -21,7 +21,7 @@
 	];
 
 	$: isAdmin = $authStore.user?.role === 'devadmin';
-	$: isProfessional = $authStore.user?.role === 'professional' || $authStore.user?.role === 'devadmin';
+	$: isProfessional = $authStore.user?.role === 'professional';
 
 	const bottomItems = [
 		{ href: '/app/profile', icon: User, label: 'nav.profile' },

@@ -7,7 +7,7 @@
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime, formatDate } from '$lib/utils';
 	import {
-		ArrowLeft, TrendingUp, UtensilsCrossed, Dumbbell, Calendar,
+		ArrowLeft, TrendingUp, UtensilsCrossed, Dumbbell, Calendar, Scale,
 		MessageSquare, X, Send, ChevronLeft, ChevronRight, AlertCircle, ChevronDown
 	} from 'lucide-svelte';
 	import {
@@ -29,6 +29,7 @@
 	let weightData: any[] = [];
 	let meals: any[] = [];
 	let workouts: any[] = [];
+	let weighIns: any[] = [];
 	let loading = true;
 	let tab: 'overview' | 'timeline' = 'overview';
 	let timelineFilter: 'all' | 'day' | 'week' | 'month' | 'year' = 'all';
@@ -47,6 +48,7 @@
 
 	// Section collapse state
 	let mealsCollapsed = false;
+	let weighInsCollapsed = false;
 	let workoutsCollapsed = false;
 
 	// Collapsible card state
@@ -152,17 +154,19 @@
 			loading = true;
 			const filterParams = tab === 'timeline' ? getTimelineFilterParams() : {};
 
-			const [patientRes, weightRes, mealsRes, workoutsRes] = await Promise.all([
+			const [patientRes, weightRes, mealsRes, workoutsRes, weighInsRes] = await Promise.all([
 				api.get(`/professional/patients/${patientId}`),
 				api.get('/dashboard/weight-series', { patient_id: patientId, days: '365' }),
 				api.get('/meals', { patient_id: patientId, limit: '100', ...filterParams }),
-				api.get('/workouts', { patient_id: patientId, limit: '100', ...filterParams })
+				api.get('/workouts', { patient_id: patientId, limit: '100', ...filterParams }),
+				api.get('/weigh-ins', { patient_id: patientId, limit: '100', ...filterParams })
 			]);
 
 			patient = patientRes;
 			weightData = weightRes.data || [];
 			meals = mealsRes.data || [];
 			workouts = workoutsRes.data || [];
+			weighIns = weighInsRes.data || [];
 		} catch (err: any) {
 			console.error('Failed to load patient data:', err);
 		} finally {
@@ -350,6 +354,13 @@
 						</div>
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2">
+								<Scale size={18} class="text-purple-600" />
+								<span class="text-sm text-[var(--text-secondary)]">{$t('nav.weighIns')}</span>
+							</div>
+							<span class="text-lg font-bold text-[var(--text-primary)]">{weighIns.length}</span>
+						</div>
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2">
 								<Dumbbell size={18} class="text-blue-600" />
 								<span class="text-sm text-[var(--text-secondary)]">{$t('professional.totalWorkouts')}</span>
 							</div>
@@ -459,6 +470,42 @@
 						</div>
 					{:else if !mealsCollapsed}
 						<p class="text-sm text-[var(--text-secondary)]">{$t('meals.noMeals')}</p>
+					{/if}
+				</div>
+
+				<!-- Weigh-ins -->
+				<div class="card">
+					<button
+						on:click={() => (weighInsCollapsed = !weighInsCollapsed)}
+						class="mb-4 flex w-full items-center justify-between"
+					>
+						<div class="flex items-center gap-2">
+							<Scale size={18} class="text-brand-600" />
+							<h3 class="font-semibold text-[var(--text-primary)]">{$t('nav.weighIns')}</h3>
+							<span class="text-xs text-[var(--text-secondary)]">({weighIns.length})</span>
+						</div>
+						<ChevronDown size={18} class="text-[var(--text-secondary)] transition-transform {weighInsCollapsed ? '' : 'rotate-180'}" />
+					</button>
+					{#if !weighInsCollapsed && weighIns.length > 0}
+						<div class="space-y-3">
+							{#each weighIns as wi}
+								<div class="rounded-lg border border-[var(--border-color)] p-3">
+									<div class="flex items-center justify-between">
+										<div>
+											<p class="text-lg font-bold text-[var(--text-primary)]">{wi.weight_kg} kg</p>
+											<p class="text-sm text-[var(--text-secondary)]">
+												{formatDateTime(wi.recorded_at, $locale)}
+											</p>
+										</div>
+									</div>
+									{#if wi.notes}
+										<p class="text-sm text-[var(--text-secondary)] mt-2">{wi.notes}</p>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{:else if !weighInsCollapsed}
+						<p class="text-sm text-[var(--text-secondary)]">{$t('weighIns.noWeighIns')}</p>
 					{/if}
 				</div>
 
