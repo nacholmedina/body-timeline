@@ -1,8 +1,8 @@
 export const BRANDING = {
-	appName: 'Body Timeline',
-	shortName: 'Timeline',
-	slug: 'body-timeline',
+	appName: 'Wellvio',
+	shortName: 'Wellvio',
+	slug: 'wellvio',
 	description: 'Track physical progress, meals, weigh-ins, goals, workouts, and professional notes.',
-	packageId: 'com.bodytimeline.app',
+	packageId: 'com.wellvio.app',
 	version: '1.0.0'
 } as const;

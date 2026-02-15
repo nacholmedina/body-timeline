@@ -59,6 +59,6 @@ def create_app(config_override=None):
 
     @app.route("/api/health")
     def health():
-        return {"status": "ok", "app": "Body Timeline"}
+        return {"status": "ok", "app": "Wellvio"}
 
     return app

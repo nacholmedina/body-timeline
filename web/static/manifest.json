@@ -1,6 +1,6 @@
 {
-	"name": "Body Timeline",
-	"short_name": "Timeline",
+	"name": "Wellvio",
+	"short_name": "Wellvio",
 	"description": "Track physical progress, meals, weigh-ins, goals, workouts, and professional notes.",
 	"start_url": "/app/dashboard",
 	"display": "standalone",
@@ -8,7 +8,7 @@
 	"theme_color": "#1b87f5",
 	"orientation": "portrait-primary",
 	"scope": "/",
-	"id": "com.bodytimeline.app",
+	"id": "com.wellvio.app",
 	"categories": ["health", "fitness", "lifestyle"],
 	"icons": [
 		{

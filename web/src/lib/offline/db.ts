@@ -1,6 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 
-interface BodyTimelineDB extends DBSchema {
+interface WellvioDB extends DBSchema {
 	syncQueue: {
 		key: number;
 		value: {
@@ -23,12 +23,12 @@ interface BodyTimelineDB extends DBSchema {
 	};
 }
 
-let dbInstance: IDBPDatabase<BodyTimelineDB> | null = null;
+let dbInstance: IDBPDatabase<WellvioDB> | null = null;
 
-export async function getDB(): Promise<IDBPDatabase<BodyTimelineDB>> {
+export async function getDB(): Promise<IDBPDatabase<WellvioDB>> {
 	if (dbInstance) return dbInstance;
 
-	dbInstance = await openDB<BodyTimelineDB>('body-timeline', 1, {
+	dbInstance = await openDB<WellvioDB>('wellvio', 1, {
 		upgrade(db) {
 			const syncStore = db.createObjectStore('syncQueue', {
 				keyPath: 'id',
@@ -45,7 +45,7 @@ export async function getDB(): Promise<IDBPDatabase<BodyTimelineDB>> {
 
 // ── Sync queue operations ────────────────────────────────
 
-export async function addToSyncQueue(item: Omit<BodyTimelineDB['syncQueue']['value'], 'id' | 'createdAt' | 'retries'>) {
+export async function addToSyncQueue(item: Omit<WellvioDB['syncQueue']['value'], 'id' | 'createdAt' | 'retries'>) {
 	const db = await getDB();
 	await db.add('syncQueue', {
 		...item,

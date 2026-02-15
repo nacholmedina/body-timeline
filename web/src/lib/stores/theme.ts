@@ -7,7 +7,7 @@ function createThemeStore() {
 	let initial: Theme = 'light';
 
 	if (browser) {
-		const saved = localStorage.getItem('bt_theme') as Theme;
+		const saved = localStorage.getItem('wv_theme') as Theme;
 		if (saved === 'dark' || saved === 'light') {
 			initial = saved;
 		} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -20,7 +20,7 @@ function createThemeStore() {
 	function apply(theme: Theme) {
 		if (browser) {
 			document.documentElement.classList.toggle('dark', theme === 'dark');
-			localStorage.setItem('bt_theme', theme);
+			localStorage.setItem('wv_theme', theme);
 		}
 	}
 

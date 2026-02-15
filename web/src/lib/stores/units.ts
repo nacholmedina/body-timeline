@@ -7,7 +7,7 @@ function createUnitStore() {
 	let initial: UnitSystem = 'metric';
 
 	if (browser) {
-		const saved = localStorage.getItem('bt_units') as UnitSystem;
+		const saved = localStorage.getItem('wv_units') as UnitSystem;
 		if (saved === 'metric' || saved === 'imperial') {
 			initial = saved;
 		}
@@ -18,7 +18,7 @@ function createUnitStore() {
 	function setUnit(unit: UnitSystem) {
 		store.set(unit);
 		if (browser) {
-			localStorage.setItem('bt_units', unit);
+			localStorage.setItem('wv_units', unit);
 		}
 	}
 

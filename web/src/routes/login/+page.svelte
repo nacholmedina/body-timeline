@@ -43,7 +43,7 @@
 		<!-- Logo -->
 		<div class="mb-8 text-center">
 			<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 text-white text-2xl font-bold">
-				BT
+				Wv
 			</div>
 			<h1 class="text-2xl font-bold text-[var(--text-primary)]">{BRANDING.appName}</h1>
 			<p class="mt-1 text-sm text-[var(--text-secondary)]">{$t('auth.loginSubtitle')}</p>

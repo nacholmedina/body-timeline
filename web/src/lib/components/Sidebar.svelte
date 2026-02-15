@@ -51,7 +51,7 @@
 	<!-- Logo -->
 	<div class="flex items-center gap-3 px-6 py-5 border-b border-[var(--border-color)]">
 		<div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-sm">
-			BT
+			Wv
 		</div>
 		<span class="text-lg font-semibold text-[var(--text-primary)]">{BRANDING.appName}</span>
 	</div>

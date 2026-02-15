@@ -9,8 +9,8 @@ _env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_env_path, override=True)
 
 # ── Branding ──────────────────────────────────────────────
-APP_NAME = "Body Timeline"
-APP_SLUG = "body-timeline"
+APP_NAME = "Wellvio"
+APP_SLUG = "wellvio"
 APP_DESCRIPTION = "Track physical progress, meals, weigh-ins, goals, workouts, and professional notes."
 
 
@@ -24,7 +24,7 @@ def _fix_db_url(url: str) -> str:
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
     SQLALCHEMY_DATABASE_URI = _fix_db_url(
-        os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/body_timeline")
+        os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/wellvio")
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}

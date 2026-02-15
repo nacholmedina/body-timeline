@@ -19,7 +19,7 @@
 	let impersonatingName = '';
 
 	if (browser) {
-		const saved = sessionStorage.getItem('bt_impersonation');
+		const saved = sessionStorage.getItem('wv_impersonation');
 		if (saved) {
 			isImpersonating = true;
 		}
@@ -30,17 +30,17 @@
 	}
 
 	function stopImpersonation() {
-		const saved = sessionStorage.getItem('bt_impersonation');
+		const saved = sessionStorage.getItem('wv_impersonation');
 		if (saved) {
 			const adminState = JSON.parse(saved);
 			authStore.login(adminState.user, adminState.accessToken, adminState.refreshToken);
-			sessionStorage.removeItem('bt_impersonation');
+			sessionStorage.removeItem('wv_impersonation');
 			window.location.href = '/app/admin/users';
 		}
 	}
 
 	function handleLogout() {
-		sessionStorage.removeItem('bt_impersonation');
+		sessionStorage.removeItem('wv_impersonation');
 		authStore.logout();
 		window.location.href = '/login';
 	}

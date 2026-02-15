@@ -13,16 +13,16 @@ def seed():
     app = create_app()
     with app.app_context():
         # Check if devadmin already exists
-        admin = User.query.filter_by(email="admin@bodytimeline.app").first()
+        admin = User.query.filter_by(email="admin@wellvio.app").first()
         if admin:
             print("Devadmin already exists, skipping seed.")
             return
 
         # Create devadmin
         admin = User(
-            email="admin@bodytimeline.app",
+            email="admin@wellvio.app",
             first_name="Admin",
-            last_name="Body Timeline",
+            last_name="Wellvio",
             role="devadmin",
         )
         admin.set_password("Admin123!")
@@ -30,7 +30,7 @@ def seed():
 
         # Create a sample professional
         pro = User(
-            email="professional@bodytimeline.app",
+            email="professional@wellvio.app",
             first_name="Dr. Sarah",
             last_name="Johnson",
             role="professional",
@@ -40,7 +40,7 @@ def seed():
 
         # Create a sample patient
         patient = User(
-            email="patient@bodytimeline.app",
+            email="patient@wellvio.app",
             first_name="John",
             last_name="Doe",
             role="patient",
@@ -64,9 +64,9 @@ def seed():
 
         db.session.commit()
         print("Seed complete!")
-        print(f"  Devadmin:      admin@bodytimeline.app / Admin123!")
-        print(f"  Professional:  professional@bodytimeline.app / Professional123!")
-        print(f"  Patient:       patient@bodytimeline.app / Patient123!")
+        print(f"  Devadmin:      admin@wellvio.app / Admin123!")
+        print(f"  Professional:  professional@wellvio.app / Professional123!")
+        print(f"  Patient:       patient@wellvio.app / Patient123!")
 
 
 if __name__ == "__main__":

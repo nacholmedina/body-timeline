@@ -50,7 +50,7 @@ function createAuthStore() {
 
 	if (browser) {
 		try {
-			const saved = localStorage.getItem('bt_auth');
+			const saved = localStorage.getItem('wv_auth');
 			if (saved) {
 				const parsed = JSON.parse(saved);
 				initial = { ...parsed, isAuthenticated: !!parsed.accessToken };
@@ -62,7 +62,7 @@ function createAuthStore() {
 
 	function persist(state: AuthState) {
 		if (browser) {
-			localStorage.setItem('bt_auth', JSON.stringify(state));
+			localStorage.setItem('wv_auth', JSON.stringify(state));
 		}
 	}
 
@@ -96,7 +96,7 @@ function createAuthStore() {
 			};
 			set(state);
 			if (browser) {
-				localStorage.removeItem('bt_auth');
+				localStorage.removeItem('wv_auth');
 			}
 		}
 	};

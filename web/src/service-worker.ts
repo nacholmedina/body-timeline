@@ -7,7 +7,7 @@ import { build, files, version } from '$service-worker';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
-const CACHE_NAME = `body-timeline-${version}`;
+const CACHE_NAME = `wellvio-${version}`;
 const APP_SHELL = [...build, ...files];
 
 // Install: cache app shell

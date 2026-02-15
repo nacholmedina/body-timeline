@@ -1,6 +1,6 @@
 export const es = {
 	app: {
-		name: 'Body Timeline',
+		name: 'Wellvio',
 		tagline: 'Seguí tu progreso físico',
 		description: 'Seguí tu progreso físico, comidas, pesajes, metas, entrenamientos y notas profesionales.'
 	},

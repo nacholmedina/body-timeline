@@ -124,7 +124,7 @@
 				accessToken: $authStore.accessToken,
 				refreshToken: $authStore.refreshToken,
 			};
-			sessionStorage.setItem('bt_impersonation', JSON.stringify(adminState));
+			sessionStorage.setItem('wv_impersonation', JSON.stringify(adminState));
 			// Login as the target user
 			authStore.login(res.user, res.access_token, res.refresh_token);
 			window.location.href = '/app/dashboard';

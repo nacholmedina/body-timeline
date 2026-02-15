@@ -11,7 +11,7 @@ const translations: Record<Locale, Translations> = { en, es };
 function createLocaleStore() {
 	let initial: Locale = 'en';
 	if (browser) {
-		const saved = localStorage.getItem('bt_locale') as Locale;
+		const saved = localStorage.getItem('wv_locale') as Locale;
 		if (saved === 'en' || saved === 'es') {
 			initial = saved;
 		} else if (navigator.language.startsWith('es')) {
@@ -26,7 +26,7 @@ function createLocaleStore() {
 		set(locale: Locale) {
 			set(locale);
 			if (browser) {
-				localStorage.setItem('bt_locale', locale);
+				localStorage.setItem('wv_locale', locale);
 				document.documentElement.lang = locale;
 			}
 		}
