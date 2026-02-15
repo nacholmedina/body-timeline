@@ -13,8 +13,8 @@
   },
   "rewrites": [
     {
-      "source": "/api/migrate",
-      "destination": "/api/migrate_endpoint.py"
+      "source": "/api/run-migration",
+      "destination": "/api/index.py"
     },
     {
       "source": "/api/v1/:path*",
