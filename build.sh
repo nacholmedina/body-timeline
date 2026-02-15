@@ -1,12 +1,10 @@
 #!/bin/bash
 set -e
 
-echo "Installing API dependencies..."
-cd api
-pip install -r requirements.txt
-
 echo "Running database migrations..."
-flask db upgrade
+cd api
+export FLASK_APP=app:create_app
+python -m flask db upgrade
 
 echo "Building frontend..."
 cd ../web
