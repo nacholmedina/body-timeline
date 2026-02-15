@@ -61,15 +61,4 @@ def create_app(config_override=None):
     def health():
         return {"status": "ok", "app": "Body Timeline"}
 
-    @app.route("/api/run-migration", methods=["POST"])
-    def run_migration():
-        """One-time migration endpoint - DELETE AFTER USE"""
-        try:
-            from app.models.meal_comment import MealComment
-            from app.models.patient_invitation import PatientInvitation
-            db.create_all()
-            return {"message": "Tables created successfully"}, 200
-        except Exception as e:
-            return {"error": str(e), "type": type(e).__name__}, 500
-
     return app
