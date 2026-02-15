@@ -6,9 +6,10 @@
 	import { BRANDING } from '$lib/config/branding';
 	import { timeAgo } from '$lib/utils';
 	import { locale } from '$i18n/index';
-	import { Bell, CheckCircle, Send, Plus } from 'lucide-svelte';
+	import { Bell, CheckCircle, Send, Plus, Mail, Check, X } from 'lucide-svelte';
 
 	let notifications: any[] = [];
+	let invitations: any[] = [];
 	let loading = true;
 	let error = '';
 
@@ -26,12 +27,37 @@
 	async function loadNotifications() {
 		loading = true;
 		try {
-			const res = await api.get('/notifications');
-			notifications = res.data;
+			const promises = [api.get('/notifications')];
+			if (isPatient) {
+				promises.push(api.get('/invitations/pending'));
+			}
+			const results = await Promise.all(promises);
+			notifications = results[0].data;
+			if (isPatient && results[1]) {
+				invitations = results[1].data || [];
+			}
 		} catch (err) {
-			error = err instanceof ApiError ? err.message : 'Failed to load';
+			error = err instanceof ApiError ? err.message : $t('common.failedToLoad');
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function acceptInvitation(id: string) {
+		try {
+			await api.post(`/invitations/${id}/accept`);
+			invitations = invitations.filter((inv) => inv.id !== id);
+		} catch (err) {
+			error = err instanceof ApiError ? err.message : $t('invitations.failedToAccept');
+		}
+	}
+
+	async function rejectInvitation(id: string) {
+		try {
+			await api.post(`/invitations/${id}/reject`);
+			invitations = invitations.filter((inv) => inv.id !== id);
+		} catch (err) {
+			error = err instanceof ApiError ? err.message : $t('invitations.failedToReject');
 		}
 	}
 
@@ -56,7 +82,7 @@
 			body = '';
 			patientIds = '';
 		} catch (err) {
-			formError = err instanceof ApiError ? err.message : 'Failed';
+			formError = err instanceof ApiError ? err.message : $t('common.failed');
 		} finally {
 			formLoading = false;
 		}
@@ -107,11 +133,59 @@
 		</form>
 	{/if}
 
+	<!-- Pending Invitations for Patients -->
+	{#if isPatient && invitations.length > 0}
+		<div class="card border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-950">
+			<div class="mb-4 flex items-center gap-2">
+				<Mail size={18} class="text-brand-600" />
+				<h3 class="font-semibold text-[var(--text-primary)]">{$t('invitations.pending')}</h3>
+			</div>
+			<div class="space-y-3">
+				{#each invitations as invitation}
+					<div class="rounded-lg border border-[var(--border-color)] bg-white dark:bg-gray-900 p-4">
+						<div class="mb-3">
+							<p class="font-medium text-[var(--text-primary)]">
+								{$t('invitations.fromProfessional')}: {invitation.professional_name}
+							</p>
+							{#if invitation.professional_email}
+								<p class="text-sm text-[var(--text-secondary)]">{invitation.professional_email}</p>
+							{/if}
+							{#if invitation.message}
+								<p class="mt-2 text-sm text-[var(--text-secondary)]">{invitation.message}</p>
+							{/if}
+						</div>
+						{#if $authStore.user?.professional_id}
+							<p class="mb-3 text-xs text-amber-600 dark:text-amber-400">
+								{$t('invitations.warningReassignment')}
+							</p>
+						{/if}
+						<div class="flex gap-2">
+							<button
+								on:click={() => acceptInvitation(invitation.id)}
+								class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+							>
+								<Check size={16} />
+								{$t('invitations.acceptInvitation')}
+							</button>
+							<button
+								on:click={() => rejectInvitation(invitation.id)}
+								class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+							>
+								<X size={16} />
+								{$t('invitations.rejectInvitation')}
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	{#if loading}
 		<div class="flex items-center justify-center py-12">
 			<div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600"></div>
 		</div>
-	{:else if notifications.length === 0}
+	{:else if notifications.length === 0 && invitations.length === 0}
 		<div class="py-12 text-center">
 			<Bell size={48} class="mx-auto mb-4 text-[var(--text-secondary)] opacity-50" />
 			<p class="text-[var(--text-secondary)]">{$t('notifications.noNotifications')}</p>

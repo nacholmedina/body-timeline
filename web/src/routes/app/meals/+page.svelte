@@ -6,7 +6,7 @@
 	import { formatDateTime } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
-	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X } from 'lucide-svelte';
+	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, ChevronDown } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 
 	let meals: any[] = [];
@@ -31,6 +31,10 @@
 	let lightboxUrl = '';
 	let lightboxAlt = '';
 
+	// Comments
+	let expandedCommentIds = new Set<string>();
+	let mealComments: Record<string, any[]> = {};
+
 	function openLightbox(url: string, alt: string) {
 		lightboxUrl = url;
 		lightboxAlt = alt;
@@ -39,6 +43,27 @@
 	function closeLightbox() {
 		lightboxUrl = '';
 		lightboxAlt = '';
+	}
+
+	async function toggleComments(mealId: string) {
+		if (expandedCommentIds.has(mealId)) {
+			expandedCommentIds.delete(mealId);
+			expandedCommentIds = expandedCommentIds;
+		} else {
+			expandedCommentIds.add(mealId);
+			expandedCommentIds = expandedCommentIds;
+
+			// Load comments if not already loaded
+			if (!mealComments[mealId]) {
+				try {
+					const res = await api.get(`/meal-comments/${mealId}/comments`);
+					mealComments[mealId] = res.data || [];
+					mealComments = mealComments; // Trigger reactivity
+				} catch (err) {
+					console.error('Failed to load comments:', err);
+				}
+			}
+		}
 	}
 
 	// Filters
@@ -319,15 +344,50 @@
 								{$t('meals.draftOffline')}
 							</span>
 						{/if}
+						{#if expandedCommentIds.has(meal.id) && mealComments[meal.id] && mealComments[meal.id].length > 0}
+							<div class="mt-3 space-y-2 border-t border-[var(--border-color)] pt-3">
+								{#each mealComments[meal.id] as comment}
+									<div class="rounded bg-brand-50 dark:bg-brand-950 p-3">
+										<div class="flex items-center justify-between mb-1">
+											<span class="text-xs font-medium text-brand-600 dark:text-brand-400">
+												{comment.professional_name}
+											</span>
+											<span class="text-xs text-[var(--text-secondary)]">
+												{new Date(comment.created_at).toLocaleDateString()}
+											</span>
+										</div>
+										<p class="text-sm text-[var(--text-primary)]">{comment.comment}</p>
+									</div>
+								{/each}
+							</div>
+						{/if}
 					</div>
-					{#if !meal.id?.startsWith('draft-')}
-						<button
-							on:click={() => deleteMeal(meal.id)}
-							class="ml-2 rounded-lg p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600"
-						>
-							<Trash2 size={16} />
-						</button>
-					{/if}
+					<div class="ml-2 flex gap-1">
+						{#if !meal.id?.startsWith('draft-')}
+							<!-- Comment toggle button -->
+							{@const commentCount = mealComments[meal.id]?.length || 0}
+							<button
+								on:click={() => toggleComments(meal.id)}
+								class="rounded-lg p-2 transition-colors {commentCount > 0
+									? 'text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950'
+									: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+								title={commentCount > 0 ? `${commentCount} comment(s)` : 'View comments'}
+							>
+								<div class="flex items-center gap-1">
+									<MessageSquare size={16} class="{expandedCommentIds.has(meal.id) ? 'fill-current' : ''}" />
+									{#if commentCount > 0}
+										<span class="text-xs font-medium">{commentCount}</span>
+									{/if}
+								</div>
+							</button>
+							<button
+								on:click={() => deleteMeal(meal.id)}
+								class="rounded-lg p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600"
+							>
+								<Trash2 size={16} />
+							</button>
+						{/if}
+					</div>
 				</div>
 			{/each}
 		</div>

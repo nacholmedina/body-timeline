@@ -5,7 +5,7 @@
 	import { BRANDING } from '$lib/config/branding';
 	import {
 		LayoutDashboard, UtensilsCrossed, Scale, Target,
-		Dumbbell, Bell, Calendar, User, Settings, LogOut, ShieldCheck
+		Dumbbell, Bell, Calendar, User, Settings, LogOut, ShieldCheck, Users
 	} from 'lucide-svelte';
 
 	export let mobile = false;
@@ -21,6 +21,7 @@
 	];
 
 	$: isAdmin = $authStore.user?.role === 'devadmin';
+	$: isProfessional = $authStore.user?.role === 'professional' || $authStore.user?.role === 'devadmin';
 
 	const bottomItems = [
 		{ href: '/app/profile', icon: User, label: 'nav.profile' },
@@ -63,18 +64,32 @@
 			</a>
 		{/each}
 
-		{#if isAdmin}
+		{#if isProfessional || isAdmin}
 			<div class="pt-3 mt-3 border-t border-[var(--border-color)]">
-				<a
-					href="/app/admin"
-					class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-					       {isActive('/app/admin', pathname)
-						? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
-						: 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'}"
-				>
-					<ShieldCheck size={20} />
-					{$t('nav.admin')}
-				</a>
+				{#if isProfessional}
+					<a
+						href="/app/professional"
+						class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+						       {isActive('/app/professional', pathname)
+							? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
+							: 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'}"
+					>
+						<Users size={20} />
+						{$t('nav.myPatients')}
+					</a>
+				{/if}
+				{#if isAdmin}
+					<a
+						href="/app/admin"
+						class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+						       {isActive('/app/admin', pathname)
+							? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
+							: 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'}"
+					>
+						<ShieldCheck size={20} />
+						{$t('nav.admin')}
+					</a>
+				{/if}
 			</div>
 		{/if}
 	</nav>

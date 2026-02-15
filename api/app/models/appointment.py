@@ -45,6 +45,10 @@ class Appointment(db.Model):
             "id": str(self.id),
             "patient_id": str(self.patient_id),
             "professional_id": str(self.professional_id),
+            "patient_name": (
+                f"{self.patient.first_name} {self.patient.last_name}"
+                if self.patient else None
+            ),
             "professional_name": (
                 f"{self.professional.first_name} {self.professional.last_name}"
                 if self.professional else None

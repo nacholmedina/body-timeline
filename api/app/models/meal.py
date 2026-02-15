@@ -28,10 +28,11 @@ class Meal(db.Model):
 
     patient = db.relationship("User", back_populates="meals")
     photos = db.relationship("MealPhoto", back_populates="meal", cascade="all, delete-orphan", order_by="MealPhoto.sort_order")
+    comments = db.relationship("MealComment", back_populates="meal", cascade="all, delete-orphan", order_by="MealComment.created_at")
 
     __table_args__ = (db.Index("ix_meals_patient_eaten", "patient_id", "eaten_at"),)
 
-    def to_dict(self, include_photos=True):
+    def to_dict(self, include_photos=True, include_comments=False):
         data = {
             "id": str(self.id),
             "patient_id": str(self.patient_id),
@@ -43,6 +44,8 @@ class Meal(db.Model):
         }
         if include_photos:
             data["photos"] = [p.to_dict() for p in self.photos]
+        if include_comments:
+            data["comments"] = [c.to_dict() for c in self.comments]
         return data
 
 
