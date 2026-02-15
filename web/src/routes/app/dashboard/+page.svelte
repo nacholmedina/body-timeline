@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { authStore } from '$stores/auth';
 	import { api } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime } from '$lib/utils';
+	import { formatDateTime, formatDate } from '$lib/utils';
 	import {
 		UtensilsCrossed, Dumbbell, Target, Calendar,
 		Bell, TrendingUp, Newspaper, BarChart3, List
@@ -47,7 +47,7 @@
 	$: isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
 	$: weightChartData = {
-		labels: weightData.map((p) => new Date(p.date).toLocaleDateString()),
+		labels: weightData.map((p) => formatDate(p.date, $locale)),
 		datasets: [
 			{
 				label: $t('dashboard.weightOverTime'),
@@ -254,7 +254,7 @@
 						<div class="space-y-2 max-h-56 overflow-y-auto">
 							{#each [...weightData].reverse().slice(0, 10) as point}
 								<div class="flex items-center justify-between text-sm">
-									<span class="text-[var(--text-secondary)]">{new Date(point.date).toLocaleDateString()}</span>
+									<span class="text-[var(--text-secondary)]">{formatDate(point.date, $locale)}</span>
 									<span class="font-medium text-[var(--text-primary)]">{point.weight_kg} kg</span>
 								</div>
 							{/each}
@@ -329,7 +329,7 @@
 					<div class="rounded-lg bg-brand-50 dark:bg-brand-950 p-4">
 						<p class="font-medium text-[var(--text-primary)]">{summary.next_appointment.title}</p>
 						<p class="text-sm text-[var(--text-secondary)]">
-							{formatDateTime(summary.next_appointment.scheduled_at)}
+							{formatDateTime(summary.next_appointment.scheduled_at, $locale)}
 						</p>
 						{#if summary.next_appointment.professional_name}
 							<p class="mt-1 text-sm text-brand-600 dark:text-brand-400">

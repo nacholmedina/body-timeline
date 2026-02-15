@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
+	import { formatDate } from '$lib/utils';
 	import {
 		Plus, Search, Check, X, Edit2, Trash2
 	} from 'lucide-svelte';
@@ -165,7 +166,7 @@
 				<div class="card p-4 flex items-center justify-between">
 					<div>
 						<p class="font-medium text-[var(--text-primary)]">{req.name}</p>
-						<p class="text-xs text-[var(--text-secondary)]">{typeLabel(req.exercise_type)} &middot; {new Date(req.created_at).toLocaleDateString()}</p>
+						<p class="text-xs text-[var(--text-secondary)]">{typeLabel(req.exercise_type)} &middot; {formatDate(req.created_at, $locale)}</p>
 						{#if req.description}
 							<p class="text-sm text-[var(--text-secondary)] mt-1">{req.description}</p>
 						{/if}

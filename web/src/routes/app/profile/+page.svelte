@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { authStore } from '$stores/auth';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
@@ -144,7 +144,7 @@
 					<p class="text-xs text-[var(--text-secondary)]">{$t('profile.initialWeight')}</p>
 					{#if weightStats.initial_weight_kg}
 						<p class="text-lg font-bold text-[var(--text-primary)]">{weightStats.initial_weight_kg} kg</p>
-						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.initial_weight_date || '')}</p>
+						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.initial_weight_date || '', $locale)}</p>
 					{:else}
 						<p class="text-sm text-[var(--text-secondary)]">—</p>
 					{/if}
@@ -158,7 +158,7 @@
 					<p class="text-xs text-[var(--text-secondary)]">{$t('profile.currentWeight')}</p>
 					{#if weightStats.current_weight_kg}
 						<p class="text-lg font-bold text-[var(--text-primary)]">{weightStats.current_weight_kg} kg</p>
-						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.current_weight_date || '')}</p>
+						<p class="text-[0.65rem] text-[var(--text-secondary)] truncate">{formatDate(weightStats.current_weight_date || '', $locale)}</p>
 					{:else}
 						<p class="text-sm text-[var(--text-secondary)]">—</p>
 					{/if}

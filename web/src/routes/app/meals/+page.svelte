@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, ApiError, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime } from '$lib/utils';
+	import { formatDateTime, formatDate } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, ChevronDown } from 'lucide-svelte';
@@ -318,7 +318,7 @@
 				<div class="card flex items-start justify-between">
 					<div class="flex-1">
 						<h3 class="font-medium text-[var(--text-primary)]">{meal.description}</h3>
-						<p class="mt-1 text-xs text-[var(--text-secondary)]">{formatDateTime(meal.eaten_at || meal.eaten_at)}</p>
+						<p class="mt-1 text-xs text-[var(--text-secondary)]">{formatDateTime(meal.eaten_at || meal.eaten_at, $locale)}</p>
 						{#if meal.notes}
 							<p class="mt-2 text-sm text-[var(--text-secondary)]">{meal.notes}</p>
 						{/if}
@@ -353,7 +353,7 @@
 												{comment.professional_name}
 											</span>
 											<span class="text-xs text-[var(--text-secondary)]">
-												{new Date(comment.created_at).toLocaleDateString()}
+												{formatDate(comment.created_at, $locale)}
 											</span>
 										</div>
 										<p class="text-sm text-[var(--text-primary)]">{comment.comment}</p>

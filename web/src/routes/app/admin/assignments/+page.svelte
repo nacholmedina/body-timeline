@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
+	import { formatDate } from '$lib/utils';
 	import { Plus, Trash2, X } from 'lucide-svelte';
 
 	interface Assignment {
@@ -130,7 +131,7 @@
 						<tr class="border-b border-[var(--border-color)] hover:bg-[var(--bg-secondary)] transition-colors">
 							<td class="px-4 py-3 font-medium text-[var(--text-primary)]">{assignment.professional_name}</td>
 							<td class="px-4 py-3 text-[var(--text-primary)]">{assignment.patient_name}</td>
-							<td class="px-4 py-3 text-[var(--text-secondary)]">{new Date(assignment.created_at).toLocaleDateString()}</td>
+							<td class="px-4 py-3 text-[var(--text-secondary)]">{formatDate(assignment.created_at, $locale)}</td>
 							<td class="px-4 py-3 text-right">
 								<button
 									on:click={() => removeAssignment(assignment.id)}

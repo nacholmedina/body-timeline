@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { authStore } from '$stores/auth';
 	import { BRANDING } from '$lib/config/branding';
@@ -155,7 +155,7 @@
 							<div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
 								<span class="flex items-center gap-1">
 									<Calendar size={14} />
-									{formatDateTime(appt.scheduled_at)}
+									{formatDateTime(appt.scheduled_at, $locale)}
 								</span>
 								<span class="flex items-center gap-1">
 									<Clock size={14} />

@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime } from '$lib/utils';
+	import { formatDateTime, formatDate } from '$lib/utils';
 	import {
 		ArrowLeft, TrendingUp, UtensilsCrossed, Dumbbell, Calendar,
 		MessageSquare, X, Send, ChevronLeft, ChevronRight, AlertCircle, ChevronDown
@@ -70,7 +70,7 @@
 	$: isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
 	$: weightChartData = {
-		labels: weightData.map((p) => new Date(p.date).toLocaleDateString()),
+		labels: weightData.map((p) => formatDate(p.date, $locale)),
 		datasets: [
 			{
 				label: $t('dashboard.weightOverTime'),
@@ -393,7 +393,7 @@
 										<div class="flex-1">
 											<p class="font-medium text-[var(--text-primary)]">{meal.description}</p>
 											<p class="text-sm text-[var(--text-secondary)]">
-												{formatDateTime(meal.eaten_at)}
+												{formatDateTime(meal.eaten_at, $locale)}
 											</p>
 										</div>
 										<button
@@ -434,7 +434,7 @@
 													<div class="flex items-center justify-between mb-1">
 														<span class="text-xs font-medium text-brand-600">{comment.professional_name}</span>
 														<span class="text-xs text-[var(--text-secondary)]">
-															{new Date(comment.created_at).toLocaleDateString()}
+															{formatDate(comment.created_at, $locale)}
 														</span>
 													</div>
 													<p class="text-sm text-[var(--text-primary)]">{comment.comment}</p>
@@ -473,7 +473,7 @@
 												{workout.exercises?.length || 0} {$t('workouts.exercises').toLowerCase()}
 											</p>
 											<p class="text-sm text-[var(--text-secondary)]">
-												{formatDateTime(workout.start_time)}
+												{formatDateTime(workout.start_time, $locale)}
 											</p>
 										</div>
 									</div>
@@ -515,7 +515,7 @@
 			<!-- Meal Info -->
 			<div class="mb-4 rounded-lg bg-[var(--bg-secondary)] p-3">
 				<p class="font-medium text-[var(--text-primary)]">{selectedMeal.description}</p>
-				<p class="text-sm text-[var(--text-secondary)]">{formatDateTime(selectedMeal.eaten_at)}</p>
+				<p class="text-sm text-[var(--text-secondary)]">{formatDateTime(selectedMeal.eaten_at, $locale)}</p>
 			</div>
 
 			<!-- Existing Comments -->

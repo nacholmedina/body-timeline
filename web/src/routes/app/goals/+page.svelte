@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDate } from '$lib/utils';
@@ -190,7 +190,7 @@
 								{$t(`goals.${goal.period}`)}
 							</span>
 							{#if goal.target_date}
-								<span class="text-xs text-[var(--text-secondary)]">{formatDate(goal.target_date)}</span>
+								<span class="text-xs text-[var(--text-secondary)]">{formatDate(goal.target_date, $locale)}</span>
 							{/if}
 						</div>
 					</div>

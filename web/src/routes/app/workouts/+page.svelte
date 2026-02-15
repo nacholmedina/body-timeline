@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime } from '$lib/utils';
@@ -129,7 +129,7 @@
 						<div>
 							<div class="flex items-center gap-2">
 								<Dumbbell size={18} class="text-brand-500" />
-								<span class="text-sm text-[var(--text-secondary)]">{formatDateTime(workout.started_at)}</span>
+								<span class="text-sm text-[var(--text-secondary)]">{formatDateTime(workout.started_at, $locale)}</span>
 								{#if getDuration(workout)}
 									<span class="flex items-center gap-1 text-xs text-accent-600 dark:text-accent-400">
 										<Clock size={12} />{getDuration(workout)}

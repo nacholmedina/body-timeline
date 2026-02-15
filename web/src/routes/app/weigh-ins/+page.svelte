@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from '$i18n/index';
+	import { t, locale } from '$i18n/index';
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDate } from '$lib/utils';
@@ -140,7 +140,7 @@
 						</div>
 						<div>
 							<p class="text-xl font-bold text-[var(--text-primary)]">{wi.weight_kg} kg</p>
-							<p class="text-xs text-[var(--text-secondary)]">{formatDate(wi.recorded_at)}</p>
+							<p class="text-xs text-[var(--text-secondary)]">{formatDate(wi.recorded_at, $locale)}</p>
 						</div>
 					</div>
 					{#if !wi.id?.startsWith('draft-')}
