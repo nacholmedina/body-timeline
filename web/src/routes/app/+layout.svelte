@@ -88,7 +88,7 @@
 
 	<div class="lg:pl-64" class:pt-10={isImpersonating}>
 		<!-- Top bar -->
-		<header class="sticky z-30 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-3 lg:px-6 lg:py-5" class:top-10={isImpersonating} class:top-0={!isImpersonating}>
+		<header class="sticky z-30 flex items-center justify-between bg-[var(--bg-card)] px-4 py-3 lg:px-6 lg:py-5" style="box-shadow: var(--shadow-header);" class:top-10={isImpersonating} class:top-0={!isImpersonating}>
 			<div class="flex items-center gap-3">
 				<button
 					on:click={() => (mobileMenuOpen = !mobileMenuOpen)}
@@ -164,8 +164,15 @@
 		{/if}
 
 		<!-- Main content -->
-		<main class="px-4 py-6 pb-24 lg:px-6 lg:pb-6">
-			<slot />
+		<main class="relative px-4 py-6 pb-24 lg:px-6 lg:pb-6" style="min-height: calc(100vh - 4rem);">
+			<div class="pointer-events-none absolute inset-0 overflow-hidden dark:hidden" aria-hidden="true">
+				<div class="mist-blob-1 absolute -top-20 -left-20 h-[500px] w-[500px] rounded-full bg-brand-400/20 blur-[100px]"></div>
+				<div class="mist-blob-2 absolute top-40 -right-20 h-[400px] w-[400px] rounded-full bg-brand-300/[0.15] blur-[90px]"></div>
+				<div class="mist-blob-3 absolute -bottom-20 left-1/3 h-[450px] w-[450px] rounded-full bg-brand-500/[0.12] blur-[100px]"></div>
+			</div>
+			<div class="relative">
+				<slot />
+			</div>
 		</main>
 	</div>
 

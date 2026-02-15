@@ -4,12 +4,20 @@
 
 @layer base {
 	:root {
-		--bg-primary: #ffffff;
-		--bg-secondary: #f8fafc;
+		--bg-primary: #f6f8fa;
+		--bg-secondary: #eef1f5;
 		--bg-card: #ffffff;
-		--text-primary: #0f172a;
-		--text-secondary: #64748b;
-		--border-color: #e2e8f0;
+		--text-primary: #1a1f36;
+		--text-secondary: #5e6687;
+		--border-color: #e3e8ef;
+		--shadow-card: 0 1px 2px rgba(25, 77, 143, 0.04),
+			0 2px 6px rgba(25, 77, 143, 0.04),
+			0 4px 12px rgba(25, 77, 143, 0.03);
+		--shadow-card-hover: 0 2px 4px rgba(25, 77, 143, 0.06),
+			0 6px 16px rgba(25, 77, 143, 0.06),
+			0 12px 28px rgba(25, 77, 143, 0.04);
+		--shadow-header: 0 1px 3px rgba(25, 77, 143, 0.06),
+			0 2px 8px rgba(25, 77, 143, 0.04);
 	}
 
 	.dark {
@@ -19,6 +27,9 @@
 		--text-primary: #f1f5f9;
 		--text-secondary: #94a3b8;
 		--border-color: #334155;
+		--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
+		--shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.3);
+		--shadow-header: 0 1px 3px rgba(0, 0, 0, 0.3);
 	}
 
 	body {
@@ -30,18 +41,25 @@
 
 @layer components {
 	.card {
-		@apply rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 shadow-sm;
+		@apply rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4;
+		box-shadow: var(--shadow-card);
+		transition: box-shadow 0.2s ease, transform 0.2s ease;
 	}
 
 	.btn-primary {
 		@apply rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white
-		       transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2
+		       transition-all hover:bg-brand-700 focus:outline-none focus:ring-2
 		       focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50;
+		box-shadow: 0 1px 3px rgba(27, 135, 245, 0.2), 0 1px 2px rgba(27, 135, 245, 0.1);
+	}
+
+	.btn-primary:hover:not(:disabled) {
+		box-shadow: 0 2px 6px rgba(27, 135, 245, 0.25), 0 1px 3px rgba(27, 135, 245, 0.15);
 	}
 
 	.btn-secondary {
 		@apply rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] px-4 py-2.5
-		       text-sm font-medium text-[var(--text-primary)] transition-colors
+		       text-sm font-medium text-[var(--text-primary)] transition-all
 		       hover:bg-[var(--bg-secondary)] focus:outline-none focus:ring-2
 		       focus:ring-brand-500 focus:ring-offset-2;
 	}
@@ -50,9 +68,40 @@
 		@apply w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)]
 		       px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]
 		       focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.input:focus {
+		box-shadow: 0 0 0 3px rgba(27, 135, 245, 0.1);
 	}
 
 	.label {
 		@apply mb-1.5 block text-sm font-medium text-[var(--text-primary)];
 	}
 }
+
+/* Mist floating animations */
+@keyframes mist-drift-1 {
+	0%, 100% { transform: translate(0, 0) scale(1); }
+	25% { transform: translate(40px, 30px) scale(1.05); }
+	50% { transform: translate(-20px, 60px) scale(0.95); }
+	75% { transform: translate(30px, -20px) scale(1.02); }
+}
+
+@keyframes mist-drift-2 {
+	0%, 100% { transform: translate(0, 0) scale(1); }
+	25% { transform: translate(-30px, -40px) scale(1.08); }
+	50% { transform: translate(50px, 20px) scale(0.96); }
+	75% { transform: translate(-40px, 40px) scale(1.04); }
+}
+
+@keyframes mist-drift-3 {
+	0%, 100% { transform: translate(0, 0) scale(1); }
+	25% { transform: translate(50px, -30px) scale(1.06); }
+	50% { transform: translate(-30px, -50px) scale(0.97); }
+	75% { transform: translate(-20px, 30px) scale(1.03); }
+}
+
+.mist-blob-1 { animation: mist-drift-1 20s ease-in-out infinite; }
+.mist-blob-2 { animation: mist-drift-2 25s ease-in-out infinite; }
+.mist-blob-3 { animation: mist-drift-3 30s ease-in-out infinite; }
