@@ -25,6 +25,7 @@
 	let notes = '';
 	let formLoading = false;
 	let formError = '';
+	let overrideWarning = false;
 
 	// Reschedule modal
 	let showRescheduleModal = false;
@@ -46,15 +47,23 @@
 		}
 	}
 
+	// Reset override when scheduled time changes
+	$: if (scheduledAt) {
+		overrideWarning = false;
+	}
+
 	async function loadAppointments() {
 		loading = true;
 		try {
 			const params: Record<string, string> = {};
 			if (filter === 'upcoming') params.upcoming = 'true';
 			const res = await api.get('/appointments', params);
-			appointments = res.data.sort(
-				(a: any, b: any) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
-			);
+			// Próximos: nearest first (ascending). Todo: latest first (descending)
+			appointments = res.data.sort((a: any, b: any) => {
+				const timeA = new Date(a.scheduled_at).getTime();
+				const timeB = new Date(b.scheduled_at).getTime();
+				return filter === 'upcoming' ? timeA - timeB : timeB - timeA;
+			});
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : 'Failed to load';
 		} finally {
@@ -76,9 +85,21 @@
 		formError = '';
 		formLoading = true;
 		try {
+			// Validate required fields
+			if (!patientId || !scheduledAt || !apptTitle) {
+				formError = 'Todos los campos son requeridos';
+				formLoading = false;
+				return;
+			}
+
 			// Check for past dates
 			const scheduledDate = new Date(scheduledAt);
 			const now = new Date();
+			if (isNaN(scheduledDate.getTime())) {
+				formError = 'Fecha y hora inválida';
+				formLoading = false;
+				return;
+			}
 			if (scheduledDate < now) {
 				formError = $t('appointments.cannotSchedulePast');
 				formLoading = false;
@@ -86,23 +107,46 @@
 			}
 
 			// Check for overlapping appointments (skip for "other" patients)
-			if (patientId && patientId !== 'other') {
-				const durationMs = parseInt(durationMinutes) * 60000;
-				const conflicts = appointments.filter((appt: any) => {
-					if (String(appt.patient_id) !== String(patientId) || appt.status === 'cancelled') return false;
-					const apptStart = new Date(appt.scheduled_at);
-					const apptEnd = new Date(apptStart.getTime() + appt.duration_minutes * 60000);
-					const newEnd = new Date(scheduledDate.getTime() + durationMs);
-					return (scheduledDate < apptEnd && newEnd > apptStart);
-				});
+			if (patientId !== 'other' && !overrideWarning) {
+				try {
+					// Fetch scheduled appointments to check for overlaps (excludes completed/cancelled)
+					const allApptsRes = await api.get('/appointments', { status: 'scheduled', limit: '100' });
+					const allAppointments = allApptsRes.data || [];
 
-				if (conflicts.length > 0) {
-					const conflictTimes = conflicts.map((c: any) =>
-						new Date(c.scheduled_at).toLocaleTimeString($locale === 'es' ? 'es-AR' : 'en-US', { hour: '2-digit', minute: '2-digit' })
-					).join(', ');
-					formError = `${$t('appointments.overlapWarning')} ${conflictTimes}`;
-					formLoading = false;
-					return;
+					const durationMs = parseInt(durationMinutes) * 60000;
+					const newStart = scheduledDate.getTime();
+					const newEnd = newStart + durationMs;
+					const nowTime = now.getTime();
+
+					// Find conflicts: same patient, not cancelled, not completely ended, time overlaps
+					const conflicts = allAppointments.filter((appt: any) => {
+						// Same patient only (convert both to string for comparison)
+						if (String(appt.patient_id) !== String(patientId)) return false;
+						// Not cancelled
+						if (appt.status === 'cancelled') return false;
+						// Time range
+						const existStart = new Date(appt.scheduled_at).getTime();
+						const existEnd = existStart + (appt.duration_minutes * 60000);
+						// Skip if appointment has completely ended
+						if (existEnd <= nowTime) return false;
+						// Check overlap: new starts before existing ends AND new ends after existing starts
+						return (newStart < existEnd) && (newEnd > existStart);
+					});
+
+					if (conflicts.length > 0) {
+						const patient = patients.find((p: any) => p.id === patientId);
+						const patientName = patient ? `${patient.first_name} ${patient.last_name}` : apptTitle;
+						const conflictTimes = conflicts.map((c: any) =>
+							new Date(c.scheduled_at).toLocaleTimeString($locale === 'es' ? 'es-AR' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+						).join(', ');
+						formError = `${patientName}: ${$t('appointments.overlapWarning')} ${conflictTimes}. ${$t('professional.proceedAnyway')}`;
+						overrideWarning = true;
+						formLoading = false;
+						return;
+					}
+				} catch (err) {
+					console.error('Overlap check failed:', err);
+					// Continue with appointment creation if overlap check fails
 				}
 			}
 
@@ -113,14 +157,17 @@
 				duration_minutes: parseInt(durationMinutes),
 				notes: notes || undefined
 			});
-			appointments = [...appointments, res.data].sort(
-				(a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
-			);
+			appointments = [...appointments, res.data].sort((a, b) => {
+				const timeA = new Date(a.scheduled_at).getTime();
+				const timeB = new Date(b.scheduled_at).getTime();
+				return filter === 'upcoming' ? timeA - timeB : timeB - timeA;
+			});
 			showForm = false;
 			patientId = '';
 			scheduledAt = '';
 			apptTitle = '';
 			notes = '';
+			overrideWarning = false;
 		} catch (err) {
 			formError = err instanceof ApiError ? err.message : 'Failed';
 		} finally {
@@ -176,7 +223,11 @@
 				scheduled_at: new Date(rescheduleDateTime).toISOString()
 			});
 			appointments = appointments.map(a => a.id === rescheduleAppt.id ? res.data : a)
-				.sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+				.sort((a, b) => {
+					const timeA = new Date(a.scheduled_at).getTime();
+					const timeB = new Date(b.scheduled_at).getTime();
+					return filter === 'upcoming' ? timeA - timeB : timeB - timeA;
+				});
 			showRescheduleModal = false;
 			rescheduleAppt = null;
 		} catch (err) {
@@ -197,6 +248,8 @@
 
 	function handlePatientChange() {
 		apptTitle = '';
+		overrideWarning = false;
+		formError = '';
 	}
 
 	onMount(() => {
