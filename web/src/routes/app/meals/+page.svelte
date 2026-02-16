@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { t, locale } from '$i18n/index';
 	import { api, ApiError, photoUrl } from '$lib/api/client';
 	import { authStore } from '$stores/auth';
@@ -49,11 +49,25 @@
 	function openLightbox(url: string, alt: string) {
 		lightboxUrl = url;
 		lightboxAlt = alt;
+		// Push a new history state so back button closes the lightbox
+		history.pushState({ lightbox: true }, '');
 	}
 
 	function closeLightbox() {
 		lightboxUrl = '';
 		lightboxAlt = '';
+		// If we're still in lightbox history state, go back
+		if (history.state?.lightbox) {
+			history.back();
+		}
+	}
+
+	function handlePopState(event: PopStateEvent) {
+		// Close lightbox when back button is pressed
+		if (lightboxUrl && !event.state?.lightbox) {
+			lightboxUrl = '';
+			lightboxAlt = '';
+		}
 	}
 
 	async function toggleComments(mealId: string) {
@@ -258,6 +272,13 @@
 	onMount(() => {
 		loadMeals();
 		mounted = true;
+		// Listen for back button to close lightbox
+		window.addEventListener('popstate', handlePopState);
+	});
+
+	onDestroy(() => {
+		// Clean up event listener
+		window.removeEventListener('popstate', handlePopState);
 	});
 
 	$: if (mounted && filter) {

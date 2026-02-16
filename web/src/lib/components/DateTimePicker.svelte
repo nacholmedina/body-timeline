@@ -34,7 +34,7 @@
 		type="date"
 		value={datePart}
 		on:input={onDateChange}
-		class="input date-input"
+		class="datetime-input date-input"
 		{required}
 	/>
 	<input
@@ -42,15 +42,77 @@
 		type="time"
 		value={timePart}
 		on:input={onTimeChange}
-		class="input date-input"
+		class="datetime-input time-input"
 	/>
 </div>
 
 <style>
-	.date-input::-webkit-calendar-picker-indicator {
-		filter: invert(0.5);
+	.datetime-input {
+		font-family: inherit;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-primary);
+		background: var(--bg-primary);
+		border: 1px solid var(--border-color);
+		border-radius: 0.5rem;
+		padding: 0.625rem 0.75rem;
+		transition: all 0.15s ease;
+		cursor: pointer;
 	}
-	:global(.dark) .date-input::-webkit-calendar-picker-indicator {
-		filter: invert(0.7);
+
+	.datetime-input:hover {
+		border-color: var(--brand-500);
+	}
+
+	.datetime-input:focus {
+		outline: none;
+		border-color: var(--brand-600);
+		ring: 2px;
+		ring-color: rgba(99, 102, 241, 0.1);
+	}
+
+	/* Calendar/clock icon styling */
+	.datetime-input::-webkit-calendar-picker-indicator {
+		cursor: pointer;
+		opacity: 0.6;
+		padding: 4px;
+		border-radius: 4px;
+		transition: all 0.15s ease;
+	}
+
+	.datetime-input::-webkit-calendar-picker-indicator:hover {
+		opacity: 1;
+		background: rgba(99, 102, 241, 0.1);
+	}
+
+	:global(.dark) .datetime-input::-webkit-calendar-picker-indicator {
+		filter: invert(1);
+		opacity: 0.7;
+	}
+
+	:global(.dark) .datetime-input::-webkit-calendar-picker-indicator:hover {
+		opacity: 1;
+	}
+
+	/* Remove browser-specific styling */
+	.datetime-input::-webkit-datetime-edit {
+		padding: 0;
+	}
+
+	.datetime-input::-webkit-datetime-edit-fields-wrapper {
+		padding: 0;
+	}
+
+	/* Mobile optimizations */
+	@media (max-width: 640px) {
+		.datetime-input {
+			font-size: 1rem;
+			padding: 0.75rem;
+		}
+
+		.datetime-input::-webkit-calendar-picker-indicator {
+			width: 24px;
+			height: 24px;
+		}
 	}
 </style>
