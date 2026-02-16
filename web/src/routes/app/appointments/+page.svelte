@@ -7,6 +7,7 @@
 	import { formatDateTime } from '$lib/utils';
 	import { Calendar, Clock, User, Plus, XCircle, RefreshCw, Trash2 } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	let appointments: any[] = [];
 	let patients: any[] = [];
@@ -31,6 +32,11 @@
 	let rescheduleDateTime = '';
 	let rescheduling = false;
 	let rescheduleError = '';
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let appointmentToDelete: string | null = null;
+	let deleting = false;
 
 	// Auto-fill title when patient changes
 	$: if (patientId && patients.length > 0) {
@@ -100,13 +106,23 @@
 		}
 	}
 
-	async function deleteAppointment(appt: any) {
-		if (!confirm($t('appointments.confirmDelete'))) return;
+	function deleteAppointment(id: string) {
+		appointmentToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!appointmentToDelete) return;
+		deleting = true;
 		try {
-			await api.delete(`/appointments/${appt.id}`);
-			appointments = appointments.filter(a => a.id !== appt.id);
+			await api.delete(`/appointments/${appointmentToDelete}`);
+			appointments = appointments.filter(a => a.id !== appointmentToDelete);
+			showDeleteConfirm = false;
+			appointmentToDelete = null;
 		} catch (err) {
-			console.error('Failed to delete:', err);
+			error = 'Failed to delete appointment';
+		} finally {
+			deleting = false;
 		}
 	}
 
@@ -280,7 +296,7 @@
 							{/if}
 							{#if canCreate}
 								<button
-									on:click={() => deleteAppointment(appt)}
+									on:click={() => deleteAppointment(appt.id)}
 									class="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
 									title={$t('appointments.delete')}
 								>
@@ -329,3 +345,12 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('appointments.confirmDelete')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>

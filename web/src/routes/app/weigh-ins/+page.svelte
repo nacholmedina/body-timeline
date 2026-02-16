@@ -8,6 +8,7 @@
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { unitStore } from '$stores/units';
 	import { Plus, Scale, Trash2, TrendingDown, TrendingUp } from 'lucide-svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	let weighIns: any[] = [];
 	let loading = true;
@@ -18,6 +19,11 @@
 	let recordedAt = localToday();
 	let formLoading = false;
 	let formError = '';
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let weighInToDelete: string | null = null;
+	let deleting = false;
 
 	async function loadWeighIns() {
 		loading = true;
@@ -58,9 +64,24 @@
 		}
 	}
 
-	async function deleteWeighIn(id: string) {
-		await api.delete(`/weigh-ins/${id}`);
-		weighIns = weighIns.filter((w) => w.id !== id);
+	function deleteWeighIn(id: string) {
+		weighInToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!weighInToDelete) return;
+		deleting = true;
+		try {
+			await api.delete(`/weigh-ins/${weighInToDelete}`);
+			weighIns = weighIns.filter((w) => w.id !== weighInToDelete);
+			showDeleteConfirm = false;
+			weighInToDelete = null;
+		} catch (err) {
+			error = 'Failed to delete weigh-in';
+		} finally {
+			deleting = false;
+		}
 	}
 
 	function resetForm() {
@@ -158,3 +179,12 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('weighIns.confirmDelete')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>

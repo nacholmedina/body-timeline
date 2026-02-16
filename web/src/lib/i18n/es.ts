@@ -85,14 +85,16 @@ export const es = {
 		choosePhoto: 'Galería',
 		removePhoto: 'Quitar',
 		maxPhotos: 'Máximo 3 fotos alcanzado',
-		writeReply: 'Escribí una respuesta...'
+		writeReply: 'Escribí una respuesta...',
+		confirmDelete: '¿Estás seguro de que querés eliminar esta comida?'
 	},
 	weighIns: {
 		title: 'Pesajes',
 		addWeighIn: 'Agregar pesaje',
 		weight: 'Peso',
 		recordedAt: 'Registrado el',
-		noWeighIns: 'Aún no hay pesajes'
+		noWeighIns: 'Aún no hay pesajes',
+		confirmDelete: '¿Estás seguro de que querés eliminar este pesaje?'
 	},
 	goals: {
 		title: 'Metas',
@@ -105,7 +107,8 @@ export const es = {
 		targetDate: 'Fecha objetivo',
 		completed: 'Completada',
 		pending: 'Pendiente',
-		noGoals: 'Aún no se definieron metas'
+		noGoals: 'Aún no se definieron metas',
+		confirmDelete: '¿Estás seguro de que querés eliminar esta meta?'
 	},
 	workouts: {
 		title: 'Entrenamientos',
@@ -114,7 +117,8 @@ export const es = {
 		endTime: 'Hora de fin',
 		exercises: 'Ejercicios',
 		noWorkouts: 'Aún no se registraron entrenamientos',
-		exercise: 'Ejercicio'
+		exercise: 'Ejercicio',
+		confirmDelete: '¿Estás seguro de que querés eliminar este entrenamiento?'
 	},
 	exercises: {
 		title: 'Ejercicios',
@@ -331,7 +335,8 @@ export const es = {
 			'Meditation': 'Meditación',
 			'Breathing Exercises': 'Ejercicios de Respiración',
 			'Other': 'Otro'
-		}
+		},
+		confirmDelete: '¿Estás seguro de que querés eliminar este ejercicio?'
 	},
 	notifications: {
 		title: 'Notificaciones',
@@ -415,7 +420,8 @@ export const es = {
 		noUsers: 'No se encontraron usuarios',
 		noAssignments: 'No se encontraron asignaciones',
 		noExercises: 'No se encontraron ejercicios',
-		noRequests: 'Sin solicitudes pendientes'
+		noRequests: 'Sin solicitudes pendientes',
+		confirmRemoveAssignment: '¿Estás seguro de que querés quitar esta asignación?'
 	},
 	roles: {
 		patient: 'Paciente',
@@ -474,7 +480,10 @@ export const es = {
 		optional: 'opcional',
 		failedToLoad: 'Error al cargar',
 		failed: 'Error',
-		send: 'Enviar'
+		send: 'Enviar',
+		yes: 'Sí',
+		no: 'No',
+		dismiss: 'Descartar'
 	},
 	professional: {
 		title: 'Mis Pacientes',

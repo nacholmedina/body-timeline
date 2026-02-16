@@ -6,6 +6,7 @@
 	import { formatDateTime, localNow } from '$lib/utils';
 	import { Plus, Dumbbell, Trash2, Clock } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	let workouts: any[] = [];
 	let loading = true;
@@ -17,6 +18,11 @@
 	let notes = '';
 	let formLoading = false;
 	let formError = '';
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let workoutToDelete: string | null = null;
+	let deleting = false;
 
 	async function loadWorkouts() {
 		loading = true;
@@ -49,9 +55,24 @@
 		}
 	}
 
-	async function deleteWorkout(id: string) {
-		await api.delete(`/workouts/${id}`);
-		workouts = workouts.filter((w) => w.id !== id);
+	function deleteWorkout(id: string) {
+		workoutToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!workoutToDelete) return;
+		deleting = true;
+		try {
+			await api.delete(`/workouts/${workoutToDelete}`);
+			workouts = workouts.filter((w) => w.id !== workoutToDelete);
+			showDeleteConfirm = false;
+			workoutToDelete = null;
+		} catch (err) {
+			error = 'Failed to delete workout';
+		} finally {
+			deleting = false;
+		}
 	}
 
 	function resetForm() {
@@ -170,3 +191,12 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('workouts.confirmDelete')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>

@@ -5,6 +5,7 @@
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime } from '$lib/utils';
 	import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, X, Clock, User, Trash2, XCircle, RefreshCw } from 'lucide-svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	type ViewMode = 'day' | 'week' | 'month';
 
@@ -13,6 +14,11 @@
 	let appointments: any[] = [];
 	let patients: any[] = [];
 	let loading = true;
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let appointmentToDelete: string | null = null;
+	let deleting = false;
 
 	// Create appointment modal
 	let showCreateModal = false;
@@ -152,13 +158,23 @@
 		}
 	}
 
-	async function deleteAppointment(appt: any) {
-		if (!confirm($t('appointments.confirmDelete'))) return;
+	function deleteAppointment(id: string) {
+		appointmentToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!appointmentToDelete) return;
+		deleting = true;
 		try {
-			await api.delete(`/appointments/${appt.id}`);
-			appointments = appointments.filter(a => a.id !== appt.id);
+			await api.delete(`/appointments/${appointmentToDelete}`);
+			appointments = appointments.filter(a => a.id !== appointmentToDelete);
+			showDeleteConfirm = false;
+			appointmentToDelete = null;
 		} catch (err: any) {
-			console.error('Failed to delete:', err);
+			console.error('Failed to delete appointment:', err);
+		} finally {
+			deleting = false;
 		}
 	}
 
@@ -387,7 +403,7 @@
 												<button on:click={() => cancelAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-600" title={$t('appointments.cancel')}>
 													<XCircle size={14} />
 												</button>
-												<button on:click={() => deleteAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
+												<button on:click={() => deleteAppointment(appt.id)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
 													<Trash2 size={14} />
 												</button>
 											</div>
@@ -432,7 +448,7 @@
 										<button on:click={() => cancelAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-600" title={$t('appointments.cancel')}>
 											<XCircle size={14} />
 										</button>
-										<button on:click={() => deleteAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
+										<button on:click={() => deleteAppointment(appt.id)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
 											<Trash2 size={14} />
 										</button>
 									</div>
@@ -568,6 +584,15 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('appointments.confirmDelete')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>
 
 <style>
 	.input {

@@ -85,14 +85,16 @@ export const en = {
 		choosePhoto: 'Gallery',
 		removePhoto: 'Remove',
 		maxPhotos: 'Maximum 3 photos reached',
-		writeReply: 'Write a reply...'
+		writeReply: 'Write a reply...',
+		confirmDelete: 'Are you sure you want to delete this meal?'
 	},
 	weighIns: {
 		title: 'Weigh-ins',
 		addWeighIn: 'Add weigh-in',
 		weight: 'Weight',
 		recordedAt: 'Recorded at',
-		noWeighIns: 'No weigh-ins yet'
+		noWeighIns: 'No weigh-ins yet',
+		confirmDelete: 'Are you sure you want to delete this weigh-in?'
 	},
 	goals: {
 		title: 'Goals',
@@ -105,7 +107,8 @@ export const en = {
 		targetDate: 'Target date',
 		completed: 'Completed',
 		pending: 'Pending',
-		noGoals: 'No goals set yet'
+		noGoals: 'No goals set yet',
+		confirmDelete: 'Are you sure you want to delete this goal?'
 	},
 	workouts: {
 		title: 'Workouts',
@@ -114,7 +117,8 @@ export const en = {
 		endTime: 'End time',
 		exercises: 'Exercises',
 		noWorkouts: 'No workouts logged yet',
-		exercise: 'Exercise'
+		exercise: 'Exercise',
+		confirmDelete: 'Are you sure you want to delete this workout?'
 	},
 	exercises: {
 		title: 'Exercises',
@@ -331,7 +335,8 @@ export const en = {
 			'Meditation': 'Meditation',
 			'Breathing Exercises': 'Breathing Exercises',
 			'Other': 'Other'
-		}
+		},
+		confirmDelete: 'Are you sure you want to delete this exercise?'
 	},
 	notifications: {
 		title: 'Notifications',
@@ -415,7 +420,8 @@ export const en = {
 		noUsers: 'No users found',
 		noAssignments: 'No assignments found',
 		noExercises: 'No exercises found',
-		noRequests: 'No pending requests'
+		noRequests: 'No pending requests',
+		confirmRemoveAssignment: 'Are you sure you want to remove this assignment?'
 	},
 	roles: {
 		patient: 'Patient',
@@ -474,7 +480,10 @@ export const en = {
 		optional: 'optional',
 		failedToLoad: 'Failed to load',
 		failed: 'Failed',
-		send: 'Send'
+		send: 'Send',
+		yes: 'Yes',
+		no: 'No',
+		dismiss: 'Dismiss'
 	},
 	professional: {
 		title: 'My Patients',

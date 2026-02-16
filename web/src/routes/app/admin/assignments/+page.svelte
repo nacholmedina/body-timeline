@@ -4,6 +4,7 @@
 	import { api, ApiError } from '$lib/api/client';
 	import { formatDate } from '$lib/utils';
 	import { Plus, Trash2, X } from 'lucide-svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	interface Assignment {
 		id: string;
@@ -34,6 +35,11 @@
 	let selectedPatient = '';
 	let createError = '';
 	let creating = false;
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let assignmentToDelete: string | null = null;
+	let deleting = false;
 
 	async function loadAssignments() {
 		loading = true;
@@ -91,12 +97,23 @@
 		}
 	}
 
-	async function removeAssignment(id: string) {
+	function removeAssignment(id: string) {
+		assignmentToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!assignmentToDelete) return;
+		deleting = true;
 		try {
-			await api.delete(`/admin/assignments/${id}`);
-			assignments = assignments.filter((a) => a.id !== id);
+			await api.delete(`/admin/assignments/${assignmentToDelete}`);
+			assignments = assignments.filter((a) => a.id !== assignmentToDelete);
+			showDeleteConfirm = false;
+			assignmentToDelete = null;
 		} catch (err) {
-			console.error('Failed to remove assignment', err);
+			error = 'Failed to remove assignment';
+		} finally {
+			deleting = false;
 		}
 	}
 
@@ -199,3 +216,12 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('admin.confirmRemoveAssignment')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>

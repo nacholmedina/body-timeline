@@ -64,6 +64,17 @@
 		       focus:ring-brand-500 focus:ring-offset-2;
 	}
 
+	.btn-danger {
+		@apply rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white
+		       transition-all hover:bg-red-700 focus:outline-none focus:ring-2
+		       focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50;
+		box-shadow: 0 1px 3px rgba(220, 38, 38, 0.2), 0 1px 2px rgba(220, 38, 38, 0.1);
+	}
+
+	.btn-danger:hover:not(:disabled) {
+		box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25), 0 1px 3px rgba(220, 38, 38, 0.15);
+	}
+
 	.input {
 		@apply w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)]
 		       px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]

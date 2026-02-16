@@ -6,6 +6,7 @@
 	import { formatDateTime, localNow, kgToLbs, lbsToKg, kmToMi, miToKm } from '$lib/utils';
 	import { Plus, Dumbbell, Trash2, Search, X, Camera, ImagePlus, ChevronDown } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { onlineStore } from '$stores/online';
 	import { unitStore } from '$stores/units';
@@ -17,6 +18,11 @@
 	let error = '';
 	let showForm = false;
 	let showRequestForm = false;
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let exerciseToDelete: string | null = null;
+	let deleting = false;
 
 	// Form state
 	let selectedDefinitionId = '';
@@ -218,16 +224,27 @@
 		}
 	}
 
-	async function deleteExerciseLog(id: string) {
+	function deleteExerciseLog(id: string) {
+		exerciseToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!exerciseToDelete) return;
+		deleting = true;
 		try {
 			if ($onlineStore) {
-				await api.delete(`/exercise-logs/${id}`);
+				await api.delete(`/exercise-logs/${exerciseToDelete}`);
 			} else {
-				await addToSyncQueue({ type: 'exercise', action: 'delete', payload: { id } });
+				await addToSyncQueue({ type: 'exercise', action: 'delete', payload: { id: exerciseToDelete } });
 			}
-			exerciseLogs = exerciseLogs.filter((e) => e.id !== id);
+			exerciseLogs = exerciseLogs.filter((e) => e.id !== exerciseToDelete);
+			showDeleteConfirm = false;
+			exerciseToDelete = null;
 		} catch (err) {
-			console.error('Failed to delete:', err);
+			error = 'Failed to delete exercise';
+		} finally {
+			deleting = false;
 		}
 	}
 
@@ -780,3 +797,12 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('exercises.confirmDelete')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>

@@ -9,6 +9,7 @@
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, Send } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	let meals: any[] = [];
 	let loading = true;
@@ -39,6 +40,11 @@
 	let replyTexts: Record<string, string> = {};
 	let replyLoading: Record<string, boolean> = {};
 	const isPatient = $authStore.user?.role === 'patient';
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let mealToDelete: string | null = null;
+	let deleting = false;
 
 	function openLightbox(url: string, alt: string) {
 		lightboxUrl = url;
@@ -218,12 +224,23 @@
 		}
 	}
 
-	async function deleteMeal(id: string) {
+	function deleteMeal(id: string) {
+		mealToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!mealToDelete) return;
+		deleting = true;
 		try {
-			await api.delete(`/meals/${id}`);
-			meals = meals.filter((m) => m.id !== id);
+			await api.delete(`/meals/${mealToDelete}`);
+			meals = meals.filter((m) => m.id !== mealToDelete);
+			showDeleteConfirm = false;
+			mealToDelete = null;
 		} catch (err) {
 			error = 'Failed to delete meal';
+		} finally {
+			deleting = false;
 		}
 	}
 
@@ -518,3 +535,12 @@
 		/>
 	</button>
 {/if}
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('meals.confirmDelete')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>

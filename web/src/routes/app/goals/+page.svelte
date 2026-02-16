@@ -5,6 +5,7 @@
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDate } from '$lib/utils';
 	import { Plus, Target, Check, Circle, Trash2 } from 'lucide-svelte';
+	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	let goals: any[] = [];
 	let loading = true;
@@ -19,6 +20,11 @@
 	let targetDate = '';
 	let formLoading = false;
 	let formError = '';
+
+	// Delete confirmation
+	let showDeleteConfirm = false;
+	let goalToDelete: string | null = null;
+	let deleting = false;
 
 	async function loadGoals() {
 		loading = true;
@@ -61,9 +67,24 @@
 		} catch {}
 	}
 
-	async function deleteGoal(id: string) {
-		await api.delete(`/goals/${id}`);
-		goals = goals.filter((g) => g.id !== id);
+	function deleteGoal(id: string) {
+		goalToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	async function confirmDelete() {
+		if (!goalToDelete) return;
+		deleting = true;
+		try {
+			await api.delete(`/goals/${goalToDelete}`);
+			goals = goals.filter((g) => g.id !== goalToDelete);
+			showDeleteConfirm = false;
+			goalToDelete = null;
+		} catch (err) {
+			error = 'Failed to delete goal';
+		} finally {
+			deleting = false;
+		}
 	}
 
 	function resetForm() {
@@ -205,3 +226,12 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<ConfirmModal
+	bind:show={showDeleteConfirm}
+	title={$t('common.delete')}
+	message={$t('goals.confirmDelete')}
+	onConfirm={confirmDelete}
+	loading={deleting}
+/>
