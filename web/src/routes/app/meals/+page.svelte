@@ -2,11 +2,12 @@
 	import { onMount } from 'svelte';
 	import { t, locale } from '$i18n/index';
 	import { api, ApiError, photoUrl } from '$lib/api/client';
+	import { authStore } from '$stores/auth';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime, formatDate, localNow } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
-	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, ChevronDown } from 'lucide-svelte';
+	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, Send } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 
 	let meals: any[] = [];
@@ -31,9 +32,12 @@
 	let lightboxUrl = '';
 	let lightboxAlt = '';
 
-	// Comments
+	// Comments & Replies
 	let expandedCommentIds = new Set<string>();
 	let mealComments: Record<string, any[]> = {};
+	let replyTexts: Record<string, string> = {};
+	let replyLoading: Record<string, boolean> = {};
+	const isPatient = $authStore.user?.role === 'patient';
 
 	function openLightbox(url: string, alt: string) {
 		lightboxUrl = url;
@@ -63,6 +67,28 @@
 					console.error('Failed to load comments:', err);
 				}
 			}
+		}
+	}
+
+	async function sendReply(mealId: string) {
+		const text = (replyTexts[mealId] || '').trim();
+		if (!text) return;
+		replyLoading[mealId] = true;
+		replyLoading = replyLoading;
+		try {
+			const res = await api.post(`/meal-comments/${mealId}/comments`, { comment: text });
+			mealComments[mealId] = [...(mealComments[mealId] || []), res.data];
+			mealComments = mealComments;
+			replyTexts[mealId] = '';
+			// Update comment count on the meal card
+			const meal = meals.find((m) => m.id === mealId);
+			if (meal) meal.comment_count = (meal.comment_count || 0) + 1;
+			meals = meals;
+		} catch (err) {
+			console.error('Failed to send reply:', err);
+		} finally {
+			replyLoading[mealId] = false;
+			replyLoading = replyLoading;
 		}
 	}
 
@@ -347,9 +373,13 @@
 						{#if expandedCommentIds.has(meal.id) && mealComments[meal.id] && mealComments[meal.id].length > 0}
 							<div class="mt-3 space-y-2 border-t border-[var(--border-color)] pt-3">
 								{#each mealComments[meal.id] as comment}
-									<div class="rounded bg-brand-50 dark:bg-brand-950 p-3">
+									<div class="rounded p-3 {comment.author_role === 'patient'
+										? 'bg-[var(--bg-secondary)] ml-4'
+										: 'bg-brand-50 dark:bg-brand-950'}">
 										<div class="flex items-center justify-between mb-1">
-											<span class="text-xs font-medium text-brand-600 dark:text-brand-400">
+											<span class="text-xs font-medium {comment.author_role === 'patient'
+												? 'text-[var(--text-secondary)]'
+												: 'text-brand-600 dark:text-brand-400'}">
 												{comment.professional_name}
 											</span>
 											<span class="text-xs text-[var(--text-secondary)]">
@@ -359,6 +389,24 @@
 										<p class="text-sm text-[var(--text-primary)]">{comment.comment}</p>
 									</div>
 								{/each}
+								{#if isPatient}
+									<form on:submit|preventDefault={() => sendReply(meal.id)} class="flex gap-2 pt-1">
+										<input
+											type="text"
+											bind:value={replyTexts[meal.id]}
+											class="input flex-1 text-sm"
+											placeholder={$t('meals.writeReply')}
+											disabled={replyLoading[meal.id]}
+										/>
+										<button
+											type="submit"
+											class="btn-primary flex items-center justify-center px-3"
+											disabled={replyLoading[meal.id] || !(replyTexts[meal.id] || '').trim()}
+										>
+											<Send size={16} />
+										</button>
+									</form>
+								{/if}
 							</div>
 						{/if}
 					</div>

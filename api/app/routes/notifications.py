@@ -26,10 +26,16 @@ def list_notifications():
             .order_by(Notification.created_at.desc())
         )
     elif current_user.role == "professional":
-        # Professional sees notifications they authored
-        query = Notification.query.filter_by(author_id=current_user.id).order_by(
-            Notification.created_at.desc()
+        # Professional sees notifications they authored + notifications sent to them
+        from sqlalchemy import or_
+        authored_ids = db.session.query(Notification.id).filter_by(author_id=current_user.id)
+        received_ids = (
+            db.session.query(NotificationRecipient.notification_id)
+            .filter(NotificationRecipient.patient_id == current_user.id)
         )
+        query = Notification.query.filter(
+            or_(Notification.id.in_(authored_ids), Notification.id.in_(received_ids))
+        ).order_by(Notification.created_at.desc())
     else:
         # devadmin sees all
         query = Notification.query.order_by(Notification.created_at.desc())
@@ -39,14 +45,17 @@ def list_notifications():
 
     results = []
     for n in items:
-        data = n.to_dict(include_recipients=current_user.role != "patient")
-        if current_user.role == "patient":
+        data = n.to_dict(include_recipients=current_user.role not in ("patient", "professional"))
+        if current_user.role in ("patient", "professional"):
             recip = NotificationRecipient.query.filter_by(
                 notification_id=n.id, patient_id=current_user.id
             ).first()
             if recip:
                 data["is_read"] = recip.is_read
                 data["read_at"] = recip.read_at.isoformat() if recip.read_at else None
+            elif current_user.role == "professional":
+                # Authored notification — mark as read by default
+                data["is_read"] = True
         results.append(data)
 
     return jsonify(data=results, page=page, limit=limit, total=total)
@@ -99,9 +108,6 @@ def create_notification():
 @bp.route("/<uuid:notification_id>/read", methods=["POST"])
 @jwt_required()
 def mark_read(notification_id):
-    if current_user.role != "patient":
-        return api_error("Only patients can mark notifications as read", 403)
-
     recip = NotificationRecipient.query.filter_by(
         notification_id=notification_id,
         patient_id=current_user.id,
@@ -119,9 +125,6 @@ def mark_read(notification_id):
 @bp.route("/mark-all-read", methods=["POST"])
 @jwt_required()
 def mark_all_read():
-    if current_user.role != "patient":
-        return api_error("Only patients can mark notifications as read", 403)
-
     NotificationRecipient.query.filter_by(
         patient_id=current_user.id, is_read=False
     ).update({"is_read": True, "read_at": datetime.now(timezone.utc)})
@@ -132,9 +135,6 @@ def mark_all_read():
 @bp.route("/unread-count", methods=["GET"])
 @jwt_required()
 def unread_count():
-    if current_user.role != "patient":
-        return jsonify(count=0)
-
     count = NotificationRecipient.query.filter_by(
         patient_id=current_user.id, is_read=False
     ).count()

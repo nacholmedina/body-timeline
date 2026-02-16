@@ -84,7 +84,8 @@ export const en = {
 		takePhoto: 'Take photo',
 		choosePhoto: 'Gallery',
 		removePhoto: 'Remove',
-		maxPhotos: 'Maximum 3 photos reached'
+		maxPhotos: 'Maximum 3 photos reached',
+		writeReply: 'Write a reply...'
 	},
 	weighIns: {
 		title: 'Weigh-ins',
@@ -348,7 +349,9 @@ export const en = {
 		assignmentRemovedTitle: 'Patient Assignment Removed',
 		assignmentRemovedBody: '{name} has accepted an invitation from another professional and is no longer your patient.',
 		goalCreatedTitle: '{name} set a goal for you',
-		goalCreatedBody: 'Your professional set a new goal: {goal}'
+		goalCreatedBody: 'Your professional set a new goal: {goal}',
+		mealReplyTitle: '{name} replied to your meal comment',
+		mealReplyBody: 'Your patient replied: {preview}'
 	},
 	appointments: {
 		title: 'Appointments',

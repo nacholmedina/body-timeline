@@ -42,6 +42,7 @@ class MealComment(db.Model):
                 if self.professional
                 else None
             ),
+            "author_role": self.professional.role if self.professional else None,
             "comment": self.comment,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),

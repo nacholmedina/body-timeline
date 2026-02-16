@@ -30,15 +30,27 @@ def list_comments(meal_id):
 
 @bp.route("/<uuid:meal_id>/comments", methods=["POST"])
 @jwt_required()
-@roles_required("professional", "devadmin")
 def create_comment(meal_id):
-    """Add comment to meal (professionals only)"""
+    """Add comment to meal (professionals, or patients replying to existing thread)"""
     meal = db.session.get(Meal, meal_id)
     if not meal:
         return api_error("Meal not found", 404)
 
-    if not can_access_patient_data(current_user, str(meal.patient_id)):
-        return api_error("No access to this meal", 403)
+    if current_user.role == "patient":
+        # Patients can only reply on their own meals when a professional has commented
+        if str(meal.patient_id) != str(current_user.id):
+            return api_error("Forbidden", 403)
+        has_professional_comment = MealComment.query.filter(
+            MealComment.meal_id == meal_id,
+            MealComment.professional_id != current_user.id,
+        ).first()
+        if not has_professional_comment:
+            return api_error("You can only reply after a professional comments", 403)
+    else:
+        if current_user.role not in ("professional", "devadmin"):
+            return api_error("Forbidden", 403)
+        if not can_access_patient_data(current_user, str(meal.patient_id)):
+            return api_error("No access to this meal", 403)
 
     data = request.get_json(silent=True) or {}
     comment_text = (data.get("comment") or "").strip()
@@ -54,23 +66,47 @@ def create_comment(meal_id):
     db.session.add(comment)
     db.session.flush()
 
-    # Create notification for patient (type key for frontend i18n)
     preview = comment_text[:100] + ("..." if len(comment_text) > 100 else "")
-    notification = Notification(
-        author_id=current_user.id,
-        title="meal_comment",
-        body=preview,
-    )
-    db.session.add(notification)
-    db.session.flush()
 
-    recipient = NotificationRecipient(
-        notification_id=notification.id,
-        patient_id=meal.patient_id,
-    )
-    db.session.add(recipient)
+    if current_user.role == "patient":
+        # Notify all professionals who commented on this meal
+        pro_ids = (
+            db.session.query(MealComment.professional_id)
+            .filter(
+                MealComment.meal_id == meal_id,
+                MealComment.professional_id != current_user.id,
+            )
+            .distinct()
+            .all()
+        )
+        if pro_ids:
+            notification = Notification(
+                author_id=current_user.id,
+                title="meal_reply",
+                body=preview,
+            )
+            db.session.add(notification)
+            db.session.flush()
+            for (pid,) in pro_ids:
+                db.session.add(NotificationRecipient(
+                    notification_id=notification.id,
+                    patient_id=pid,
+                ))
+    else:
+        # Professional commenting → notify patient
+        notification = Notification(
+            author_id=current_user.id,
+            title="meal_comment",
+            body=preview,
+        )
+        db.session.add(notification)
+        db.session.flush()
+        db.session.add(NotificationRecipient(
+            notification_id=notification.id,
+            patient_id=meal.patient_id,
+        ))
+
     db.session.commit()
-
     return jsonify(data=comment.to_dict()), 201
 
 

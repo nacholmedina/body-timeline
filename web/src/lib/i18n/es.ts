@@ -84,7 +84,8 @@ export const es = {
 		takePhoto: 'Tomar foto',
 		choosePhoto: 'Galería',
 		removePhoto: 'Quitar',
-		maxPhotos: 'Máximo 3 fotos alcanzado'
+		maxPhotos: 'Máximo 3 fotos alcanzado',
+		writeReply: 'Escribí una respuesta...'
 	},
 	weighIns: {
 		title: 'Pesajes',
@@ -348,7 +349,9 @@ export const es = {
 		assignmentRemovedTitle: 'Asignación de paciente eliminada',
 		assignmentRemovedBody: '{name} aceptó una invitación de otro profesional y ya no es tu paciente.',
 		goalCreatedTitle: '{name} te asignó una meta',
-		goalCreatedBody: 'Tu profesional te asignó una nueva meta: {goal}'
+		goalCreatedBody: 'Tu profesional te asignó una nueva meta: {goal}',
+		mealReplyTitle: '{name} respondió a tu comentario',
+		mealReplyBody: 'Tu paciente respondió: {preview}'
 	},
 	appointments: {
 		title: 'Turnos',

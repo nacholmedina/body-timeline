@@ -547,9 +547,13 @@
 									{#if meal.comments && meal.comments.length > 0}
 										<div class="mt-3 space-y-2 border-t border-[var(--border-color)] pt-3">
 											{#each meal.comments as comment}
-												<div class="rounded bg-[var(--bg-secondary)] p-2">
+												<div class="rounded p-2 {comment.author_role === 'patient'
+													? 'bg-amber-50 dark:bg-amber-950 ml-3'
+													: 'bg-[var(--bg-secondary)]'}">
 													<div class="flex items-center justify-between mb-1">
-														<span class="text-xs font-medium text-brand-600">{comment.professional_name}</span>
+														<span class="text-xs font-medium {comment.author_role === 'patient'
+															? 'text-amber-600 dark:text-amber-400'
+															: 'text-brand-600'}">{comment.professional_name}</span>
 														<span class="text-xs text-[var(--text-secondary)]">
 															{formatDate(comment.created_at, $locale)}
 														</span>
@@ -786,9 +790,13 @@
 				<div class="mb-4 space-y-2 max-h-60 overflow-y-auto">
 					<h3 class="text-sm font-medium text-[var(--text-secondary)]">{$t('professional.comments')}</h3>
 					{#each selectedMeal.comments as comment}
-						<div class="rounded-lg border border-[var(--border-color)] p-3">
+						<div class="rounded-lg border border-[var(--border-color)] p-3 {comment.author_role === 'patient'
+							? 'bg-amber-50 dark:bg-amber-950 ml-3'
+							: ''}">
 							<div class="flex items-center justify-between mb-1">
-								<span class="text-xs font-medium text-brand-600">{comment.professional_name}</span>
+								<span class="text-xs font-medium {comment.author_role === 'patient'
+									? 'text-amber-600 dark:text-amber-400'
+									: 'text-brand-600'}">{comment.professional_name}</span>
 								<span class="text-xs text-[var(--text-secondary)]">
 									{new Date(comment.created_at).toLocaleDateString()}
 								</span>

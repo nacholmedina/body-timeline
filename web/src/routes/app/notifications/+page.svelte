@@ -11,6 +11,7 @@
 
 	function detectType(title: string): string | null {
 		if (title === 'meal_comment') return 'meal_comment';
+		if (title === 'meal_reply') return 'meal_reply';
 		if (title === 'professional_invitation') return 'professional_invitation';
 		if (title === 'assignment_removed') return 'assignment_removed';
 		if (title === 'goal_created') return 'goal_created';
@@ -33,6 +34,9 @@
 			displayTitle = $t('notifications.mealCommentTitle').replace('{name}', name);
 			const preview = notif.body?.replace(/^Your professional has commented on your meal:\s*/, '') || '';
 			displayBody = $t('notifications.mealCommentBody').replace('{name}', name).replace('{preview}', preview);
+		} else if (type === 'meal_reply') {
+			displayTitle = $t('notifications.mealReplyTitle').replace('{name}', name);
+			displayBody = $t('notifications.mealReplyBody').replace('{name}', name).replace('{preview}', notif.body || '');
 		} else if (type === 'professional_invitation') {
 			displayTitle = $t('notifications.professionalInvitationTitle').replace('{name}', name);
 			displayBody = $t('notifications.professionalInvitationBody').replace('{name}', name);
@@ -128,12 +132,10 @@
 	onMount(async () => {
 		await loadNotifications();
 		// Mark all as read on the backend and reset badge
-		if (isPatient) {
-			try {
-				await api.post('/notifications/mark-all-read');
-				notifications = notifications.map(n => ({ ...n, is_read: true }));
-			} catch {}
-		}
+		try {
+			await api.post('/notifications/mark-all-read');
+			notifications = notifications.map(n => ({ ...n, is_read: true }));
+		} catch {}
 		unreadCount.set(0);
 	});
 </script>
@@ -240,7 +242,7 @@
 	{:else}
 		<div class="space-y-3">
 			{#each displayNotifications as notif (notif.id)}
-				<div class="card {!notif.is_read && isPatient ? 'border-brand-300 dark:border-brand-700 bg-brand-50/50 dark:bg-brand-950/50' : ''}">
+				<div class="card {!notif.is_read ? 'border-brand-300 dark:border-brand-700 bg-brand-50/50 dark:bg-brand-950/50' : ''}">
 					<div class="flex items-start justify-between">
 						<div class="flex-1">
 							<div class="flex items-center gap-2">
@@ -257,7 +259,7 @@
 								<span>{timeAgo(notif.created_at, $locale)}</span>
 							</div>
 						</div>
-						{#if isPatient && !notif.is_read}
+						{#if !notif.is_read}
 							<button
 								on:click={() => markAsRead(notif.id)}
 								class="btn-secondary text-xs"
