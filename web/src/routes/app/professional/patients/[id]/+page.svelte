@@ -11,7 +11,7 @@
 	import {
 		ArrowLeft, TrendingUp, UtensilsCrossed, Dumbbell, Calendar, Scale,
 		MessageSquare, X, Send, ChevronLeft, ChevronRight, AlertCircle, ChevronDown,
-		Target, Plus, Check, Circle, Trash2
+		Target, Plus, Check, Circle, Trash2, BarChart3, List
 	} from 'lucide-svelte';
 	import {
 		Chart as ChartJS,
@@ -38,6 +38,7 @@
 	let loadError = '';
 	let tab: 'overview' | 'timeline' | 'goals' = 'overview';
 	let timelineFilter: 'all' | 'day' | 'week' | 'month' | 'year' = 'all';
+	let weightView: 'chart' | 'list' = 'chart';
 
 	// Goals state
 	let goals: any[] = [];
@@ -414,14 +415,47 @@
 			<div class="grid gap-6 lg:grid-cols-2">
 				<!-- Weight Chart -->
 				<div class="card">
-					<div class="mb-4 flex items-center gap-2">
-						<TrendingUp size={18} class="text-brand-600" />
-						<h3 class="font-semibold text-[var(--text-primary)]">{$t('dashboard.weightOverTime')}</h3>
+					<div class="mb-4 flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<TrendingUp size={18} class="text-brand-600" />
+							<h3 class="font-semibold text-[var(--text-primary)]">{$t('dashboard.weightOverTime')}</h3>
+						</div>
+						{#if weightData.length > 0}
+							<div class="flex rounded-lg border border-[var(--border-color)] overflow-hidden">
+								<button
+									on:click={() => (weightView = 'chart')}
+									class="p-1.5 transition-colors {weightView === 'chart'
+										? 'bg-brand-600 text-white'
+										: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+								>
+									<BarChart3 size={14} />
+								</button>
+								<button
+									on:click={() => (weightView = 'list')}
+									class="p-1.5 transition-colors {weightView === 'list'
+										? 'bg-brand-600 text-white'
+										: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+								>
+									<List size={14} />
+								</button>
+							</div>
+						{/if}
 					</div>
 					{#if weightData.length > 0}
-						<div class="h-56">
-							<Line data={weightChartData} options={weightChartOptions} />
-						</div>
+						{#if weightView === 'chart'}
+							<div class="h-56">
+								<Line data={weightChartData} options={weightChartOptions} />
+							</div>
+						{:else}
+							<div class="space-y-2 max-h-56 overflow-y-auto">
+								{#each [...weightData].reverse().slice(0, 10) as point}
+									<div class="flex items-center justify-between text-sm">
+										<span class="text-[var(--text-secondary)]">{formatDate(point.date, $locale)}</span>
+										<span class="font-medium text-[var(--text-primary)]">{formatWeight(point.weight_kg, $unitStore)}</span>
+									</div>
+								{/each}
+							</div>
+						{/if}
 					{:else}
 						<p class="text-sm text-[var(--text-secondary)]">{$t('common.noData')}</p>
 					{/if}
@@ -547,16 +581,22 @@
 									{#if meal.comments && meal.comments.length > 0}
 										<div class="mt-3 space-y-2 border-t border-[var(--border-color)] pt-3">
 											{#each meal.comments as comment}
-												<div class="rounded p-2 {comment.author_role === 'patient'
-													? 'bg-amber-50 dark:bg-amber-950 ml-3'
-													: 'bg-[var(--bg-secondary)]'}">
+												{@const isMe = comment.author_role !== 'patient'}
+												<div class="rounded-lg p-2 {isMe
+													? 'bg-brand-50 dark:bg-brand-900/40 ml-4'
+													: 'bg-gray-100 dark:bg-gray-800 mr-4'}">
 													<div class="flex items-center justify-between mb-1">
-														<span class="text-xs font-medium {comment.author_role === 'patient'
-															? 'text-amber-600 dark:text-amber-400'
-															: 'text-brand-600'}">{comment.professional_name}</span>
-														<span class="text-xs text-[var(--text-secondary)]">
-															{formatDate(comment.created_at, $locale)}
-														</span>
+														{#if isMe}
+															<span class="text-xs text-[var(--text-secondary)]">
+																{formatDate(comment.created_at, $locale)}
+															</span>
+															<span class="text-xs font-medium text-brand-600 dark:text-brand-400">{comment.professional_name}</span>
+														{:else}
+															<span class="text-xs font-medium text-[var(--text-primary)]">{comment.professional_name}</span>
+															<span class="text-xs text-[var(--text-secondary)]">
+																{formatDate(comment.created_at, $locale)}
+															</span>
+														{/if}
 													</div>
 													<p class="text-sm text-[var(--text-primary)]">{comment.comment}</p>
 												</div>
@@ -790,16 +830,22 @@
 				<div class="mb-4 space-y-2 max-h-60 overflow-y-auto">
 					<h3 class="text-sm font-medium text-[var(--text-secondary)]">{$t('professional.comments')}</h3>
 					{#each selectedMeal.comments as comment}
-						<div class="rounded-lg border border-[var(--border-color)] p-3 {comment.author_role === 'patient'
-							? 'bg-amber-50 dark:bg-amber-950 ml-3'
-							: ''}">
+						{@const isMe = comment.author_role !== 'patient'}
+						<div class="rounded-lg p-3 {isMe
+							? 'bg-brand-50 dark:bg-brand-900/40 ml-4'
+							: 'bg-gray-100 dark:bg-gray-800 mr-4'}">
 							<div class="flex items-center justify-between mb-1">
-								<span class="text-xs font-medium {comment.author_role === 'patient'
-									? 'text-amber-600 dark:text-amber-400'
-									: 'text-brand-600'}">{comment.professional_name}</span>
-								<span class="text-xs text-[var(--text-secondary)]">
-									{new Date(comment.created_at).toLocaleDateString()}
-								</span>
+								{#if isMe}
+									<span class="text-xs text-[var(--text-secondary)]">
+										{new Date(comment.created_at).toLocaleDateString()}
+									</span>
+									<span class="text-xs font-medium text-brand-600 dark:text-brand-400">{comment.professional_name}</span>
+								{:else}
+									<span class="text-xs font-medium text-[var(--text-primary)]">{comment.professional_name}</span>
+									<span class="text-xs text-[var(--text-secondary)]">
+										{new Date(comment.created_at).toLocaleDateString()}
+									</span>
+								{/if}
 							</div>
 							<p class="text-sm text-[var(--text-primary)]">{comment.comment}</p>
 						</div>

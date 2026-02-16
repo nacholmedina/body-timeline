@@ -373,18 +373,26 @@
 						{#if expandedCommentIds.has(meal.id) && mealComments[meal.id] && mealComments[meal.id].length > 0}
 							<div class="mt-3 space-y-2 border-t border-[var(--border-color)] pt-3">
 								{#each mealComments[meal.id] as comment}
-									<div class="rounded p-3 {comment.author_role === 'patient'
-										? 'bg-[var(--bg-secondary)] ml-4'
-										: 'bg-brand-50 dark:bg-brand-950'}">
+									{@const isMe = comment.author_role === 'patient'}
+									<div class="rounded-lg p-3 {isMe
+										? 'bg-brand-50 dark:bg-brand-900/40 ml-6'
+										: 'bg-gray-100 dark:bg-gray-800 mr-6'}">
 										<div class="flex items-center justify-between mb-1">
-											<span class="text-xs font-medium {comment.author_role === 'patient'
-												? 'text-[var(--text-secondary)]'
-												: 'text-brand-600 dark:text-brand-400'}">
-												{comment.professional_name}
-											</span>
-											<span class="text-xs text-[var(--text-secondary)]">
-												{formatDate(comment.created_at, $locale)}
-											</span>
+											{#if isMe}
+												<span class="text-xs text-[var(--text-secondary)]">
+													{formatDate(comment.created_at, $locale)}
+												</span>
+												<span class="text-xs font-medium text-brand-600 dark:text-brand-400">
+													{comment.professional_name}
+												</span>
+											{:else}
+												<span class="text-xs font-medium text-[var(--text-primary)]">
+													{comment.professional_name}
+												</span>
+												<span class="text-xs text-[var(--text-secondary)]">
+													{formatDate(comment.created_at, $locale)}
+												</span>
+											{/if}
 										</div>
 										<p class="text-sm text-[var(--text-primary)]">{comment.comment}</p>
 									</div>
