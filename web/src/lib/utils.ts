@@ -74,6 +74,16 @@ export function lbsToKg(lbs: number): number {
 	return lbs / KG_TO_LBS;
 }
 
+const KM_TO_MI = 0.621371;
+
+export function kmToMi(km: number): number {
+	return km * KM_TO_MI;
+}
+
+export function miToKm(mi: number): number {
+	return mi / KM_TO_MI;
+}
+
 export function cmToFeetInches(cm: number): { feet: number; inches: number } {
 	const totalInches = cm * CM_TO_INCH;
 	let feet = Math.floor(totalInches / 12);

@@ -169,8 +169,9 @@
 
 	onMount(async () => {
 		try {
+			const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 			if (isPatient) {
-				const params = { patient_id: $authStore.user!.id };
+				const params = { patient_id: $authStore.user!.id, tz };
 				const [summaryRes, weightRes, activityRes, notifsRes] = await Promise.all([
 					api.get('/dashboard/summary', params),
 					api.get('/dashboard/weight-series', { ...params, days: '365' }),
@@ -182,7 +183,7 @@
 				activityData = activityRes.data;
 				notifications = notifsRes.data;
 			} else {
-				const res = await api.get('/dashboard/professional-summary');
+				const res = await api.get('/dashboard/professional-summary', { tz });
 				proSummary = res;
 			}
 		} catch (err) {

@@ -155,6 +155,8 @@ export const en = {
 		minutes: 'min',
 		kilometers: 'km',
 		kilograms: 'kg',
+		miles: 'mi',
+		pounds: 'lbs',
 		// Other
 		search: 'Search exercises...',
 		optional: 'Optional',

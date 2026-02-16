@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, current_user
@@ -28,8 +29,20 @@ def professional_summary():
         return jsonify(error="Forbidden"), 403
 
     now = datetime.now(timezone.utc)
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = today_start + timedelta(days=1)
+    tz_name = request.args.get("tz")
+    if tz_name:
+        try:
+            tz = ZoneInfo(tz_name)
+            now_local = now.astimezone(tz)
+            today_start_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = today_start_local.astimezone(timezone.utc)
+            today_end = (today_start_local + timedelta(days=1)).astimezone(timezone.utc)
+        except Exception:
+            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1)
+    else:
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
 
     # Patient count
     if current_user.role == "professional":
@@ -102,7 +115,16 @@ def summary():
         return jsonify(error="Forbidden"), 403
 
     now = datetime.now(timezone.utc)
-    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    tz_name = request.args.get("tz")
+    if tz_name:
+        try:
+            tz = ZoneInfo(tz_name)
+            now_local = now.astimezone(tz)
+            month_start = now_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+        except Exception:
+            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    else:
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     meals_count = Meal.query.filter(
         Meal.patient_id == patient_id, Meal.eaten_at >= month_start

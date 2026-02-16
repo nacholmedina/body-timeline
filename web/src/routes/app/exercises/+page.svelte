@@ -3,11 +3,12 @@
 	import { t, locale } from '$i18n/index';
 	import { api, ApiError, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime, localNow } from '$lib/utils';
+	import { formatDateTime, localNow, kgToLbs, lbsToKg, kmToMi, miToKm } from '$lib/utils';
 	import { Plus, Dumbbell, Trash2, Search, X, Camera, ImagePlus, ChevronDown } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { onlineStore } from '$stores/online';
+	import { unitStore } from '$stores/units';
 
 	let exerciseLogs: any[] = [];
 	let exerciseDefinitions: any[] = [];
@@ -177,7 +178,12 @@
 
 					for (const measurementType of allowed) {
 						if (measurements[measurementType] !== undefined && measurements[measurementType] !== null) {
-							measurementData[measurementType] = measurements[measurementType];
+							let val = Number(measurements[measurementType]);
+							if ($unitStore === 'imperial') {
+								if (measurementType === 'weight') val = lbsToKg(val);
+								if (measurementType === 'distance') val = miToKm(val);
+							}
+							measurementData[measurementType] = parseFloat(val.toFixed(2));
 						}
 					}
 
@@ -285,17 +291,39 @@
 		return def.allowed_measurements;
 	}
 
+	function getMeasurementLabel(type: string): string {
+		const isImperial = $unitStore === 'imperial';
+		if (type === 'weight') return isImperial ? `${$t('exercises.weight')} (lbs)` : $t('exercises.weightLabel');
+		if (type === 'distance') return isImperial ? `${$t('exercises.distance')} (mi)` : $t('exercises.distanceLabel');
+		return $t(`exercises.${type}Label`);
+	}
+
+	function getMeasurementStep(type: string): number {
+		if (['reps', 'jumps', 'sets'].includes(type)) return 1;
+		if (type === 'weight') return 0.5;
+		if (type === 'distance') return 0.1;
+		return 0.5;
+	}
+
+	function stepMeasurement(type: string, direction: 1 | -1) {
+		const step = getMeasurementStep(type);
+		const current = Number(measurements[type]) || 0;
+		const next = current + step * direction;
+		measurements[type] = parseFloat(Math.max(0, next).toFixed(2));
+	}
+
 	function getMeasurementDisplay(exercise: any): string {
 		if (!exercise.measurements || typeof exercise.measurements !== 'object') return '';
 		const m = exercise.measurements;
 		const parts: string[] = [];
+		const isImperial = $unitStore === 'imperial';
 
 		if (m.duration) parts.push(`${m.duration} ${$t('exercises.minutes')}`);
 		if (m.reps) parts.push(`${m.reps} ${$t('exercises.reps').toLowerCase()}`);
 		if (m.jumps) parts.push(`${m.jumps} ${$t('exercises.jumps').toLowerCase()}`);
-		if (m.distance) parts.push(`${m.distance} ${$t('exercises.kilometers')}`);
+		if (m.distance) parts.push(`${isImperial ? kmToMi(m.distance).toFixed(1) : m.distance} ${isImperial ? $t('exercises.miles') : $t('exercises.kilometers')}`);
 		if (m.sets) parts.push(`${m.sets} ${$t('exercises.sets').toLowerCase()}`);
-		if (m.weight) parts.push(`${m.weight} ${$t('exercises.kilograms')}`);
+		if (m.weight) parts.push(`${isImperial ? kgToLbs(m.weight).toFixed(1) : m.weight} ${isImperial ? $t('exercises.pounds') : $t('exercises.kilograms')}`);
 
 		return parts.join(' · ');
 	}
@@ -565,17 +593,29 @@
 						{#each allowedMeasurements as measurementType}
 							<div>
 								<label for={measurementType} class="text-sm text-[var(--text-secondary)] mb-1 block">
-									{$t(`exercises.${measurementType}Label`)}
+									{getMeasurementLabel(measurementType)}
 								</label>
-								<input
-									id={measurementType}
-									type="number"
-									step="0.01"
-									min="0"
-									bind:value={measurements[measurementType]}
-									class="input"
-									placeholder="0"
-								/>
+								<div class="flex items-center">
+									<button
+										type="button"
+										on:click={() => stepMeasurement(measurementType, -1)}
+										class="flex h-[42px] w-11 shrink-0 items-center justify-center rounded-l-lg border border-r-0 border-[var(--border-color)] bg-[var(--bg-secondary)] text-lg font-bold text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] transition-colors"
+									>&minus;</button>
+									<input
+										id={measurementType}
+										type="number"
+										step={getMeasurementStep(measurementType)}
+										min="0"
+										bind:value={measurements[measurementType]}
+										class="input rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+										placeholder="0"
+									/>
+									<button
+										type="button"
+										on:click={() => stepMeasurement(measurementType, 1)}
+										class="flex h-[42px] w-11 shrink-0 items-center justify-center rounded-r-lg border border-l-0 border-[var(--border-color)] bg-[var(--bg-secondary)] text-lg font-bold text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] transition-colors"
+									>+</button>
+								</div>
 							</div>
 						{/each}
 					</div>
