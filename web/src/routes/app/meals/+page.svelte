@@ -24,6 +24,7 @@
 	let photoPreviews: string[] = [];
 	let formLoading = false;
 	let formError = '';
+	let photoError = '';
 	let fileInput: HTMLInputElement;
 	let cameraInput: HTMLInputElement;
 	const MAX_PHOTOS = 3;
@@ -164,14 +165,21 @@
 			const newMeal = res.data;
 
 			// Upload photos if any
+			const photoErrors: string[] = [];
 			for (let i = 0; i < selectedPhotos.length; i++) {
 				try {
 					await api.upload(`/meals/${newMeal.id}/photos`, selectedPhotos[i], { sort_order: String(i) });
-				} catch {}
+				} catch (uploadErr) {
+					console.error('Photo upload failed:', uploadErr);
+					photoErrors.push(uploadErr instanceof ApiError ? uploadErr.message : `Photo ${i + 1} failed`);
+				}
 			}
 
 			resetForm();
 			await loadMeals();
+			if (photoErrors.length > 0) {
+				photoError = photoErrors.join(', ');
+			}
 		} catch (err) {
 			formError = err instanceof ApiError ? err.message : 'Failed to create meal';
 		} finally {
@@ -324,6 +332,13 @@
 				<button type="button" on:click={resetForm} class="btn-secondary">{$t('common.cancel')}</button>
 			</div>
 		</form>
+	{/if}
+
+	{#if photoError}
+		<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">
+			{photoError}
+			<button on:click={() => (photoError = '')} class="ml-2 underline">{$t('common.dismiss') ?? 'Dismiss'}</button>
+		</div>
 	{/if}
 
 	<!-- Meals List -->

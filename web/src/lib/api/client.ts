@@ -103,7 +103,6 @@ class ApiClient {
 	}
 
 	async upload(path: string, file: File, extraFields?: Record<string, string>) {
-		const auth = get(authStore);
 		const formData = new FormData();
 		formData.append('photo', file);
 		if (extraFields) {
@@ -112,11 +111,29 @@ class ApiClient {
 			}
 		}
 
-		const response = await fetch(`${BASE}${path}`, {
-			method: 'POST',
-			headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
-			body: formData
-		});
+		const doUpload = () => {
+			const auth = get(authStore);
+			return fetch(`${BASE}${path}`, {
+				method: 'POST',
+				headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
+				body: formData
+			});
+		};
+
+		let response = await doUpload();
+
+		if (response.status === 401) {
+			const refreshed = await this.refresh();
+			if (refreshed) {
+				response = await doUpload();
+			} else {
+				authStore.logout();
+				if (typeof window !== 'undefined') {
+					window.location.href = '/login';
+				}
+				throw new Error('Unauthorized');
+			}
+		}
 
 		return this.handleResponse(response);
 	}
