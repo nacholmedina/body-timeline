@@ -22,9 +22,13 @@ def run_migration():
         # Run the migration
         upgrade(directory=migrations_dir)
 
+        # Seed the exercise catalog
+        from app.services.exercise_seed import seed_exercise_catalog
+        exercise_count = seed_exercise_catalog()
+
         return jsonify({
             "success": True,
-            "message": "Migration completed successfully"
+            "message": f"Migration completed successfully. Created {exercise_count} system exercises."
         }), 200
 
     except Exception as e:
