@@ -356,7 +356,19 @@ export const es = {
 		goalCreatedTitle: '{name} te asignó una meta',
 		goalCreatedBody: 'Tu profesional te asignó una nueva meta: {goal}',
 		mealReplyTitle: '{name} respondió a tu comentario',
-		mealReplyBody: 'Tu paciente respondió: {preview}'
+		mealReplyBody: 'Tu paciente respondió: {preview}',
+		appointmentScheduledTitle: '{name} agendó un turno',
+		appointmentScheduledBody: 'Tu profesional agendó un turno: {details}',
+		appointmentCancelledTitle: 'Turno cancelado',
+		appointmentCancelledBody: '{name} canceló tu turno: {details}',
+		appointmentDeletedTitle: 'Turno eliminado',
+		appointmentDeletedBody: '{name} eliminó tu turno: {details}',
+		exerciseRequestCreatedTitle: 'Nueva solicitud de ejercicio de {name}',
+		exerciseRequestCreatedBody: '{details}',
+		exerciseRequestApprovedTitle: 'Solicitud de ejercicio aprobada',
+		exerciseRequestApprovedBody: '{details}',
+		exerciseRequestRejectedTitle: 'Solicitud de ejercicio rechazada',
+		exerciseRequestRejectedBody: '{details}'
 	},
 	appointments: {
 		title: 'Turnos',

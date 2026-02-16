@@ -356,7 +356,19 @@ export const en = {
 		goalCreatedTitle: '{name} set a goal for you',
 		goalCreatedBody: 'Your professional set a new goal: {goal}',
 		mealReplyTitle: '{name} replied to your meal comment',
-		mealReplyBody: 'Your patient replied: {preview}'
+		mealReplyBody: 'Your patient replied: {preview}',
+		appointmentScheduledTitle: '{name} scheduled an appointment',
+		appointmentScheduledBody: 'Your professional scheduled an appointment: {details}',
+		appointmentCancelledTitle: 'Appointment cancelled',
+		appointmentCancelledBody: '{name} cancelled your appointment: {details}',
+		appointmentDeletedTitle: 'Appointment deleted',
+		appointmentDeletedBody: '{name} deleted your appointment: {details}',
+		exerciseRequestCreatedTitle: 'New exercise request from {name}',
+		exerciseRequestCreatedBody: '{details}',
+		exerciseRequestApprovedTitle: 'Exercise request approved',
+		exerciseRequestApprovedBody: '{details}',
+		exerciseRequestRejectedTitle: 'Exercise request rejected',
+		exerciseRequestRejectedBody: '{details}'
 	},
 	appointments: {
 		title: 'Appointments',
