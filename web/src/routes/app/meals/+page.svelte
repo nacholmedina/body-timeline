@@ -126,14 +126,45 @@
 		}
 	}
 
-	function handlePhotoSelect(e: Event) {
+	function compressImage(file: File, maxSize = 1920, quality = 0.8): Promise<File> {
+		return new Promise((resolve) => {
+			if (file.size <= 2 * 1024 * 1024) { resolve(file); return; }
+			const img = new Image();
+			const url = URL.createObjectURL(file);
+			img.onload = () => {
+				URL.revokeObjectURL(url);
+				let { width, height } = img;
+				if (width > maxSize || height > maxSize) {
+					const ratio = Math.min(maxSize / width, maxSize / height);
+					width = Math.round(width * ratio);
+					height = Math.round(height * ratio);
+				}
+				const canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+				canvas.toBlob(
+					(blob) => {
+						resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file);
+					},
+					'image/jpeg',
+					quality
+				);
+			};
+			img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+			img.src = url;
+		});
+	}
+
+	async function handlePhotoSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (!input.files?.length) return;
 		const remaining = MAX_PHOTOS - selectedPhotos.length;
 		const files = Array.from(input.files).slice(0, remaining);
 		for (const file of files) {
-			selectedPhotos = [...selectedPhotos, file];
-			photoPreviews = [...photoPreviews, URL.createObjectURL(file)];
+			const compressed = await compressImage(file);
+			selectedPhotos = [...selectedPhotos, compressed];
+			photoPreviews = [...photoPreviews, URL.createObjectURL(compressed)];
 		}
 		input.value = '';
 	}
