@@ -10,6 +10,7 @@ from app.models.goal import Goal
 from app.models.meal import Meal
 # Old workout model - commented out after migration to new exercise tracking
 # from app.models.workout import Workout
+from app.models.exercise_log import ExerciseLog
 from app.models.appointment import Appointment
 from app.models.notification import Notification, NotificationRecipient
 from app.models.user import User, ProfessionalPatient
@@ -107,10 +108,9 @@ def summary():
         Meal.patient_id == patient_id, Meal.eaten_at >= month_start
     ).count()
 
-    # Old workout tracking - migrated to exercise logs
-    workouts_count = 0  # Workout.query.filter(
-    #     Workout.patient_id == patient_id, Workout.started_at >= month_start
-    # ).count()
+    workouts_count = ExerciseLog.query.filter(
+        ExerciseLog.patient_id == patient_id, ExerciseLog.performed_at >= month_start
+    ).count()
 
     goals_total = Goal.query.filter_by(patient_id=patient_id).count()
     goals_done = Goal.query.filter_by(patient_id=patient_id, is_completed=True).count()

@@ -34,7 +34,7 @@ def list_exercise_definitions():
     else:  # alphabetical
         query = query.order_by(ExerciseDefinition.name)
 
-    page, limit, offset = get_pagination_params(request.args)
+    page, limit, offset = get_pagination_params(request.args, default_limit=100, max_limit=500)
     total = query.count()
     items = query.offset(offset).limit(limit).all()
 

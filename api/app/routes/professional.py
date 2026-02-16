@@ -12,6 +12,7 @@ from app.models.meal import Meal
 from app.models.weigh_in import WeighIn
 # Old workout model - commented out after migration to new exercise tracking
 # from app.models.workout import Workout
+from app.models.exercise_log import ExerciseLog
 from app.services.rbac import roles_required, get_accessible_patient_ids
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import validate_email
@@ -43,8 +44,7 @@ def list_patients():
 
         # Count totals
         meal_count = Meal.query.filter_by(patient_id=patient.id).count()
-        # Old workout count - will be replaced with exercise logs
-        workout_count = 0  # Workout.query.filter_by(patient_id=patient.id).count()
+        workout_count = ExerciseLog.query.filter_by(patient_id=patient.id).count()
 
         patient_data = {
             "id": str(patient.id),
@@ -95,7 +95,7 @@ def get_patient(patient_id):
             "current_date": current_weight.recorded_at.isoformat() if current_weight else None,
         },
         "total_meals": Meal.query.filter_by(patient_id=patient.id).count(),
-        "total_workouts": 0,  # Workout.query.filter_by(patient_id=patient.id).count() - migrated to exercise logs
+        "total_workouts": ExerciseLog.query.filter_by(patient_id=patient.id).count(),
     }
 
     return jsonify(data)

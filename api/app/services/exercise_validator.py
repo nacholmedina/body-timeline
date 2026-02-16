@@ -73,7 +73,11 @@ def validate_measurements(measurements: dict, allowed_measurements: list = None)
             continue  # Allow null values
 
         if schema["type"] == "integer":
-            if not isinstance(value, int) or isinstance(value, bool):
+            # Accept floats that are whole numbers (e.g., 30.0 from HTML number inputs)
+            if isinstance(value, float) and value == int(value):
+                measurements[key] = int(value)
+                value = measurements[key]
+            elif not isinstance(value, int) or isinstance(value, bool):
                 return False, f"{key} must be an integer"
         elif schema["type"] == "number":
             if not isinstance(value, (int, float)) or isinstance(value, bool):

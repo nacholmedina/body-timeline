@@ -4,7 +4,7 @@
 	import { api, ApiError, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime, localNow } from '$lib/utils';
-	import { Plus, Dumbbell, Trash2, Search, X, Camera, ImagePlus } from 'lucide-svelte';
+	import { Plus, Dumbbell, Trash2, Search, X, Camera, ImagePlus, ChevronDown } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { onlineStore } from '$stores/online';
@@ -43,14 +43,34 @@
 	// Filter state
 	let selectedCategory = 'all';
 	let searchQuery = '';
+	let showDropdown = false;
+	let showSelectDropdown = false;
+	let dropdownWrapper: HTMLDivElement;
+	let selectWrapper: HTMLDivElement;
+	let timeFilter: 'all' | 'day' | 'week' | 'month' | 'year' = 'all';
 
 	const categories = ['all', 'cardio', 'strength', 'sports', 'flexibility', 'general'];
 	const measurementTypes = ['duration', 'reps', 'jumps', 'distance', 'sets', 'weight'];
 
+	function getTimeFilterParams(): Record<string, string> {
+		const now = new Date();
+		const params: Record<string, string> = {};
+		if (timeFilter === 'day') {
+			params.from = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+		} else if (timeFilter === 'week') {
+			params.from = new Date(now.getTime() - 7 * 86400000).toISOString();
+		} else if (timeFilter === 'month') {
+			params.from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+		} else if (timeFilter === 'year') {
+			params.from = new Date(now.getFullYear(), 0, 1).toISOString();
+		}
+		return params;
+	}
+
 	async function loadExerciseLogs() {
 		loading = true;
 		try {
-			const res = await api.get('/exercise-logs');
+			const res = await api.get('/exercise-logs', getTimeFilterParams());
 			exerciseLogs = res.data || [];
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : 'Failed to load';
@@ -61,7 +81,7 @@
 
 	async function loadExerciseDefinitions() {
 		try {
-			const res = await api.get('/exercise-definitions');
+			const res = await api.get('/exercise-definitions?limit=500');
 			exerciseDefinitions = res.data || [];
 			filterDefinitions();
 		} catch (err) {
@@ -77,16 +97,41 @@
 			filtered = filtered.filter((def) => def.category === selectedCategory);
 		}
 
-		// Filter by search query
+		// Filter by search query (search translated names)
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase();
-			filtered = filtered.filter((def) => def.name.toLowerCase().includes(query));
+			filtered = filtered.filter((def) => translateExerciseName(def.name).toLowerCase().includes(query));
 		}
 
 		// Sort by usage count
 		filtered.sort((a, b) => b.usage_count - a.usage_count);
 
 		filteredDefinitions = filtered;
+	}
+
+	function selectExercise(def: any) {
+		selectedDefinitionId = def.id;
+		searchQuery = translateExerciseName(def.name);
+		showDropdown = false;
+		showSelectDropdown = false;
+		measurements = {};
+	}
+
+	function selectCustomExercise() {
+		selectedDefinitionId = 'custom';
+		searchQuery = $t('exercises.customExercise');
+		showDropdown = false;
+		showSelectDropdown = false;
+		measurements = {};
+	}
+
+	function handleClickOutside(e: MouseEvent) {
+		if (dropdownWrapper && !dropdownWrapper.contains(e.target as Node)) {
+			showDropdown = false;
+		}
+		if (selectWrapper && !selectWrapper.contains(e.target as Node)) {
+			showSelectDropdown = false;
+		}
 	}
 
 	function handlePhotoSelect(e: Event) {
@@ -137,7 +182,7 @@
 					}
 
 					if (Object.keys(measurementData).length > 0) {
-						payload.measurements = JSON.stringify(measurementData);
+						payload.measurements = measurementData;
 					}
 				}
 			}
@@ -213,6 +258,8 @@
 		performedAt = localNow();
 		measurements = {};
 		notes = '';
+		searchQuery = '';
+		showDropdown = false;
 		photoPreviews.forEach((url) => URL.revokeObjectURL(url));
 		selectedPhotos = [];
 		photoPreviews = [];
@@ -239,22 +286,18 @@
 	}
 
 	function getMeasurementDisplay(exercise: any): string {
-		if (!exercise.measurements) return '';
-		try {
-			const m = JSON.parse(exercise.measurements);
-			const parts: string[] = [];
+		if (!exercise.measurements || typeof exercise.measurements !== 'object') return '';
+		const m = exercise.measurements;
+		const parts: string[] = [];
 
-			if (m.duration) parts.push(`${m.duration} ${$t('exercises.minutes')}`);
-			if (m.reps) parts.push(`${m.reps} ${$t('exercises.reps').toLowerCase()}`);
-			if (m.jumps) parts.push(`${m.jumps} ${$t('exercises.jumps').toLowerCase()}`);
-			if (m.distance) parts.push(`${m.distance} ${$t('exercises.kilometers')}`);
-			if (m.sets) parts.push(`${m.sets} ${$t('exercises.sets').toLowerCase()}`);
-			if (m.weight) parts.push(`${m.weight} ${$t('exercises.kilograms')}`);
+		if (m.duration) parts.push(`${m.duration} ${$t('exercises.minutes')}`);
+		if (m.reps) parts.push(`${m.reps} ${$t('exercises.reps').toLowerCase()}`);
+		if (m.jumps) parts.push(`${m.jumps} ${$t('exercises.jumps').toLowerCase()}`);
+		if (m.distance) parts.push(`${m.distance} ${$t('exercises.kilometers')}`);
+		if (m.sets) parts.push(`${m.sets} ${$t('exercises.sets').toLowerCase()}`);
+		if (m.weight) parts.push(`${m.weight} ${$t('exercises.kilograms')}`);
 
-			return parts.join(' · ');
-		} catch {
-			return '';
-		}
+		return parts.join(' · ');
 	}
 
 	function toggleMeasurementRequest(type: string) {
@@ -272,21 +315,29 @@
 		return translated === key ? name : translated;
 	}
 
-	$: if (selectedCategory || searchQuery) {
+	$: if (selectedCategory || searchQuery !== undefined || $locale) {
 		filterDefinitions();
 	}
 
 	$: allowedMeasurements = getAllowedMeasurements(selectedDefinitionId);
 
+	let mounted = false;
+	$: if (mounted && timeFilter) {
+		loadExerciseLogs();
+	}
+
 	onMount(() => {
 		loadExerciseLogs();
 		loadExerciseDefinitions();
+		mounted = true;
 	});
 </script>
 
 <svelte:head>
 	<title>{$t('exercises.title')} - {BRANDING.appName}</title>
 </svelte:head>
+
+<svelte:window on:click={handleClickOutside} />
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between gap-3">
@@ -340,7 +391,7 @@
 							on:click={() => toggleMeasurementRequest(type)}
 							class="px-3 py-1.5 text-sm rounded-lg border transition-colors {requestMeasurements.includes(type)
 								? 'bg-brand-500 text-white border-brand-500'
-								: 'bg-[var(--card-bg)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-brand-500'}"
+								: 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-brand-500'}"
 						>
 							{$t(`exercises.${type}`)}
 						</button>
@@ -372,56 +423,126 @@
 						on:click={() => (selectedCategory = cat)}
 						class="px-3 py-1.5 text-sm rounded-lg border transition-colors {selectedCategory === cat
 							? 'bg-brand-500 text-white border-brand-500'
-							: 'bg-[var(--card-bg)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-brand-500'}"
+							: 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-brand-500'}"
 					>
 						{$t(`exercises.${cat}`)}
 					</button>
 				{/each}
 			</div>
 
-			<!-- Search -->
-			<div class="relative">
-				<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
-				<input
-					type="text"
-					bind:value={searchQuery}
-					list="exercise-suggestions"
-					placeholder={$t('exercises.search')}
-					class="input pl-10 pr-10"
-					autocomplete="off"
-				/>
-				<datalist id="exercise-suggestions">
-					{#each exerciseDefinitions as def (def.id)}
-						<option value={translateExerciseName(def.name)} />
-					{/each}
-				</datalist>
-				{#if searchQuery}
-					<button
-						type="button"
-						on:click={() => (searchQuery = '')}
-						class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-					>
-						<X size={18} />
-					</button>
+			<!-- Exercise Search & Selection -->
+			<div class="relative" bind:this={dropdownWrapper}>
+				<label for="exercise-search" class="label">{$t('exercises.selectExercise')}</label>
+				<div class="relative">
+					<Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
+					<input
+						id="exercise-search"
+						type="text"
+						bind:value={searchQuery}
+						placeholder={$t('exercises.search')}
+						class="input pl-10 pr-10"
+						autocomplete="off"
+						on:input={() => {
+							if (searchQuery.length > 0) {
+								showDropdown = true;
+								selectedDefinitionId = '';
+							} else {
+								showDropdown = false;
+							}
+						}}
+						on:focus={() => {
+							if (searchQuery.length > 0) showDropdown = true;
+						}}
+					/>
+					{#if searchQuery}
+						<button
+							type="button"
+							on:click={() => { searchQuery = ''; selectedDefinitionId = ''; showDropdown = false; }}
+							class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+						>
+							<X size={18} />
+						</button>
+					{/if}
+				</div>
+
+				{#if showDropdown && searchQuery.length > 0}
+					<div class="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] shadow-lg">
+						{#if filteredDefinitions.length > 0}
+							{#each filteredDefinitions.slice(0, 30) as def (def.id)}
+								<button
+									type="button"
+									on:click={() => selectExercise(def)}
+									class="w-full flex items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-color)] last:border-b-0"
+								>
+									<span class="text-[var(--text-primary)] truncate">{translateExerciseName(def.name)}</span>
+									<span class="ml-2 shrink-0 px-2 py-0.5 text-xs rounded-full bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300">
+										{$t(`exercises.${def.category}`)}
+									</span>
+								</button>
+							{/each}
+						{:else}
+							<div class="px-4 py-3 text-sm text-[var(--text-secondary)]">
+								{$t('exercises.noResults') || 'No exercises found'}
+							</div>
+						{/if}
+						<button
+							type="button"
+							on:click={selectCustomExercise}
+							class="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-brand-500 hover:bg-[var(--bg-secondary)] transition-colors border-t border-[var(--border-color)]"
+						>
+							<Plus size={16} />
+							{$t('exercises.customExercise')}
+						</button>
+					</div>
 				{/if}
 			</div>
 
-			<!-- Exercise Selection -->
-			<div>
-				<label for="exercise" class="label">{$t('exercises.selectExercise')}</label>
-				<select
-					id="exercise"
-					bind:value={selectedDefinitionId}
-					class="input"
-					required
-					on:change={() => (measurements = {})}
+			<!-- Exercise Selection Dropdown -->
+			<div class="relative" bind:this={selectWrapper}>
+				<label class="label">{$t('exercises.selectExercise')}</label>
+				<button
+					type="button"
+					on:click={() => { showSelectDropdown = !showSelectDropdown; showDropdown = false; }}
+					class="input w-full flex items-center justify-between text-left"
 				>
-					<option value="">{$t('exercises.selectExercise')}</option>
-					{#each filteredDefinitions as def (def.id)}
-						<option value={def.id}>{translateExerciseName(def.name)}</option>
-					{/each}
-					<option value="custom">{$t('exercises.customExercise')}</option>
-				</select>
+					<span class={selectedDefinitionId ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
+						{#if selectedDefinitionId === 'custom'}
+							{$t('exercises.customExercise')}
+						{:else if selectedDefinitionId}
+							{@const selectedDef = exerciseDefinitions.find((d) => d.id === selectedDefinitionId)}
+							{selectedDef ? translateExerciseName(selectedDef.name) : $t('exercises.selectExercise')}
+						{:else}
+							{$t('exercises.selectExercise')}
+						{/if}
+					</span>
+					<ChevronDown size={18} class="shrink-0 text-[var(--text-secondary)] transition-transform {showSelectDropdown ? 'rotate-180' : ''}" />
+				</button>
+
+				{#if showSelectDropdown}
+					<div class="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] shadow-lg">
+						{#each filteredDefinitions as def (def.id)}
+							<button
+								type="button"
+								on:click={() => selectExercise(def)}
+								class="w-full flex items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-color)] last:border-b-0
+									{selectedDefinitionId === def.id ? 'bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400' : 'text-[var(--text-primary)]'}"
+							>
+								<span class="truncate">{translateExerciseName(def.name)}</span>
+								<span class="ml-2 shrink-0 px-2 py-0.5 text-xs rounded-full bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300">
+									{$t(`exercises.${def.category}`)}
+								</span>
+							</button>
+						{/each}
+						<button
+							type="button"
+							on:click={selectCustomExercise}
+							class="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm text-brand-500 hover:bg-[var(--bg-secondary)] transition-colors border-t border-[var(--border-color)]"
+						>
+							<Plus size={16} />
+							{$t('exercises.customExercise')}
+						</button>
+					</div>
+				{/if}
 			</div>
 
 			<!-- Custom Exercise Fields -->
@@ -541,6 +662,20 @@
 			</div>
 		</form>
 	{/if}
+
+	<!-- Time Filter -->
+	<div class="flex gap-2 overflow-x-auto">
+		{#each ['all', 'day', 'week', 'month', 'year'] as f}
+			<button
+				on:click={() => (timeFilter = f)}
+				class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {timeFilter === f
+					? 'bg-brand-600 text-white'
+					: 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}"
+			>
+				{$t(`common.${f}`)}
+			</button>
+		{/each}
+	</div>
 
 	{#if loading}
 		<div class="flex items-center justify-center py-12">

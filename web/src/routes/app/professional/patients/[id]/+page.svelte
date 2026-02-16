@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import { t, locale } from '$i18n/index';
 	import { api, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
@@ -18,12 +19,13 @@
 		LinearScale,
 		PointElement,
 		LineElement,
+		Filler,
 		Tooltip,
 		Legend
 	} from 'chart.js';
 	import { Line } from 'svelte-chartjs';
 
-	ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
+	ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 	const patientId = $page.params.id;
 
@@ -33,6 +35,7 @@
 	let workouts: any[] = [];
 	let weighIns: any[] = [];
 	let loading = true;
+	let loadError = '';
 	let tab: 'overview' | 'timeline' | 'goals' = 'overview';
 	let timelineFilter: 'all' | 'day' | 'week' | 'month' | 'year' = 'all';
 
@@ -63,6 +66,12 @@
 	let mealsCollapsed = false;
 	let weighInsCollapsed = false;
 	let workoutsCollapsed = false;
+
+	function translateExerciseName(name: string): string {
+		const key = `exercises.exerciseNames.${name}`;
+		const translated = $t(key);
+		return translated === key ? name : translated;
+	}
 
 	// Collapsible card state
 	let expandedMealIds = new Set<string>();
@@ -170,23 +179,31 @@
 	async function loadData() {
 		try {
 			loading = true;
+			loadError = '';
 			const filterParams = tab === 'timeline' ? getTimelineFilterParams() : {};
 
-			const [patientRes, weightRes, mealsRes, workoutsRes, weighInsRes] = await Promise.all([
+			const [patientRes, weightRes, mealsRes, weighInsRes] = await Promise.all([
 				api.get(`/professional/patients/${patientId}`),
 				api.get('/dashboard/weight-series', { patient_id: patientId, days: '365' }),
 				api.get('/meals', { patient_id: patientId, limit: '100', ...filterParams }),
-				api.get('/workouts', { patient_id: patientId, limit: '100', ...filterParams }),
 				api.get('/weigh-ins', { patient_id: patientId, limit: '100', ...filterParams })
 			]);
 
 			patient = patientRes;
 			weightData = weightRes.data || [];
 			meals = mealsRes.data || [];
-			workouts = workoutsRes.data || [];
 			weighIns = weighInsRes.data || [];
+
+			// Load exercise logs separately (endpoint may not exist for all setups)
+			try {
+				const exRes = await api.get('/exercise-logs', { patient_id: patientId, limit: '100', ...filterParams });
+				workouts = exRes.data || [];
+			} catch {
+				workouts = [];
+			}
 		} catch (err: any) {
 			console.error('Failed to load patient data:', err);
+			loadError = err?.message || String(err);
 		} finally {
 			loading = false;
 		}
@@ -613,10 +630,10 @@
 										</button>
 										<div class="flex-1">
 											<p class="font-medium text-[var(--text-primary)]">
-												{workout.exercises?.length || 0} {$t('workouts.exercises').toLowerCase()}
+												{translateExerciseName(workout.exercise_name || workout.definition_name || '') || $t('exercises.exercise')}
 											</p>
 											<p class="text-sm text-[var(--text-secondary)]">
-												{formatDateTime(workout.start_time, $locale)}
+												{workout.performed_at ? formatDateTime(workout.performed_at, $locale) : ''}
 											</p>
 										</div>
 									</div>
@@ -734,7 +751,12 @@
 	{:else}
 		<div class="card p-12 text-center">
 			<AlertCircle size={48} class="mx-auto mb-4 text-red-500" />
-			<p class="text-lg font-medium text-[var(--text-primary)]">Patient not found</p>
+			<p class="text-lg font-medium text-[var(--text-primary)]">
+				{loadError ? loadError : 'Patient not found'}
+			</p>
+			{#if loadError}
+				<button on:click={loadData} class="mt-4 btn-primary">{$t('common.retry') || 'Retry'}</button>
+			{/if}
 		</div>
 	{/if}
 </div>
