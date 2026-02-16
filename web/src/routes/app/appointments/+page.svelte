@@ -52,7 +52,9 @@
 			const params: Record<string, string> = {};
 			if (filter === 'upcoming') params.upcoming = 'true';
 			const res = await api.get('/appointments', params);
-			appointments = res.data;
+			appointments = res.data.sort(
+				(a: any, b: any) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
+			);
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : 'Failed to load';
 		} finally {
@@ -82,7 +84,7 @@
 				notes: notes || undefined
 			});
 			appointments = [...appointments, res.data].sort(
-				(a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+				(a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
 			);
 			showForm = false;
 			patientId = '';
@@ -144,7 +146,7 @@
 				scheduled_at: new Date(rescheduleDateTime).toISOString()
 			});
 			appointments = appointments.map(a => a.id === rescheduleAppt.id ? res.data : a)
-				.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+				.sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 			showRescheduleModal = false;
 			rescheduleAppt = null;
 		} catch (err) {

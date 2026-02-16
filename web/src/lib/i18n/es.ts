@@ -37,7 +37,7 @@ export const es = {
 	},
 	dashboard: {
 		title: 'Panel',
-		welcome: 'Bienvenido',
+		welcome: 'Te damos la bienvenida',
 		welcomeMale: 'Bienvenido',
 		welcomeFemale: 'Bienvenida',
 		welcomeOther: 'Te damos la bienvenida',
@@ -57,7 +57,7 @@ export const es = {
 		newsRestBody: 'La recuperación es tan importante como el entrenamiento. Dale tiempo a tu cuerpo para sanar.',
 		newsMealPrep: 'Consejos de meal prep',
 		newsMealPrepBody: 'Preparar las comidas con anticipación ayuda a mantener la consistencia con los objetivos nutricionales.',
-		proWelcome: 'Bienvenido',
+		proWelcome: 'Te damos la bienvenida',
 		proDescription: 'Gestioná tus pacientes, turnos y actividad.',
 		patients: 'Pacientes',
 		todaysAppointments: 'Turnos de hoy',

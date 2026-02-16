@@ -202,7 +202,7 @@
 	<!-- Welcome -->
 	<div>
 		<h1 class="text-2xl font-bold text-[var(--text-primary)]">
-			{isPatient ? $t(welcomeKey) : $t('dashboard.proWelcome')}, {$authStore.user?.first_name}!
+			{$t(welcomeKey)}, {$authStore.user?.first_name}!
 		</h1>
 		<p class="text-sm text-[var(--text-secondary)]">
 			{isPatient ? $t('app.description') : $t('dashboard.proDescription')}
