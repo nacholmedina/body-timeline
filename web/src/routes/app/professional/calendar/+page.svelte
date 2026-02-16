@@ -228,25 +228,26 @@
 				return;
 			}
 
-			const conflicts = appointments.filter((appt) => {
-				if (appt.patient_id !== selectedPatientId || appt.status === 'cancelled') return false;
+			// Skip conflict detection for non-registered patients
+			const conflicts = selectedPatientId !== 'other' ? appointments.filter((appt) => {
+				if (String(appt.patient_id) !== String(selectedPatientId) || appt.status === 'cancelled') return false;
 				const apptStart = new Date(appt.scheduled_at);
 				const apptEnd = new Date(apptStart.getTime() + appt.duration_minutes * 60000);
 				const newEnd = new Date(scheduledDate.getTime() + appointmentDuration * 60000);
 				return (scheduledDate < apptEnd && newEnd > apptStart);
-			});
+			}) : [];
 
 			if (conflicts.length > 0 && !forceCreate) {
 				const conflictTimes = conflicts.map(c =>
 					new Date(c.scheduled_at).toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' })
 				).join(', ');
-				createError = `Warning: This overlaps with existing appointment(s) at ${conflictTimes}. Click again to proceed anyway.`;
+				createError = `${$t('appointments.overlapWarning')} ${conflictTimes}. ${$t('professional.proceedAnyway')}`;
 				creating = false;
 				return;
 			}
 
 			await api.post('/appointments', {
-				patient_id: selectedPatientId,
+				patient_id: selectedPatientId === 'other' ? null : selectedPatientId,
 				title: appointmentTitle,
 				scheduled_at,
 				duration_minutes: appointmentDuration,
@@ -390,10 +391,12 @@
 														<Clock size={12} />
 														{new Date(appt.scheduled_at).toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' })}
 													</span>
-													<span class="flex items-center gap-1">
-														<User size={12} />
-														{appt.patient_name || 'Unknown'}
-													</span>
+													{#if appt.patient_name}
+														<span class="flex items-center gap-1">
+															<User size={12} />
+															{appt.patient_name}
+														</span>
+													{/if}
 												</div>
 											</div>
 											<div class="flex gap-1 ml-2">
@@ -435,10 +438,12 @@
 												<Clock size={14} />
 												{new Date(appt.scheduled_at).toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' })} ({appt.duration_minutes} min)
 											</span>
-											<span class="flex items-center gap-1">
-												<User size={14} />
-												{appt.patient_name || 'Unknown'}
-											</span>
+											{#if appt.patient_name}
+												<span class="flex items-center gap-1">
+													<User size={14} />
+													{appt.patient_name}
+												</span>
+											{/if}
 										</div>
 									</div>
 									<div class="flex gap-1 ml-2">
@@ -493,6 +498,7 @@
 						{#each patients as patient}
 							<option value={patient.id}>{patient.first_name} {patient.last_name}</option>
 						{/each}
+						<option value="other">{$t('appointments.otherPatient')}</option>
 					</select>
 				</div>
 
@@ -555,7 +561,9 @@
 					<X size={20} />
 				</button>
 			</div>
-			<p class="mb-4 text-sm text-[var(--text-secondary)]">{rescheduleAppt.title} — {rescheduleAppt.patient_name}</p>
+			<p class="mb-4 text-sm text-[var(--text-secondary)]">
+				{rescheduleAppt.title}{#if rescheduleAppt.patient_name} — {rescheduleAppt.patient_name}{/if}
+			</p>
 			<div class="space-y-4">
 				<div class="grid grid-cols-2 gap-3">
 					<div>

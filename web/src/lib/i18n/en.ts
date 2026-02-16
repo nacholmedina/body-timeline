@@ -378,7 +378,10 @@ export const en = {
 		cancelled_success: 'Appointment cancelled',
 		deleted_success: 'Appointment deleted',
 		rescheduled_success: 'Appointment rescheduled',
-		selectPatient: 'Select patient'
+		selectPatient: 'Select patient',
+		otherPatient: 'Other (non-registered)',
+		cannotSchedulePast: 'Cannot schedule appointments in the past',
+		overlapWarning: 'Warning: This overlaps with existing appointment(s) at'
 	},
 	admin: {
 		title: 'Admin Panel',

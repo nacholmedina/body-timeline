@@ -378,7 +378,10 @@ export const es = {
 		cancelled_success: 'Turno cancelado',
 		deleted_success: 'Turno eliminado',
 		rescheduled_success: 'Turno reprogramado',
-		selectPatient: 'Seleccionar paciente'
+		selectPatient: 'Seleccionar paciente',
+		otherPatient: 'Otro (no registrado)',
+		cannotSchedulePast: 'No se pueden agendar turnos en el pasado',
+		overlapWarning: 'Advertencia: Este turno se superpone con turno(s) existente(s) a las'
 	},
 	admin: {
 		title: 'Panel de Admin',

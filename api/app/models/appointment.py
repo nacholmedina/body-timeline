@@ -9,7 +9,7 @@ class Appointment(db.Model):
 
     id = db.Column(GUID, primary_key=True, default=uuid.uuid4)
     patient_id = db.Column(
-        GUID, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )
     professional_id = db.Column(
         GUID, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
@@ -43,7 +43,7 @@ class Appointment(db.Model):
     def to_dict(self):
         return {
             "id": str(self.id),
-            "patient_id": str(self.patient_id),
+            "patient_id": str(self.patient_id) if self.patient_id else None,
             "professional_id": str(self.professional_id),
             "patient_name": (
                 f"{self.patient.first_name} {self.patient.last_name}"

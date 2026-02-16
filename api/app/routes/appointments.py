@@ -55,9 +55,9 @@ def create_appointment():
 
     data = request.get_json(silent=True) or {}
     patient_id = data.get("patient_id")
-    if not patient_id:
-        return validation_error("patient_id is required")
-    if not can_access_patient_data(current_user, patient_id):
+
+    # patient_id is optional - allows appointments with non-registered patients
+    if patient_id and not can_access_patient_data(current_user, patient_id):
         return api_error("Forbidden", 403)
 
     scheduled_at = parse_datetime(data.get("scheduled_at"))
@@ -89,7 +89,10 @@ def get_appointment(appointment_id):
     appt = db.session.get(Appointment, appointment_id)
     if not appt:
         return api_error("Appointment not found", 404)
-    if not can_access_patient_data(current_user, appt.patient_id):
+    # Check access: if has patient_id, verify access; if no patient_id, check professional ownership
+    if appt.patient_id and not can_access_patient_data(current_user, appt.patient_id):
+        return api_error("Forbidden", 403)
+    if not appt.patient_id and current_user.role == "professional" and str(current_user.id) != str(appt.professional_id):
         return api_error("Forbidden", 403)
     return jsonify(data=appt.to_dict())
 

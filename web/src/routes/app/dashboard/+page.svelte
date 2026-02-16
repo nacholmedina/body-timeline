@@ -497,7 +497,9 @@
 										{new Date(appt.scheduled_at).toLocaleTimeString($locale === 'es' ? 'es-ES' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
 									</span>
 								</div>
-								<p class="mt-1 text-sm text-brand-600 dark:text-brand-400">{appt.patient_name}</p>
+								{#if appt.patient_name}
+									<p class="mt-1 text-sm text-brand-600 dark:text-brand-400">{appt.patient_name}</p>
+								{/if}
 							</div>
 						{/each}
 					</div>

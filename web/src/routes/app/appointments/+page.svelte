@@ -76,8 +76,38 @@
 		formError = '';
 		formLoading = true;
 		try {
+			// Check for past dates
+			const scheduledDate = new Date(scheduledAt);
+			const now = new Date();
+			if (scheduledDate < now) {
+				formError = $t('appointments.cannotSchedulePast');
+				formLoading = false;
+				return;
+			}
+
+			// Check for overlapping appointments (skip for "other" patients)
+			if (patientId && patientId !== 'other') {
+				const durationMs = parseInt(durationMinutes) * 60000;
+				const conflicts = appointments.filter((appt: any) => {
+					if (String(appt.patient_id) !== String(patientId) || appt.status === 'cancelled') return false;
+					const apptStart = new Date(appt.scheduled_at);
+					const apptEnd = new Date(apptStart.getTime() + appt.duration_minutes * 60000);
+					const newEnd = new Date(scheduledDate.getTime() + durationMs);
+					return (scheduledDate < apptEnd && newEnd > apptStart);
+				});
+
+				if (conflicts.length > 0) {
+					const conflictTimes = conflicts.map((c: any) =>
+						new Date(c.scheduled_at).toLocaleTimeString($locale === 'es' ? 'es-AR' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+					).join(', ');
+					formError = `${$t('appointments.overlapWarning')} ${conflictTimes}`;
+					formLoading = false;
+					return;
+				}
+			}
+
 			const res = await api.post('/appointments', {
-				patient_id: patientId,
+				patient_id: patientId === 'other' ? null : patientId,
 				scheduled_at: new Date(scheduledAt).toISOString(),
 				title: apptTitle,
 				duration_minutes: parseInt(durationMinutes),
@@ -217,6 +247,7 @@
 					{#each patients as p}
 						<option value={p.id}>{p.first_name} {p.last_name}</option>
 					{/each}
+					<option value="other">{$t('appointments.otherPatient')}</option>
 				</select>
 			</div>
 			<div>

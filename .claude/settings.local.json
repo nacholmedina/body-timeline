@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(psql:*)",
+      "Bash(python -m venv:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(flask db migrate:*)",
+      "Bash(flask db upgrade:*)",
+      "Bash(python seed.py:*)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(cd:*)",
+      "Bash(gh auth status:*)",
+      "Bash(winget install:*)",
+      "Bash(export PATH=\"/c/Program Files/GitHub CLI:$PATH\")",
+      "Bash(gh repo create:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "Bash(FLASK_APP=wsgi.py python -m flask db upgrade:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3MTA1MDk0MCwianRpIjoiYjVjN2M2NGItZGZmMS00MTYzLTk0YTYtNzYxNWFmMTEyZGJjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImJjNzJlMDZjLTk5ZjEtNGY4Ny1iOGNhLTBhMjQyOTA4MjVjMCIsIm5iZiI6MTc3MTA1MDk0MCwiY3NyZiI6ImZkYzAwZWE4LWYyYTMtNGY1Ny04ZTE2LThkNjAwZmM1NjY1YSIsImV4cCI6MTc3MTA1MTg0MH0.10_GRPDMfXwSl58hZV-0tUBqye_HAIyoVPjYUwoSdUA\")",
+      "Bash(__NEW_LINE_1ebadafa7be6edb1__ curl -v --max-time 30 -X POST \"https://body-timeline.vercel.app/api/v1/meals/de4fd226-3113-474f-ad2c-9fa9007a92fe/photos\" -H \"Authorization: Bearer $TOKEN\" -F \"photo=@C:/Users/Nacho/test_upload.png;type=image/png\" -F \"sort_order=0\")",
+      "Bash(S3_ENDPOINT_URL=\"https://947bbcbd8c8c2fa67c45c96dcee2c348.r2.cloudflarestorage.com\" S3_ACCESS_KEY=\"f9a7680226b6acc7a11b4144313bf08d\" S3_SECRET_KEY=\"01e6f6d7322a78a9d358da6096ef5a40dfacd9bb9881c62917677c91fb26d6cb\" S3_BUCKET=\"body-timeline-photos\" S3_REGION=\"auto\" STORAGE_BACKEND=\"s3\" python:*)",
+      "Bash(taskkill:*)",
+      "Bash(git status:*)",
+      "Bash(npx svelte-check:*)",
+      "Bash(npx vite build)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:www.joshwcomeau.com)",
+      "WebFetch(domain:tobiasahlin.com)",
+      "WebFetch(domain:bscwebdesign.at)",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(flask db revision:*)",
+      "Bash(flask db:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}
