@@ -7,6 +7,7 @@
 	import BottomNav from '$components/BottomNav.svelte';
 	import ThemeToggle from '$components/ThemeToggle.svelte';
 	import LanguageToggle from '$components/LanguageToggle.svelte';
+	import Toast from '$components/Toast.svelte';
 	import { BRANDING } from '$lib/config/branding';
 	import { Menu, X, User, Settings, LogOut, ShieldAlert } from 'lucide-svelte';
 	import { browser } from '$app/environment';
@@ -177,4 +178,5 @@
 	</div>
 
 	<BottomNav />
+	<Toast />
 {/if}

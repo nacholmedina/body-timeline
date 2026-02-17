@@ -10,7 +10,9 @@
 	import { addToSyncQueue } from '$lib/offline/db';
 	import { onlineStore } from '$stores/online';
 	import { unitStore } from '$stores/units';
+	import RoutineManager from '$components/RoutineManager.svelte';
 
+	let currentView: 'exercises' | 'routines' = 'exercises';
 	let exerciseLogs: any[] = [];
 	let exerciseDefinitions: any[] = [];
 	let filteredDefinitions: any[] = [];
@@ -390,17 +392,41 @@
 			{$t('exercises.title')}
 		</h1>
 		<div class="flex gap-2 shrink-0">
-			<button on:click={() => (showRequestForm = !showRequestForm)} class="btn-secondary flex items-center gap-2">
-				<Plus size={18} />
-				<span class="hidden sm:inline">{$t('exercises.requestNew')}</span>
-			</button>
-			<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2">
-				<Plus size={18} />
-				<span class="hidden sm:inline">{$t('exercises.addExercise')}</span>
-			</button>
+			{#if currentView === 'exercises'}
+				<button on:click={() => (showRequestForm = !showRequestForm)} class="btn-secondary flex items-center gap-2">
+					<Plus size={18} />
+					<span class="hidden sm:inline">{$t('exercises.requestNew')}</span>
+				</button>
+				<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2">
+					<Plus size={18} />
+					<span class="hidden sm:inline">{$t('exercises.addExercise')}</span>
+				</button>
+			{/if}
 		</div>
 	</div>
 
+	<!-- View Tabs -->
+	<div class="flex gap-2 border-b border-[var(--border-color)]">
+		<button
+			on:click={() => (currentView = 'exercises')}
+			class="px-4 py-2 font-medium transition-colors border-b-2 {currentView === 'exercises'
+				? 'border-brand-600 text-brand-600'
+				: 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}"
+		>
+			{$t('exercises.title')}
+		</button>
+		<button
+			on:click={() => (currentView = 'routines')}
+			class="px-4 py-2 font-medium transition-colors border-b-2 {currentView === 'routines'
+				? 'border-brand-600 text-brand-600'
+				: 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}"
+		>
+			{$t('routines.title')}
+		</button>
+	</div>
+
+	{#if currentView === 'exercises'}
+	<!-- EXERCISES VIEW -->
 	{#if showRequestForm}
 		<form on:submit|preventDefault={submitExerciseRequest} class="card space-y-4">
 			<h2 class="text-lg font-semibold text-[var(--text-primary)]">{$t('exercises.requestExercise')}</h2>
@@ -795,6 +821,14 @@
 				</div>
 			{/each}
 		</div>
+	{/if}
+
+	{:else if currentView === 'routines'}
+	<!-- ROUTINES VIEW -->
+	<RoutineManager
+		{exerciseDefinitions}
+		on:routineLogged={loadExerciseLogs}
+	/>
 	{/if}
 </div>
 

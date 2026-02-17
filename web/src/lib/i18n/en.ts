@@ -165,6 +165,9 @@ export const en = {
 		// Other
 		search: 'Search exercises...',
 		optional: 'Optional',
+		allCategories: 'All Categories',
+		notes: 'Notes',
+		notesPlaceholder: 'Additional notes for this exercise',
 		customExercise: 'Custom exercise',
 		customDescription: 'Describe what you did',
 		// Exercise names
@@ -498,7 +501,9 @@ export const en = {
 		send: 'Send',
 		yes: 'Yes',
 		no: 'No',
-		dismiss: 'Dismiss'
+		dismiss: 'Dismiss',
+		more: 'more',
+		saving: 'Saving...'
 	},
 	professional: {
 		title: 'My Patients',
@@ -581,5 +586,28 @@ export const en = {
 		rejected: 'Invitation rejected',
 		failedToAccept: 'Failed to accept invitation',
 		failedToReject: 'Failed to reject invitation'
+	},
+	routines: {
+		title: 'Routines',
+		create: 'Create Routine',
+		createFirst: 'Create your first routine',
+		edit: 'Edit Routine',
+		name: 'Routine Name',
+		namePlaceholder: 'e.g., Leg Day, Morning Workout',
+		nameRequired: 'Routine name is required',
+		description: 'Description',
+		descriptionPlaceholder: 'Optional description',
+		exercises: 'Exercises',
+		exercise: 'exercise',
+		addExercise: 'Add Exercise',
+		noExercisesAdded: 'No exercises added yet. Click "Add Exercise" to start.',
+		atLeastOneExercise: 'Routine must have at least one exercise',
+		noRoutines: 'No routines yet',
+		logNow: 'Log Routine',
+		logged: 'Routine logged',
+		loggedSuccess: 'Routine logged successfully! All exercises added to your log.',
+		deleteConfirm: 'Delete Routine?',
+		deleteMessage: 'This will permanently delete this routine. Exercise logs are not affected.',
+		deleted: 'Routine deleted successfully'
 	}
 } as const;

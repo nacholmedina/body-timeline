@@ -165,6 +165,9 @@ export const es = {
 		// Other
 		search: 'Buscar ejercicios...',
 		optional: 'Opcional',
+		allCategories: 'Todas las Categorías',
+		notes: 'Notas',
+		notesPlaceholder: 'Notas adicionales para este ejercicio',
 		customExercise: 'Ejercicio personalizado',
 		customDescription: 'Describe lo que hiciste',
 		// Exercise names
@@ -498,7 +501,9 @@ export const es = {
 		send: 'Enviar',
 		yes: 'Sí',
 		no: 'No',
-		dismiss: 'Descartar'
+		dismiss: 'Descartar',
+		more: 'más',
+		saving: 'Guardando...'
 	},
 	professional: {
 		title: 'Mis Pacientes',
@@ -581,5 +586,28 @@ export const es = {
 		rejected: 'Invitación rechazada',
 		failedToAccept: 'Error al aceptar la invitación',
 		failedToReject: 'Error al rechazar la invitación'
+	},
+	routines: {
+		title: 'Rutinas',
+		create: 'Crear Rutina',
+		createFirst: 'Crear tu primera rutina',
+		edit: 'Editar Rutina',
+		name: 'Nombre de la Rutina',
+		namePlaceholder: 'ej: Piernas, Rutina Matutina',
+		nameRequired: 'El nombre de la rutina es requerido',
+		description: 'Descripción',
+		descriptionPlaceholder: 'Descripción opcional',
+		exercises: 'Ejercicios',
+		exercise: 'ejercicio',
+		addExercise: 'Agregar Ejercicio',
+		noExercisesAdded: 'No hay ejercicios agregados. Hacé clic en "Agregar Ejercicio" para comenzar.',
+		atLeastOneExercise: 'La rutina debe tener al menos un ejercicio',
+		noRoutines: 'No hay rutinas todavía',
+		logNow: 'Registrar Rutina',
+		logged: 'Rutina registrada',
+		loggedSuccess: '¡Rutina registrada exitosamente! Todos los ejercicios agregados a tu registro.',
+		deleteConfirm: '¿Eliminar Rutina?',
+		deleteMessage: 'Esto eliminará permanentemente esta rutina. Los registros de ejercicios no se verán afectados.',
+		deleted: 'Rutina eliminada exitosamente'
 	}
 } as const;
