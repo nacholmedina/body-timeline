@@ -4,7 +4,7 @@ import { browser } from '$app/environment';
 type Theme = 'light' | 'dark';
 
 function createThemeStore() {
-	let initial: Theme = 'light';
+	let initial: Theme = 'dark';
 
 	if (browser) {
 		const saved = localStorage.getItem('wv_theme') as Theme;
