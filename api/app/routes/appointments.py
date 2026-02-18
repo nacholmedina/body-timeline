@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, current_user
 
 from app.extensions import db
 from app.models.appointment import Appointment
+from app.models.notification import Notification, NotificationRecipient
 from app.services.rbac import can_access_patient_data, get_accessible_patient_ids
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import parse_datetime, get_pagination_params
@@ -79,6 +80,22 @@ def create_appointment():
         notes=data.get("notes"),
     )
     db.session.add(appointment)
+
+    # Notify patient when appointment is created
+    if patient_id:
+        notification = Notification(
+            author_id=current_user.id,
+            title="appointment_scheduled",
+            body=f"{title} - {scheduled_at.strftime('%Y-%m-%d %H:%M')}",
+        )
+        db.session.add(notification)
+        db.session.flush()
+        recipient = NotificationRecipient(
+            notification_id=notification.id,
+            patient_id=patient_id
+        )
+        db.session.add(recipient)
+
     db.session.commit()
     return jsonify(data=appointment.to_dict()), 201
 
@@ -110,6 +127,8 @@ def update_appointment(appointment_id):
         return api_error("Forbidden", 403)
 
     data = request.get_json(silent=True) or {}
+    status_changed_to_cancelled = False
+
     if "scheduled_at" in data:
         dt = parse_datetime(data["scheduled_at"])
         if dt:
@@ -121,7 +140,24 @@ def update_appointment(appointment_id):
     if "notes" in data:
         appt.notes = data["notes"]
     if "status" in data and data["status"] in ("scheduled", "completed", "cancelled"):
+        if data["status"] == "cancelled" and appt.status != "cancelled":
+            status_changed_to_cancelled = True
         appt.status = data["status"]
+
+    # Notify patient when appointment is cancelled
+    if status_changed_to_cancelled and appt.patient_id:
+        notification = Notification(
+            author_id=current_user.id,
+            title="appointment_cancelled",
+            body=f"{appt.title} - {appt.scheduled_at.strftime('%Y-%m-%d %H:%M')}",
+        )
+        db.session.add(notification)
+        db.session.flush()
+        recipient = NotificationRecipient(
+            notification_id=notification.id,
+            patient_id=appt.patient_id
+        )
+        db.session.add(recipient)
 
     db.session.commit()
     return jsonify(data=appt.to_dict())
@@ -138,6 +174,21 @@ def delete_appointment(appointment_id):
         return api_error("Patients cannot delete appointments", 403)
     if current_user.role == "professional" and str(current_user.id) != str(appt.professional_id):
         return api_error("Forbidden", 403)
+
+    # Notify patient when appointment is deleted
+    if appt.patient_id:
+        notification = Notification(
+            author_id=current_user.id,
+            title="appointment_deleted",
+            body=f"{appt.title} - {appt.scheduled_at.strftime('%Y-%m-%d %H:%M')}",
+        )
+        db.session.add(notification)
+        db.session.flush()
+        recipient = NotificationRecipient(
+            notification_id=notification.id,
+            patient_id=appt.patient_id
+        )
+        db.session.add(recipient)
 
     db.session.delete(appt)
     db.session.commit()

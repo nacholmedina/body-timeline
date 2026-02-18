@@ -55,7 +55,7 @@
 	</div>
 
 	<!-- Navigation -->
-	<nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+	<nav class="flex-1 overflow-y-auto sidebar-nav px-3 py-4 space-y-1">
 		{#each navItems as item}
 			<a
 				href={item.href}
@@ -130,3 +130,20 @@
 		</button>
 	</div>
 </aside>
+
+<style>
+	.sidebar-nav {
+		scrollbar-width: thin;
+		scrollbar-gutter: stable;
+	}
+	.sidebar-nav::-webkit-scrollbar {
+		width: 4px;
+	}
+	.sidebar-nav::-webkit-scrollbar-thumb {
+		background: transparent;
+		border-radius: 4px;
+	}
+	.sidebar-nav:hover::-webkit-scrollbar-thumb {
+		background: var(--border-color);
+	}
+</style>

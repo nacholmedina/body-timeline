@@ -33,7 +33,7 @@
 	</div>
 
 	<!-- Tabs -->
-	<div class="flex gap-1 mb-6 overflow-x-auto border-b border-[var(--border-color)]">
+	<div class="flex gap-1 mb-6 overflow-x-auto overflow-y-hidden border-b border-[var(--border-color)]">
 		{#each tabs as tab}
 			<a
 				href={tab.href}

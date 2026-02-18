@@ -49,9 +49,19 @@
 
 	function detectType(title: string): string | null {
 		if (title === 'meal_comment') return 'meal_comment';
+		if (title === 'meal_reply') return 'meal_reply';
 		if (title === 'professional_invitation') return 'professional_invitation';
 		if (title === 'assignment_removed') return 'assignment_removed';
 		if (title === 'goal_created') return 'goal_created';
+		if (title === 'appointment_scheduled') return 'appointment_scheduled';
+		if (title === 'appointment_cancelled') return 'appointment_cancelled';
+		if (title === 'appointment_deleted') return 'appointment_deleted';
+		if (title === 'exercise_request_created') return 'exercise_request_created';
+		if (title === 'exercise_request_approved') return 'exercise_request_approved';
+		if (title === 'exercise_request_rejected') return 'exercise_request_rejected';
+		if (title.includes('commented on your meal')) return 'meal_comment';
+		if (title.includes('Professional Invitation from')) return 'professional_invitation';
+		if (title === 'Patient Assignment Removed') return 'assignment_removed';
 		return null;
 	}
 
@@ -65,6 +75,9 @@
 			displayTitle = $t('notifications.mealCommentTitle').replace('{name}', name);
 			const preview = notif.body?.replace(/^Your professional has commented on your meal:\s*/, '') || '';
 			displayBody = $t('notifications.mealCommentBody').replace('{name}', name).replace('{preview}', preview);
+		} else if (type === 'meal_reply') {
+			displayTitle = $t('notifications.mealReplyTitle').replace('{name}', name);
+			displayBody = $t('notifications.mealReplyBody').replace('{name}', name).replace('{preview}', notif.body || '');
 		} else if (type === 'professional_invitation') {
 			displayTitle = $t('notifications.professionalInvitationTitle').replace('{name}', name);
 			displayBody = $t('notifications.professionalInvitationBody').replace('{name}', name);
@@ -74,6 +87,24 @@
 		} else if (type === 'goal_created') {
 			displayTitle = $t('notifications.goalCreatedTitle').replace('{name}', name);
 			displayBody = $t('notifications.goalCreatedBody').replace('{name}', name).replace('{goal}', notif.body || '');
+		} else if (type === 'appointment_scheduled') {
+			displayTitle = $t('notifications.appointmentScheduledTitle').replace('{name}', name);
+			displayBody = $t('notifications.appointmentScheduledBody').replace('{name}', name).replace('{details}', notif.body || '');
+		} else if (type === 'appointment_cancelled') {
+			displayTitle = $t('notifications.appointmentCancelledTitle');
+			displayBody = $t('notifications.appointmentCancelledBody').replace('{name}', name).replace('{details}', notif.body || '');
+		} else if (type === 'appointment_deleted') {
+			displayTitle = $t('notifications.appointmentDeletedTitle');
+			displayBody = $t('notifications.appointmentDeletedBody').replace('{name}', name).replace('{details}', notif.body || '');
+		} else if (type === 'exercise_request_created') {
+			displayTitle = $t('notifications.exerciseRequestCreatedTitle').replace('{name}', name);
+			displayBody = $t('notifications.exerciseRequestCreatedBody').replace('{details}', notif.body || '');
+		} else if (type === 'exercise_request_approved') {
+			displayTitle = $t('notifications.exerciseRequestApprovedTitle');
+			displayBody = $t('notifications.exerciseRequestApprovedBody').replace('{details}', notif.body || '');
+		} else if (type === 'exercise_request_rejected') {
+			displayTitle = $t('notifications.exerciseRequestRejectedTitle');
+			displayBody = $t('notifications.exerciseRequestRejectedBody').replace('{details}', notif.body || '');
 		}
 
 		return { ...notif, displayTitle, displayBody };

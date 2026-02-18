@@ -37,7 +37,11 @@
       "Bash(node:*)",
       "Bash(flask db revision:*)",
       "Bash(flask db:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(timeout:*)",
+      "WebFetch(domain:lucide.dev)",
+      "Bash(./venv/Scripts/python:*)"
     ]
   }
 }
