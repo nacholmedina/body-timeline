@@ -8,7 +8,7 @@
 	import LanguageToggle from '$components/LanguageToggle.svelte';
 	import {
 		UtensilsCrossed, Dumbbell, Target, Calendar,
-		Scale, UserCheck, Stethoscope,
+		Scale, Stethoscope,
 		Monitor, Smartphone, Download, ChevronDown,
 		ArrowRight, Heart
 	} from 'lucide-svelte';
@@ -200,7 +200,7 @@
 				<!-- Professional -->
 				<div class="relative rounded-2xl border border-brand-200 dark:border-brand-800 bg-[var(--bg-card)] p-6 text-center ring-1 ring-brand-100 dark:ring-brand-900">
 					<div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100 dark:bg-brand-950">
-						<UserCheck size={28} class="text-brand-600 dark:text-brand-400" />
+						<svg class="h-7 w-7 text-brand-600 dark:text-brand-400" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M119.5,10.7c-16,2.7-30.1,12.8-37.8,27.1c-7.7,14.5-8,33.2-0.6,47.9c11.6,23.3,39.1,34.6,63.6,26.3c15.5-5.3,27.7-17.5,32.8-32.8c5.3-15.8,3.1-32.1-6.2-46.3C169,29.3,161,21.3,157.4,19C146,11.5,132.4,8.5,119.5,10.7z"/><path d="M120.8,134.4c-8.4,0.4-22.6,1.9-25.3,2.8c-0.8,0.2-0.8,1.6-0.8,19.4v19.1l1.6,0.8c6.6,3.2,9.6,11.5,6.7,18.3c-1.5,3.4-5.3,6.8-8.7,7.8c-5.4,1.6-11.2,0-14.8-4.2c-2.3-2.6-3.3-5.5-3.3-9.5c0-5.2,3.1-10.1,7.7-12.3l1.5-0.7v-18c0-13.1-0.1-18.1-0.5-18.1c-1.4,0-10.9,3.6-15.7,5.8c-23.4,11.3-37,31-39.4,57.4c-0.3,3.1-0.5,12-0.4,20.2c0.1,13.9,0.2,14.7,1.2,16.4c1.2,2.2,3.4,4.4,5.7,5.6C37.9,246,41,246,128,246h90.1l1.9-1c2.2-1.2,4.4-3.4,5.6-5.7c0.8-1.5,0.9-3.1,1-16.2c0.2-24.6-1.3-33.9-7.8-47c-6.5-13.1-17.4-23.5-32-30.5c-4.8-2.3-14.3-5.8-15.7-5.8c-0.4,0-0.5,3.1-0.4,11.2l0.1,11.2l2.5,0.6c9.1,2.3,16,9.6,19,20.1c2.1,7.5,1.7,19.1-1.1,26.6c-0.7,1.8-1,3.4-0.8,4.6c0.3,2.7-0.3,4.8-1.9,6.7c-3.2,3.7-8.2,3.9-11.6,0.7c-1.9-1.8-2.6-3.4-2.6-5.9c0-3.8,2.4-7.1,5.8-7.9c2.1-0.5,2.4-0.9,3.3-4.5c1.1-4.1,1.2-12.8,0.2-16.5c-2.4-9.6-7.8-14.6-16.4-15.1c-8.1-0.5-13.5,2.5-17,9.5c-2.7,5.4-3.6,13.9-2.1,20.7c1,4.5,1.5,5.8,2.7,5.8c1.8,0,4.6,2,5.7,4.1c3.8,7.2-3.8,14.9-11,11.1c-3.1-1.7-4.9-5.4-4.2-8.8c0.2-1.1,0-2.3-0.7-4.1c-2-4.9-2.6-9.7-2.4-17.1c0.3-7.7,0.9-10.5,3.7-16.2c3.2-6.8,9.7-12.1,16.7-13.7l2.4-0.6l0.1-12.3c0.1-10.5,0-12.4-0.6-12.6c-1.2-0.5-10-1.7-15.6-2.1C138.9,134.5,126.1,134.2,120.8,134.4z"/></svg>
 					</div>
 					<h3 class="text-lg font-semibold text-[var(--text-primary)]">{$t('landing.missionProfessional')}</h3>
 					<p class="mt-3 text-sm text-[var(--text-secondary)] leading-relaxed">{$t('landing.missionProfessionalDesc')}</p>
