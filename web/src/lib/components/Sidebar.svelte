@@ -11,7 +11,7 @@
 
 	export let mobile = false;
 
-	const patientOnlyItems = ['/app/meals', '/app/weigh-ins', '/app/goals', '/app/exercises'];
+	const patientOnlyItems = ['/app/meals', '/app/weigh-ins', '/app/goals', '/app/exercises', '/app/appointments'];
 
 	const allNavItems = [
 		{ href: '/app/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
@@ -82,12 +82,22 @@
 					<a
 						href="/app/professional"
 						class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-						       {isActive('/app/professional', pathname)
+						       {isActive('/app/professional', pathname) && !isActive('/app/professional/calendar', pathname)
 							? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
 							: 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'}"
 					>
 						<Users size={20} />
 						{$t('nav.myPatients')}
+					</a>
+					<a
+						href="/app/professional/calendar"
+						class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+						       {isActive('/app/professional/calendar', pathname)
+							? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300'
+							: 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'}"
+					>
+						<Calendar size={20} />
+						{$t('nav.professionalCalendar')}
 					</a>
 				{/if}
 				{#if isAdmin}
