@@ -7,7 +7,7 @@
 	import { formatDateTime, formatDate, localNow } from '$lib/utils';
 	import { onlineStore } from '$stores/online';
 	import { addToSyncQueue } from '$lib/offline/db';
-	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, Send } from 'lucide-svelte';
+	import { Plus, Trash2, UtensilsCrossed, Camera, ImagePlus, X, MessageSquare, Send, Edit2 } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 	import ConfirmModal from '$components/ConfirmModal.svelte';
 
@@ -18,6 +18,8 @@
 	let mounted = false;
 
 	// Form state
+	let editingMeal: any = null;
+	let existingPhotos: any[] = [];
 	let description = '';
 	let eatenAt = localNow();
 	let notes = '';
@@ -195,7 +197,28 @@
 		photoPreviews = photoPreviews.filter((_, i) => i !== index);
 	}
 
-	async function createMeal() {
+	function startEditMeal(meal: any) {
+		editingMeal = meal;
+		description = meal.description;
+		eatenAt = meal.eaten_at ? new Date(meal.eaten_at).toISOString().slice(0, 16) : localNow();
+		notes = meal.notes || '';
+		existingPhotos = meal.photos ? [...meal.photos] : [];
+		selectedPhotos = [];
+		photoPreviews = [];
+		formError = '';
+		showForm = true;
+	}
+
+	async function deleteExistingPhoto(mealId: string, photoId: string) {
+		try {
+			await api.delete(`/meals/${mealId}/photos/${photoId}`);
+			existingPhotos = existingPhotos.filter((p: any) => p.id !== photoId);
+		} catch (err) {
+			formError = err instanceof ApiError ? err.message : 'Failed to delete photo';
+		}
+	}
+
+	async function saveMeal() {
 		formError = '';
 		formLoading = true;
 		const payload = {
@@ -204,7 +227,7 @@
 			notes: notes || undefined
 		};
 
-		if (!$onlineStore) {
+		if (!editingMeal && !$onlineStore) {
 			await addToSyncQueue({ type: 'meal', action: 'create', payload });
 			meals = [{ ...payload, id: `draft-${Date.now()}`, created_at: new Date().toISOString(), photos: [] }, ...meals];
 			resetForm();
@@ -212,14 +235,23 @@
 		}
 
 		try {
-			const res = await api.post('/meals', payload);
-			const newMeal = res.data;
+			let mealId: string;
 
-			// Upload photos if any
+			if (editingMeal) {
+				const res = await api.patch(`/meals/${editingMeal.id}`, payload);
+				meals = meals.map((m) => (m.id === editingMeal.id ? res.data : m));
+				mealId = editingMeal.id;
+			} else {
+				const res = await api.post('/meals', payload);
+				mealId = res.data.id;
+			}
+
+			// Upload new photos if any
 			const photoErrors: string[] = [];
+			const startIndex = existingPhotos.length;
 			for (let i = 0; i < selectedPhotos.length; i++) {
 				try {
-					await api.upload(`/meals/${newMeal.id}/photos`, selectedPhotos[i], { sort_order: String(i) });
+					await api.upload(`/meals/${mealId}/photos`, selectedPhotos[i], { sort_order: String(startIndex + i) });
 				} catch (uploadErr) {
 					console.error('Photo upload failed:', uploadErr);
 					photoErrors.push(uploadErr instanceof ApiError ? uploadErr.message : `Photo ${i + 1} failed`);
@@ -232,7 +264,7 @@
 				photoError = photoErrors.join(', ');
 			}
 		} catch (err) {
-			formError = err instanceof ApiError ? err.message : 'Failed to create meal';
+			formError = err instanceof ApiError ? err.message : 'Failed to save meal';
 		} finally {
 			formLoading = false;
 		}
@@ -260,6 +292,8 @@
 
 	function resetForm() {
 		showForm = false;
+		editingMeal = null;
+		existingPhotos = [];
 		description = '';
 		eatenAt = localNow();
 		notes = '';
@@ -293,7 +327,7 @@
 <div class="space-y-6">
 	<div class="flex items-center justify-between gap-3">
 		<h1 class="text-2xl font-bold text-[var(--text-primary)] min-w-0 truncate">{$t('meals.title')}</h1>
-		<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2 shrink-0">
+		<button on:click={() => { if (showForm && !editingMeal) { resetForm(); } else { resetForm(); showForm = true; } }} class="btn-primary flex items-center gap-2 shrink-0">
 			<Plus size={18} />
 			<span class="hidden sm:inline">{$t('meals.addMeal')}</span>
 		</button>
@@ -316,7 +350,10 @@
 
 	<!-- Create Form -->
 	{#if showForm}
-		<form on:submit|preventDefault={createMeal} class="card space-y-4">
+		<form on:submit|preventDefault={saveMeal} class="card space-y-4">
+			<h2 class="text-lg font-semibold text-[var(--text-primary)]">
+				{editingMeal ? $t('meals.editMeal') : $t('meals.addMeal')}
+			</h2>
 			{#if formError}
 				<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">{formError}</div>
 			{/if}
@@ -354,8 +391,20 @@
 					on:change={handlePhotoSelect}
 					class="hidden"
 				/>
-				{#if photoPreviews.length > 0}
+				{#if existingPhotos.length > 0 || photoPreviews.length > 0}
 					<div class="flex flex-wrap gap-2 mb-2">
+						{#each existingPhotos as photo (photo.id)}
+							<div class="relative group">
+								<img src={photoUrl(photo.url)} alt={photo.caption || ''} class="h-20 w-20 rounded-lg object-cover border border-[var(--border-color)]" />
+								<button
+									type="button"
+									on:click={() => deleteExistingPhoto(editingMeal.id, photo.id)}
+									class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+								>
+									<X size={12} />
+								</button>
+							</div>
+						{/each}
 						{#each photoPreviews as preview, i}
 							<div class="relative group">
 								<img src={preview} alt="Preview" class="h-20 w-20 rounded-lg object-cover border border-[var(--border-color)]" />
@@ -370,7 +419,7 @@
 						{/each}
 					</div>
 				{/if}
-				{#if selectedPhotos.length < MAX_PHOTOS}
+				{#if existingPhotos.length + selectedPhotos.length < MAX_PHOTOS}
 					<div class="flex gap-2">
 						<button
 							type="button"
@@ -519,6 +568,13 @@
 										<span class="text-xs font-medium">{commentCount}</span>
 									{/if}
 								</div>
+							</button>
+							<button
+								on:click={() => startEditMeal(meal)}
+								class="rounded-lg p-2 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+								title={$t('common.edit')}
+							>
+								<Edit2 size={16} />
 							</button>
 							<button
 								on:click={() => deleteMeal(meal.id)}

@@ -4,7 +4,7 @@
 	import { api, ApiError, photoUrl } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime, localNow, kgToLbs, lbsToKg, kmToMi, miToKm } from '$lib/utils';
-	import { Plus, Dumbbell, Trash2, Search, X, Camera, ImagePlus, ChevronDown } from 'lucide-svelte';
+	import { Plus, Dumbbell, Trash2, Search, X, Camera, ImagePlus, ChevronDown, Edit2 } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 	import ConfirmModal from '$components/ConfirmModal.svelte';
 	import { addToSyncQueue } from '$lib/offline/db';
@@ -27,6 +27,8 @@
 	let deleting = false;
 
 	// Form state
+	let editingExercise: any = null;
+	let existingExercisePhotos: any[] = [];
 	let selectedDefinitionId = '';
 	let customExerciseName = '';
 	let customExerciseDescription = '';
@@ -161,7 +163,55 @@
 		photoPreviews = photoPreviews.filter((_, i) => i !== index);
 	}
 
-	async function createExerciseLog() {
+	function startEditExercise(exercise: any) {
+		editingExercise = exercise;
+		existingExercisePhotos = exercise.photos ? [...exercise.photos] : [];
+
+		if (exercise.exercise_definition_id) {
+			selectedDefinitionId = exercise.exercise_definition_id;
+			const def = exerciseDefinitions.find((d) => d.id === exercise.exercise_definition_id);
+			if (def) {
+				selectedCategory = def.category || 'all';
+			}
+		} else {
+			selectedDefinitionId = 'custom';
+		}
+		searchQuery = '';
+
+		customExerciseName = exercise.custom_exercise_name || '';
+		customExerciseDescription = exercise.custom_exercise_description || '';
+		performedAt = exercise.performed_at ? new Date(exercise.performed_at).toISOString().slice(0, 16) : localNow();
+		notes = exercise.notes || '';
+
+		// Populate measurements with unit conversion for display
+		measurements = {};
+		if (exercise.measurements && typeof exercise.measurements === 'object') {
+			for (const [key, val] of Object.entries(exercise.measurements)) {
+				let displayVal = Number(val);
+				if ($unitStore === 'imperial') {
+					if (key === 'weight') displayVal = kgToLbs(displayVal);
+					if (key === 'distance') displayVal = kmToMi(displayVal);
+				}
+				measurements[key] = parseFloat(displayVal.toFixed(2));
+			}
+		}
+
+		selectedPhotos = [];
+		photoPreviews = [];
+		formError = '';
+		showForm = true;
+	}
+
+	async function deleteExistingExercisePhoto(logId: string, photoId: string) {
+		try {
+			await api.delete(`/exercise-logs/${logId}/photos/${photoId}`);
+			existingExercisePhotos = existingExercisePhotos.filter((p: any) => p.id !== photoId);
+		} catch (err) {
+			formError = err instanceof ApiError ? err.message : 'Failed to delete photo';
+		}
+	}
+
+	async function saveExerciseLog() {
 		formError = '';
 		formLoading = true;
 
@@ -175,13 +225,16 @@
 			if (selectedDefinitionId === 'custom') {
 				payload.custom_exercise_name = customExerciseName;
 				payload.custom_exercise_description = customExerciseDescription;
+				if (editingExercise) {
+					payload.exercise_definition_id = null;
+				}
 			} else {
 				payload.exercise_definition_id = selectedDefinitionId;
 
 				// Add measurements
 				const selectedDef = exerciseDefinitions.find((d) => d.id === selectedDefinitionId);
 				if (selectedDef && selectedDef.allowed_measurements) {
-					const allowed = selectedDef.allowed_measurements; // Already an array!
+					const allowed = selectedDef.allowed_measurements;
 					const measurementData: Record<string, number> = {};
 
 					for (const measurementType of allowed) {
@@ -201,7 +254,19 @@
 				}
 			}
 
-			if ($onlineStore) {
+			if (editingExercise) {
+				await api.patch(`/exercise-logs/${editingExercise.id}`, payload);
+
+				// Upload new photos if any
+				const startIndex = existingExercisePhotos.length;
+				for (let i = 0; i < selectedPhotos.length; i++) {
+					try {
+						await api.upload(`/exercise-logs/${editingExercise.id}/photos`, selectedPhotos[i], { sort_order: String(startIndex + i) });
+					} catch (err) {
+						console.error('Photo upload failed:', err);
+					}
+				}
+			} else if ($onlineStore) {
 				const res = await api.post('/exercise-logs', payload);
 				const newLog = res.data;
 
@@ -277,6 +342,8 @@
 
 	function resetForm() {
 		showForm = false;
+		editingExercise = null;
+		existingExercisePhotos = [];
 		selectedDefinitionId = '';
 		customExerciseName = '';
 		customExerciseDescription = '';
@@ -397,7 +464,7 @@
 					<Plus size={18} />
 					<span class="hidden sm:inline">{$t('exercises.requestNew')}</span>
 				</button>
-				<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2">
+				<button on:click={() => { if (showForm && !editingExercise) { resetForm(); } else { resetForm(); showForm = true; } }} class="btn-primary flex items-center gap-2">
 					<Plus size={18} />
 					<span class="hidden sm:inline">{$t('exercises.addExercise')}</span>
 				</button>
@@ -479,7 +546,10 @@
 	{/if}
 
 	{#if showForm}
-		<form on:submit|preventDefault={createExerciseLog} class="card space-y-4">
+		<form on:submit|preventDefault={saveExerciseLog} class="card space-y-4">
+			<h2 class="text-lg font-semibold text-[var(--text-primary)]">
+				{editingExercise ? $t('exercises.editExercise') : $t('exercises.addExercise')}
+			</h2>
 			{#if formError}
 				<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">
 					{formError}
@@ -697,8 +767,20 @@
 					on:change={handlePhotoSelect}
 					class="hidden"
 				/>
-				{#if photoPreviews.length > 0}
+				{#if existingExercisePhotos.length > 0 || photoPreviews.length > 0}
 					<div class="flex flex-wrap gap-2 mb-2">
+						{#each existingExercisePhotos as photo (photo.id)}
+							<div class="relative group">
+								<img src={photoUrl(photo.url)} alt={photo.caption || ''} class="h-20 w-20 rounded-lg object-cover border border-[var(--border-color)]" />
+								<button
+									type="button"
+									on:click={() => deleteExistingExercisePhoto(editingExercise.id, photo.id)}
+									class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+								>
+									<X size={12} />
+								</button>
+							</div>
+						{/each}
 						{#each photoPreviews as preview, i}
 							<div class="relative group">
 								<img src={preview} alt="Preview" class="h-20 w-20 rounded-lg object-cover border border-[var(--border-color)]" />
@@ -713,7 +795,7 @@
 						{/each}
 					</div>
 				{/if}
-				{#if selectedPhotos.length < MAX_PHOTOS}
+				{#if existingExercisePhotos.length + selectedPhotos.length < MAX_PHOTOS}
 					<div class="flex gap-2">
 						<button
 							type="button"
@@ -811,12 +893,21 @@
 								</div>
 							{/if}
 						</div>
+						<div class="flex gap-1 shrink-0">
+						<button
+							on:click={() => startEditExercise(exercise)}
+							class="rounded-lg p-2 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+							title={$t('common.edit')}
+						>
+							<Edit2 size={16} />
+						</button>
 						<button
 							on:click={() => deleteExerciseLog(exercise.id)}
-							class="rounded-lg p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-950 shrink-0"
+							class="rounded-lg p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
 						>
 							<Trash2 size={16} />
 						</button>
+					</div>
 					</div>
 				</div>
 			{/each}

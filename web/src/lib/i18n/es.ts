@@ -86,6 +86,7 @@ export const es = {
 		removePhoto: 'Quitar',
 		maxPhotos: 'Máximo 3 fotos alcanzado',
 		writeReply: 'Escribí una respuesta...',
+		editMeal: 'Editar comida',
 		confirmDelete: '¿Estás seguro de que querés eliminar esta comida?'
 	},
 	weighIns: {
@@ -108,6 +109,7 @@ export const es = {
 		completed: 'Completada',
 		pending: 'Pendiente',
 		noGoals: 'Aún no se definieron metas',
+		editGoal: 'Editar meta',
 		confirmDelete: '¿Estás seguro de que querés eliminar esta meta?'
 	},
 	workouts: {
@@ -339,6 +341,7 @@ export const es = {
 			'Breathing Exercises': 'Ejercicios de Respiración',
 			'Other': 'Otro'
 		},
+		editExercise: 'Editar ejercicio',
 		confirmDelete: '¿Estás seguro de que querés eliminar este ejercicio?'
 	},
 	notifications: {

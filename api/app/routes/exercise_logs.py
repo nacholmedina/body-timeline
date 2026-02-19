@@ -153,6 +153,20 @@ def update_exercise_log(log_id):
 
     data = request.get_json(silent=True) or {}
 
+    # Support changing the exercise definition
+    if "exercise_definition_id" in data:
+        new_def_id = data["exercise_definition_id"]
+        if new_def_id:
+            new_def = db.session.get(ExerciseDefinition, new_def_id)
+            if not new_def:
+                return validation_error("Exercise definition not found", "exercise_definition_id")
+            log.exercise_definition_id = new_def_id
+            log.custom_exercise_name = None
+            log.custom_exercise_description = None
+        else:
+            # Switching to custom exercise
+            log.exercise_definition_id = None
+
     if "performed_at" in data:
         dt = parse_datetime(data["performed_at"])
         if dt:
@@ -163,10 +177,12 @@ def update_exercise_log(log_id):
         if not isinstance(measurements, dict):
             return validation_error("Measurements must be an object", "measurements")
 
-        # Validate against allowed measurements if using a definition
+        # Validate against allowed measurements of the (possibly updated) definition
         allowed_measurements = None
-        if log.exercise_definition:
-            allowed_measurements = log.exercise_definition.get_allowed_measurements()
+        if log.exercise_definition_id:
+            definition = db.session.get(ExerciseDefinition, log.exercise_definition_id)
+            if definition:
+                allowed_measurements = definition.get_allowed_measurements()
 
         is_valid, error_msg = validate_measurements(measurements, allowed_measurements)
         if not is_valid:
@@ -176,6 +192,9 @@ def update_exercise_log(log_id):
 
     if "notes" in data:
         log.notes = data["notes"]
+
+    if "custom_exercise_name" in data:
+        log.custom_exercise_name = data["custom_exercise_name"]
 
     if "custom_exercise_description" in data:
         log.custom_exercise_description = data["custom_exercise_description"]

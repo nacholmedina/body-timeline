@@ -86,6 +86,7 @@ export const en = {
 		removePhoto: 'Remove',
 		maxPhotos: 'Maximum 3 photos reached',
 		writeReply: 'Write a reply...',
+		editMeal: 'Edit meal',
 		confirmDelete: 'Are you sure you want to delete this meal?'
 	},
 	weighIns: {
@@ -108,6 +109,7 @@ export const en = {
 		completed: 'Completed',
 		pending: 'Pending',
 		noGoals: 'No goals set yet',
+		editGoal: 'Edit goal',
 		confirmDelete: 'Are you sure you want to delete this goal?'
 	},
 	workouts: {
@@ -339,6 +341,7 @@ export const en = {
 			'Breathing Exercises': 'Breathing Exercises',
 			'Other': 'Other'
 		},
+		editExercise: 'Edit exercise',
 		confirmDelete: 'Are you sure you want to delete this exercise?'
 	},
 	notifications: {

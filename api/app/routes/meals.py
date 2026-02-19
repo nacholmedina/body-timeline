@@ -163,3 +163,30 @@ def upload_meal_photo(meal_id):
     db.session.commit()
 
     return jsonify(data=photo.to_dict()), 201
+
+
+@bp.route("/<uuid:meal_id>/photos/<uuid:photo_id>", methods=["DELETE"])
+@jwt_required()
+def delete_meal_photo(meal_id, photo_id):
+    meal = db.session.get(Meal, meal_id)
+    if not meal:
+        return api_error("Meal not found", 404)
+
+    if current_user.role == "patient" and str(current_user.id) != str(meal.patient_id):
+        return api_error("Forbidden", 403)
+    if current_user.role == "professional":
+        return api_error("Professionals cannot modify meals", 403)
+
+    photo = db.session.get(MealPhoto, photo_id)
+    if not photo or str(photo.meal_id) != str(meal_id):
+        return api_error("Photo not found", 404)
+
+    try:
+        storage = get_storage()
+        storage.delete(photo.storage_key)
+    except Exception:
+        pass
+
+    db.session.delete(photo)
+    db.session.commit()
+    return jsonify(message="Photo deleted")

@@ -4,7 +4,7 @@
 	import { api, ApiError } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDate } from '$lib/utils';
-	import { Plus, Target, Check, Circle, Trash2 } from 'lucide-svelte';
+	import { Plus, Target, Check, Circle, Trash2, Edit2 } from 'lucide-svelte';
 	import ConfirmModal from '$components/ConfirmModal.svelte';
 
 	let goals: any[] = [];
@@ -14,6 +14,7 @@
 	let filterPeriod: string = '';
 	let filterCompleted: string = '';
 
+	let editingGoal: any = null;
 	let title = '';
 	let description = '';
 	let period = 'weekly';
@@ -41,17 +42,34 @@
 		}
 	}
 
-	async function createGoal() {
+	function startEditGoal(goal: any) {
+		editingGoal = goal;
+		title = goal.title;
+		description = goal.description || '';
+		period = goal.period;
+		targetDate = goal.target_date || '';
+		formError = '';
+		showForm = true;
+	}
+
+	async function saveGoal() {
 		formError = '';
 		formLoading = true;
 		try {
-			const res = await api.post('/goals', {
+			const payload = {
 				title,
 				description: description || undefined,
 				period,
 				target_date: targetDate || undefined
-			});
-			goals = [res.data, ...goals];
+			};
+
+			if (editingGoal) {
+				const res = await api.patch(`/goals/${editingGoal.id}`, payload);
+				goals = goals.map((g) => (g.id === editingGoal.id ? res.data : g));
+			} else {
+				const res = await api.post('/goals', payload);
+				goals = [res.data, ...goals];
+			}
 			resetForm();
 		} catch (err) {
 			formError = err instanceof ApiError ? err.message : 'Failed';
@@ -89,6 +107,7 @@
 
 	function resetForm() {
 		showForm = false;
+		editingGoal = null;
 		title = '';
 		description = '';
 		period = 'weekly';
@@ -106,7 +125,7 @@
 <div class="space-y-6">
 	<div class="flex items-center justify-between gap-3">
 		<h1 class="text-2xl font-bold text-[var(--text-primary)] min-w-0 truncate">{$t('goals.title')}</h1>
-		<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2 shrink-0">
+		<button on:click={() => { if (showForm && !editingGoal) { resetForm(); } else { resetForm(); showForm = true; } }} class="btn-primary flex items-center gap-2 shrink-0">
 			<Plus size={18} />
 			<span class="hidden sm:inline">{$t('goals.addGoal')}</span>
 		</button>
@@ -140,7 +159,10 @@
 	</div>
 
 	{#if showForm}
-		<form on:submit|preventDefault={createGoal} class="card space-y-4">
+		<form on:submit|preventDefault={saveGoal} class="card space-y-4">
+			<h2 class="text-lg font-semibold text-[var(--text-primary)]">
+				{editingGoal ? $t('goals.editGoal') : $t('goals.addGoal')}
+			</h2>
 			{#if formError}
 				<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">{formError}</div>
 			{/if}
@@ -215,12 +237,21 @@
 							{/if}
 						</div>
 					</div>
-					<button
-						on:click={() => deleteGoal(goal.id)}
-						class="flex-shrink-0 rounded-lg p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
-					>
-						<Trash2 size={16} />
-					</button>
+					<div class="flex gap-1 shrink-0">
+						<button
+							on:click={() => startEditGoal(goal)}
+							class="rounded-lg p-2 text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+							title={$t('common.edit')}
+						>
+							<Edit2 size={16} />
+						</button>
+						<button
+							on:click={() => deleteGoal(goal.id)}
+							class="rounded-lg p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
+						>
+							<Trash2 size={16} />
+						</button>
+					</div>
 				</div>
 			{/each}
 		</div>
