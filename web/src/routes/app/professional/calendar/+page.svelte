@@ -134,8 +134,13 @@
 		const dateStr = date.toISOString().split('T')[0];
 		return appointments.filter((appt) => {
 			const apptDate = new Date(appt.scheduled_at).toISOString().split('T')[0];
-			return apptDate === dateStr && appt.status !== 'cancelled';
+			return apptDate === dateStr;
 		});
+	}
+
+	function selectDay(date: Date) {
+		currentDate = new Date(date);
+		view = 'day';
 	}
 
 	function isToday(date: Date): boolean {
@@ -350,24 +355,31 @@
 				<div class="grid grid-cols-7 gap-px bg-[var(--border-color)] border-x border-b border-[var(--border-color)] rounded-b-lg overflow-hidden">
 					{#each calendarDays as day}
 						{@const dayAppointments = getAppointmentsForDay(day)}
-						<div class="bg-white dark:bg-gray-900 min-h-24 p-2 {isCurrentMonth(day) ? '' : 'opacity-40'}">
+						<button
+							on:click={() => selectDay(day)}
+							class="bg-white dark:bg-gray-900 min-h-24 p-2 text-left hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer {isCurrentMonth(day) ? '' : 'opacity-40'}"
+						>
 							<span class="text-sm font-medium {isToday(day) ? 'flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white' : 'text-[var(--text-primary)]'}">
 								{day.getDate()}
 							</span>
 							<div class="mt-1 space-y-1">
 								{#each dayAppointments.slice(0, 2) as appt}
-									<div class="rounded bg-brand-100 dark:bg-brand-900 px-2 py-1 text-xs">
-										<p class="font-medium text-brand-700 dark:text-brand-300 truncate">
+									<div class="rounded px-2 py-1 text-xs {appt.status === 'cancelled'
+										? 'bg-red-100 dark:bg-red-900/40'
+										: 'bg-brand-100 dark:bg-brand-900'}">
+										<p class="font-medium truncate {appt.status === 'cancelled'
+											? 'text-red-600 dark:text-red-400 line-through'
+											: 'text-brand-700 dark:text-brand-300'}">
 											{new Date(appt.scheduled_at).toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' })}
 										</p>
-										<p class="text-[var(--text-secondary)] truncate">{appt.title}</p>
+										<p class="truncate {appt.status === 'cancelled' ? 'text-red-500/70 dark:text-red-400/60 line-through' : 'text-[var(--text-secondary)]'}">{appt.title}</p>
 									</div>
 								{/each}
 								{#if dayAppointments.length > 2}
 									<p class="text-xs text-[var(--text-secondary)]">+{dayAppointments.length - 2} more</p>
 								{/if}
 							</div>
-						</div>
+						</button>
 					{/each}
 				</div>
 			</div>
@@ -382,10 +394,17 @@
 						{#if dayAppointments.length > 0}
 							<div class="space-y-2">
 								{#each dayAppointments as appt}
-									<div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-3">
+									<div class="rounded-lg border p-3 {appt.status === 'cancelled'
+										? 'border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/40'
+										: 'border-[var(--border-color)] bg-[var(--bg-secondary)]'}">
 										<div class="flex items-start justify-between">
 											<div class="flex-1">
-												<p class="font-medium text-[var(--text-primary)]">{appt.title}</p>
+												<div class="flex items-center gap-2">
+													<p class="font-medium {appt.status === 'cancelled' ? 'text-red-600 dark:text-red-400 line-through' : 'text-[var(--text-primary)]'}">{appt.title}</p>
+													{#if appt.status === 'cancelled'}
+														<span class="rounded-full bg-red-100 dark:bg-red-900 px-2 py-0.5 text-[0.65rem] font-medium text-red-600 dark:text-red-400">{$t('appointments.cancelled')}</span>
+													{/if}
+												</div>
 												<div class="mt-1 flex items-center gap-3 text-xs text-[var(--text-secondary)]">
 													<span class="flex items-center gap-1">
 														<Clock size={12} />
@@ -399,17 +418,19 @@
 													{/if}
 												</div>
 											</div>
-											<div class="flex gap-1 ml-2">
-												<button on:click={() => openReschedule(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-brand-50 dark:hover:bg-brand-950 hover:text-brand-600" title={$t('appointments.reschedule')}>
-													<RefreshCw size={14} />
-												</button>
-												<button on:click={() => cancelAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-600" title={$t('appointments.cancel')}>
-													<XCircle size={14} />
-												</button>
-												<button on:click={() => deleteAppointment(appt.id)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
-													<Trash2 size={14} />
-												</button>
-											</div>
+											{#if appt.status !== 'cancelled'}
+												<div class="flex gap-1 ml-2">
+													<button on:click={() => openReschedule(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-brand-50 dark:hover:bg-brand-950 hover:text-brand-600" title={$t('appointments.reschedule')}>
+														<RefreshCw size={14} />
+													</button>
+													<button on:click={() => cancelAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-600" title={$t('appointments.cancel')}>
+														<XCircle size={14} />
+													</button>
+													<button on:click={() => deleteAppointment(appt.id)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
+														<Trash2 size={14} />
+													</button>
+												</div>
+											{/if}
 										</div>
 									</div>
 								{/each}
@@ -429,10 +450,17 @@
 				{#if dayAppointments.length > 0}
 					<div class="space-y-3">
 						{#each dayAppointments as appt}
-							<div class="rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] p-4">
+							<div class="rounded-lg border p-4 {appt.status === 'cancelled'
+								? 'border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/40'
+								: 'border-[var(--border-color)] bg-[var(--bg-secondary)]'}">
 								<div class="flex items-start justify-between mb-2">
 									<div class="flex-1">
-										<p class="font-semibold text-[var(--text-primary)]">{appt.title}</p>
+										<div class="flex items-center gap-2">
+											<p class="font-semibold {appt.status === 'cancelled' ? 'text-red-600 dark:text-red-400 line-through' : 'text-[var(--text-primary)]'}">{appt.title}</p>
+											{#if appt.status === 'cancelled'}
+												<span class="rounded-full bg-red-100 dark:bg-red-900 px-2 py-0.5 text-[0.65rem] font-medium text-red-600 dark:text-red-400">{$t('appointments.cancelled')}</span>
+											{/if}
+										</div>
 										<div class="mt-1 flex items-center gap-3 text-sm text-[var(--text-secondary)]">
 											<span class="flex items-center gap-1">
 												<Clock size={14} />
@@ -446,17 +474,19 @@
 											{/if}
 										</div>
 									</div>
-									<div class="flex gap-1 ml-2">
-										<button on:click={() => openReschedule(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-brand-50 dark:hover:bg-brand-950 hover:text-brand-600" title={$t('appointments.reschedule')}>
-											<RefreshCw size={14} />
-										</button>
-										<button on:click={() => cancelAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-600" title={$t('appointments.cancel')}>
-											<XCircle size={14} />
-										</button>
-										<button on:click={() => deleteAppointment(appt.id)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
-											<Trash2 size={14} />
-										</button>
-									</div>
+									{#if appt.status !== 'cancelled'}
+										<div class="flex gap-1 ml-2">
+											<button on:click={() => openReschedule(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-brand-50 dark:hover:bg-brand-950 hover:text-brand-600" title={$t('appointments.reschedule')}>
+												<RefreshCw size={14} />
+											</button>
+											<button on:click={() => cancelAppointment(appt)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-amber-50 dark:hover:bg-amber-950 hover:text-amber-600" title={$t('appointments.cancel')}>
+												<XCircle size={14} />
+											</button>
+											<button on:click={() => deleteAppointment(appt.id)} class="p-1.5 rounded text-[var(--text-secondary)] hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600" title={$t('appointments.delete')}>
+												<Trash2 size={14} />
+											</button>
+										</div>
+									{/if}
 								</div>
 								{#if appt.notes}
 									<p class="mt-2 text-sm text-[var(--text-secondary)]">{appt.notes}</p>
