@@ -26,16 +26,13 @@ def list_notifications():
             .order_by(Notification.created_at.desc())
         )
     elif current_user.role == "professional":
-        # Professional sees notifications they authored + notifications sent to them
-        from sqlalchemy import or_
-        authored_ids = db.session.query(Notification.id).filter_by(author_id=current_user.id)
-        received_ids = (
-            db.session.query(NotificationRecipient.notification_id)
+        # Professional sees only notifications sent TO them (meal_reply, assignment_removed, etc.)
+        query = (
+            db.session.query(Notification)
+            .join(NotificationRecipient)
             .filter(NotificationRecipient.patient_id == current_user.id)
+            .order_by(Notification.created_at.desc())
         )
-        query = Notification.query.filter(
-            or_(Notification.id.in_(authored_ids), Notification.id.in_(received_ids))
-        ).order_by(Notification.created_at.desc())
     else:
         # devadmin sees all
         query = Notification.query.order_by(Notification.created_at.desc())
