@@ -94,6 +94,10 @@ class ApiClient {
 		return this.fetch(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined });
 	}
 
+	put(path: string, body?: any) {
+		return this.fetch(path, { method: 'PUT', body: body ? JSON.stringify(body) : undefined });
+	}
+
 	patch(path: string, body?: any) {
 		return this.fetch(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined });
 	}

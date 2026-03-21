@@ -23,6 +23,7 @@ class Appointment(db.Model):
         nullable=False,
         default="scheduled",
     )
+    booking_source = db.Column(db.String(20), nullable=False, default="professional")
     created_at = db.Column(
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -58,6 +59,7 @@ class Appointment(db.Model):
             "title": self.title,
             "notes": self.notes,
             "status": self.status,
+            "booking_source": self.booking_source,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }

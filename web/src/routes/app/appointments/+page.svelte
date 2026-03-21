@@ -8,6 +8,7 @@
 	import { Calendar, Clock, User, Plus, XCircle, RefreshCw, Trash2 } from 'lucide-svelte';
 	import DateTimePicker from '$components/DateTimePicker.svelte';
 	import ConfirmModal from '$components/ConfirmModal.svelte';
+	import BookAppointment from '$components/BookAppointment.svelte';
 
 	let appointments: any[] = [];
 	let patients: any[] = [];
@@ -16,6 +17,10 @@
 	let filter: 'upcoming' | 'all' = 'upcoming';
 
 	const canCreate = $authStore.user?.role === 'professional' || $authStore.user?.role === 'devadmin';
+	const isPatient = $authStore.user?.role === 'patient';
+
+	// Patient's assigned professional
+	let assignedProfessional: { id: string; first_name: string; last_name: string } | null = null;
 
 	let showForm = false;
 	let patientId = '';
@@ -252,9 +257,30 @@
 		formError = '';
 	}
 
+	async function loadAssignedProfessional() {
+		if (!isPatient) return;
+		try {
+			const res = await api.get('/professional/assigned');
+			assignedProfessional = res.data;
+		} catch (err) {
+			console.error('Failed to load assigned professional:', err);
+		}
+	}
+
+	async function patientCancelAppointment(appt: any) {
+		if (!confirm($t('availability.confirmCancelBooking'))) return;
+		try {
+			await api.patch(`/appointments/${appt.id}`, { status: 'cancelled' });
+			appointments = appointments.map(a => a.id === appt.id ? { ...a, status: 'cancelled' } : a);
+		} catch (err) {
+			console.error('Failed to cancel:', err);
+		}
+	}
+
 	onMount(() => {
 		loadAppointments();
 		loadPatients();
+		loadAssignedProfessional();
 	});
 </script>
 
@@ -265,13 +291,28 @@
 <div class="space-y-6">
 	<div class="flex items-center justify-between gap-3">
 		<h1 class="text-2xl font-bold text-[var(--text-primary)] min-w-0 truncate">{$t('appointments.title')}</h1>
-		{#if canCreate}
-			<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2 shrink-0">
-				<Plus size={18} />
-				<span class="hidden sm:inline">{$t('appointments.new')}</span>
-			</button>
-		{/if}
+		<div class="flex items-center gap-2">
+			{#if isPatient && assignedProfessional}
+				<BookAppointment
+					professionalId={assignedProfessional.id}
+					professionalName="{assignedProfessional.first_name} {assignedProfessional.last_name}"
+					onBooked={loadAppointments}
+				/>
+			{/if}
+			{#if canCreate}
+				<button on:click={() => (showForm = !showForm)} class="btn-primary flex items-center gap-2 shrink-0">
+					<Plus size={18} />
+					<span class="hidden sm:inline">{$t('appointments.new')}</span>
+				</button>
+			{/if}
+		</div>
 	</div>
+
+	{#if isPatient && !assignedProfessional && !loading}
+		<div class="card text-sm text-[var(--text-secondary)] text-center py-4">
+			{$t('availability.noProfessionalAssigned')}
+		</div>
+	{/if}
 
 	<div class="flex gap-2">
 		<button
@@ -387,6 +428,15 @@
 									title={$t('appointments.delete')}
 								>
 									<Trash2 size={16} />
+								</button>
+							{/if}
+							{#if isPatient && appt.status === 'scheduled' && String(appt.patient_id) === String($authStore.user?.id)}
+								<button
+									on:click={() => patientCancelAppointment(appt)}
+									class="rounded-lg p-1.5 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950 transition-colors"
+									title={$t('availability.cancelAppointment')}
+								>
+									<XCircle size={16} />
 								</button>
 							{/if}
 						</div>

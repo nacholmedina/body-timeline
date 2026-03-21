@@ -122,7 +122,46 @@ def update_appointment(appointment_id):
         return api_error("Appointment not found", 404)
 
     if current_user.role == "patient":
-        return api_error("Patients cannot modify appointments", 403)
+        # Patients can only cancel their own appointments
+        if str(appt.patient_id) != str(current_user.id):
+            return api_error("Forbidden", 403)
+        data = request.get_json(silent=True) or {}
+        if data.get("status") != "cancelled" or len(data) > 1:
+            return api_error("Patients can only cancel appointments", 403)
+        if appt.status != "scheduled":
+            return api_error("Can only cancel scheduled appointments", 400)
+
+        appt.status = "cancelled"
+
+        # Notify professional that patient cancelled
+        notif = Notification(
+            author_id=current_user.id,
+            title="appointment_cancelled_by_patient",
+            body=f"{appt.title} - {appt.scheduled_at.strftime('%Y-%m-%d %H:%M')}",
+        )
+        db.session.add(notif)
+        db.session.flush()
+        db.session.add(NotificationRecipient(
+            notification_id=notif.id,
+            patient_id=appt.professional_id,
+        ))
+
+        # Also notify the patient (confirmation)
+        patient_notif = Notification(
+            author_id=current_user.id,
+            title="appointment_cancelled",
+            body=f"{appt.title} - {appt.scheduled_at.strftime('%Y-%m-%d %H:%M')}",
+        )
+        db.session.add(patient_notif)
+        db.session.flush()
+        db.session.add(NotificationRecipient(
+            notification_id=patient_notif.id,
+            patient_id=current_user.id,
+        ))
+
+        db.session.commit()
+        return jsonify(data=appt.to_dict())
+
     if current_user.role == "professional" and str(current_user.id) != str(appt.professional_id):
         return api_error("Forbidden", 403)
 
@@ -144,7 +183,7 @@ def update_appointment(appointment_id):
             status_changed_to_cancelled = True
         appt.status = data["status"]
 
-    # Notify patient when appointment is cancelled
+    # Notify patient when appointment is cancelled by professional
     if status_changed_to_cancelled and appt.patient_id:
         notification = Notification(
             author_id=current_user.id,

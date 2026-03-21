@@ -4,10 +4,12 @@
 	import { api } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
 	import { formatDateTime } from '$lib/utils';
-	import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, X, Clock, User, Trash2, XCircle, RefreshCw } from 'lucide-svelte';
+	import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, X, Clock, User, Trash2, XCircle, RefreshCw, Settings } from 'lucide-svelte';
 	import ConfirmModal from '$components/ConfirmModal.svelte';
+	import AvailabilitySettings from '$components/AvailabilitySettings.svelte';
+	import { authStore } from '$lib/stores/auth';
 
-	type ViewMode = 'day' | 'week' | 'month';
+	type ViewMode = 'day' | 'week' | 'month' | 'availability';
 
 	let view: ViewMode = 'month';
 	let currentDate = new Date();
@@ -327,6 +329,15 @@
 							{$t(`professional.${v}View`)}
 						</button>
 					{/each}
+					<button
+						on:click={() => (view = 'availability')}
+						class="flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors {view === 'availability'
+							? 'bg-brand-600 text-white'
+							: 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}"
+					>
+						<Settings size={14} />
+						{$t('availability.availabilityView')}
+					</button>
 				</div>
 
 				<div class="flex items-center gap-3">
@@ -349,7 +360,7 @@
 			<div class="card overflow-x-auto">
 				<div class="grid grid-cols-7 gap-px bg-[var(--border-color)] border border-[var(--border-color)] rounded-t-lg overflow-hidden">
 					{#each [$t('professional.sun'), $t('professional.mon'), $t('professional.tue'), $t('professional.wed'), $t('professional.thu'), $t('professional.fri'), $t('professional.sat')] as day}
-						<div class="bg-[var(--bg-secondary)] p-2 text-center text-xs font-medium text-[var(--text-secondary)]">{day}</div>
+						<div class="bg-[var(--bg-secondary)] p-1.5 sm:p-2 text-center text-xs font-medium text-[var(--text-secondary)]">{day}</div>
 					{/each}
 				</div>
 				<div class="grid grid-cols-7 gap-px bg-[var(--border-color)] border-x border-b border-[var(--border-color)] rounded-b-lg overflow-hidden">
@@ -357,12 +368,21 @@
 						{@const dayAppointments = getAppointmentsForDay(day)}
 						<button
 							on:click={() => selectDay(day)}
-							class="bg-white dark:bg-gray-900 min-h-24 p-2 text-left hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer {isCurrentMonth(day) ? '' : 'opacity-40'}"
+							class="bg-white dark:bg-gray-900 min-h-12 sm:min-h-24 p-1 sm:p-2 text-left hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer {isCurrentMonth(day) ? '' : 'opacity-40'}"
 						>
-							<span class="text-sm font-medium {isToday(day) ? 'flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white' : 'text-[var(--text-primary)]'}">
+							<span class="text-xs sm:text-sm font-medium {isToday(day) ? 'flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-brand-600 text-white' : 'text-[var(--text-primary)]'}">
 								{day.getDate()}
 							</span>
-							<div class="mt-1 space-y-1">
+							<!-- Mobile: dot indicators only -->
+							{#if dayAppointments.length > 0}
+								<div class="mt-1 flex gap-0.5 sm:hidden justify-center">
+									{#each dayAppointments.slice(0, 3) as appt}
+										<span class="h-1.5 w-1.5 rounded-full {appt.status === 'cancelled' ? 'bg-red-400' : 'bg-brand-500'}"></span>
+									{/each}
+								</div>
+							{/if}
+							<!-- Desktop: appointment pills -->
+							<div class="mt-1 space-y-1 hidden sm:block">
 								{#each dayAppointments.slice(0, 2) as appt}
 									<div class="rounded px-2 py-1 text-xs {appt.status === 'cancelled'
 										? 'bg-red-100 dark:bg-red-900/40'
@@ -376,7 +396,7 @@
 									</div>
 								{/each}
 								{#if dayAppointments.length > 2}
-									<p class="text-xs text-[var(--text-secondary)]">+{dayAppointments.length - 2} more</p>
+									<p class="text-xs text-[var(--text-secondary)]">+{dayAppointments.length - 2} {$t('common.more')}</p>
 								{/if}
 							</div>
 						</button>
@@ -498,6 +518,10 @@
 					<p class="text-center py-8 text-[var(--text-secondary)]">{$t('professional.noAppointmentsThisDay')}</p>
 				{/if}
 			</div>
+		{:else if view === 'availability'}
+			{#if $authStore.user?.id}
+				<AvailabilitySettings professionalId={$authStore.user.id} />
+			{/if}
 		{/if}
 	{/if}
 </div>

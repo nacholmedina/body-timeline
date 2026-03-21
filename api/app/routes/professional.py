@@ -101,6 +101,32 @@ def get_patient(patient_id):
     return jsonify(data)
 
 
+@bp.route("/assigned", methods=["GET"])
+@jwt_required()
+def get_assigned_professional():
+    """Get the professional assigned to the current patient."""
+    if current_user.role not in ("patient",):
+        return api_error("Only patients can use this endpoint", 403)
+
+    assignment = ProfessionalPatient.query.filter_by(
+        patient_id=current_user.id, is_active=True
+    ).first()
+
+    if not assignment:
+        return jsonify(data=None)
+
+    prof = db.session.get(User, assignment.professional_id)
+    if not prof:
+        return jsonify(data=None)
+
+    return jsonify(data={
+        "id": str(prof.id),
+        "first_name": prof.first_name,
+        "last_name": prof.last_name,
+        "email": prof.email,
+    })
+
+
 @bp.route("/invitations", methods=["POST"])
 @jwt_required()
 @roles_required("professional", "devadmin")

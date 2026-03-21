@@ -58,6 +58,13 @@
 		} catch {}
 	}
 
+	async function refreshUser() {
+		try {
+			const res = await api.get('/auth/me');
+			if (res.user) authStore.updateUser(res.user);
+		} catch {}
+	}
+
 	onMount(() => {
 		const unsubscribe = authStore.subscribe((state) => {
 			if (!state.isAuthenticated) {
@@ -65,6 +72,7 @@
 			}
 		});
 		fetchUnreadCount();
+		refreshUser();
 		return unsubscribe;
 	});
 </script>

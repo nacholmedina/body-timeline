@@ -7,6 +7,7 @@ from app.models.goal import Goal
 # from app.models.workout import Workout, WorkoutItem, WorkoutPhoto
 from app.models.notification import Notification, NotificationRecipient
 from app.models.appointment import Appointment
+from app.models.availability import ProfessionalAvailability, AvailabilityOverride
 
 # New exercise tracking models
 from app.models.exercise_definition import ExerciseDefinition
@@ -23,6 +24,7 @@ __all__ = [
     # "Workout", "WorkoutItem", "WorkoutPhoto",
     "Notification", "NotificationRecipient",
     "Appointment",
+    "ProfessionalAvailability", "AvailabilityOverride",
     # New exercise tracking models
     "ExerciseDefinition",
     "ExerciseLog", "ExercisePhoto",

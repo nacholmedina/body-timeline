@@ -16,18 +16,7 @@
 		is_active: boolean;
 	}
 
-	interface ExerciseRequest {
-		id: string;
-		name: string;
-		description: string | null;
-		exercise_type: string;
-		status: string;
-		created_at: string;
-		requested_by: string;
-	}
-
 	let exercises: ExerciseItem[] = [];
-	let requests: ExerciseRequest[] = [];
 	let loading = true;
 	let search = '';
 	let page = 1;
@@ -59,18 +48,8 @@
 		}
 	}
 
-	async function loadRequests() {
-		try {
-			const res = await api.get('/exercises/requests', { status: 'pending' });
-			requests = res.data;
-		} catch (err) {
-			console.error('Failed to load requests', err);
-		}
-	}
-
 	onMount(() => {
 		loadExercises();
-		loadRequests();
 	});
 
 	let searchTimeout: ReturnType<typeof setTimeout>;
@@ -138,15 +117,6 @@
 		}
 	}
 
-	async function reviewRequest(reqId: string, action: 'approve' | 'reject') {
-		try {
-			await api.post(`/exercises/requests/${reqId}/review`, { action });
-			requests = requests.filter((r) => r.id !== reqId);
-			if (action === 'approve') loadExercises();
-		} catch (err) {
-			console.error('Failed to review request', err);
-		}
-	}
 
 	function typeLabel(t: string): string {
 		if (t === 'sets_reps') return 'Sets & Reps';
@@ -156,42 +126,6 @@
 
 	$: totalPages = Math.ceil(total / limit);
 </script>
-
-<!-- Pending requests -->
-{#if requests.length > 0}
-	<div class="mb-6">
-		<h3 class="text-base font-semibold text-[var(--text-primary)] mb-3">{$t('admin.pendingRequests')} ({requests.length})</h3>
-		<div class="space-y-2">
-			{#each requests as req (req.id)}
-				<div class="card p-4 flex items-center justify-between">
-					<div>
-						<p class="font-medium text-[var(--text-primary)]">{req.name}</p>
-						<p class="text-xs text-[var(--text-secondary)]">{typeLabel(req.exercise_type)} &middot; {formatDate(req.created_at, $locale)}</p>
-						{#if req.description}
-							<p class="text-sm text-[var(--text-secondary)] mt-1">{req.description}</p>
-						{/if}
-					</div>
-					<div class="flex gap-2">
-						<button
-							on:click={() => reviewRequest(req.id, 'approve')}
-							class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800 transition-colors"
-						>
-							<Check size={14} />
-							{$t('admin.approve')}
-						</button>
-						<button
-							on:click={() => reviewRequest(req.id, 'reject')}
-							class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800 transition-colors"
-						>
-							<X size={14} />
-							{$t('admin.reject')}
-						</button>
-					</div>
-				</div>
-			{/each}
-		</div>
-	</div>
-{/if}
 
 <!-- Header -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

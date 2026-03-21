@@ -7,6 +7,7 @@ from app.routes.goals import bp as goals_bp
 # from app.routes.workouts import bp as workouts_bp
 from app.routes.notifications import bp as notifications_bp
 from app.routes.appointments import bp as appointments_bp
+from app.routes.availability import bp as availability_bp
 from app.routes.dashboard import bp as dashboard_bp
 from app.routes.admin import bp as admin_bp
 from app.routes.professional import bp as professional_bp
@@ -16,7 +17,8 @@ from app.routes.meal_comments import bp as meal_comments_bp
 # New exercise tracking routes
 from app.routes.exercise_definitions import bp as exercise_definitions_bp
 from app.routes.exercise_logs import bp as exercise_logs_bp
-from app.routes.exercise_requests_new import bp as exercise_requests_new_bp
+# Exercise requests removed - users can no longer request new exercises
+# from app.routes.exercise_requests_new import bp as exercise_requests_new_bp
 from app.routes.exercise_routines import bp as exercise_routines_bp
 
 # Temporary migration endpoint
@@ -34,6 +36,7 @@ def register_blueprints(app):
     # app.register_blueprint(workouts_bp, url_prefix=f"{prefix}/workouts")
     app.register_blueprint(notifications_bp, url_prefix=f"{prefix}/notifications")
     app.register_blueprint(appointments_bp, url_prefix=f"{prefix}/appointments")
+    app.register_blueprint(availability_bp, url_prefix=f"{prefix}/availability")
     app.register_blueprint(dashboard_bp, url_prefix=f"{prefix}/dashboard")
     app.register_blueprint(admin_bp, url_prefix=f"{prefix}/admin")
     app.register_blueprint(professional_bp, url_prefix=f"{prefix}/professional")
@@ -43,7 +46,7 @@ def register_blueprints(app):
     # New exercise tracking routes
     app.register_blueprint(exercise_definitions_bp, url_prefix=f"{prefix}/exercise-definitions")
     app.register_blueprint(exercise_logs_bp, url_prefix=f"{prefix}/exercise-logs")
-    app.register_blueprint(exercise_requests_new_bp, url_prefix=f"{prefix}/exercise-requests")
+    # app.register_blueprint(exercise_requests_new_bp, url_prefix=f"{prefix}/exercise-requests")
     app.register_blueprint(exercise_routines_bp, url_prefix=f"{prefix}/exercise-routines")
 
     # Temporary migration endpoint (DELETE AFTER USE!)

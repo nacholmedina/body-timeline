@@ -19,7 +19,6 @@
 	let loading = true;
 	let error = '';
 	let showForm = false;
-	let showRequestForm = false;
 
 	// Delete confirmation
 	let showDeleteConfirm = false;
@@ -44,12 +43,6 @@
 	const MAX_PHOTOS = 3;
 
 	// Request form state
-	let requestName = '';
-	let requestCategory = 'general';
-	let requestDescription = '';
-	let requestMeasurements: string[] = [];
-	let requestLoading = false;
-	let requestError = '';
 
 	// Filter state
 	let selectedCategory = 'all';
@@ -315,30 +308,6 @@
 		}
 	}
 
-	async function submitExerciseRequest() {
-		requestError = '';
-		requestLoading = true;
-
-		try {
-			const payload = {
-				name: requestName,
-				category: requestCategory,
-				description: requestDescription || undefined,
-				suggested_measurements: requestMeasurements.length > 0
-					? JSON.stringify(requestMeasurements)
-					: undefined
-			};
-
-			await api.post('/exercise-requests', payload);
-
-			alert($t('exercises.requestSuccess'));
-			resetRequestForm();
-		} catch (err) {
-			requestError = err instanceof ApiError ? err.message : 'Failed';
-		} finally {
-			requestLoading = false;
-		}
-	}
 
 	function resetForm() {
 		showForm = false;
@@ -359,15 +328,6 @@
 		formError = '';
 	}
 
-	function resetRequestForm() {
-		showRequestForm = false;
-		requestName = '';
-		requestCategory = 'general';
-		requestDescription = '';
-		requestMeasurements = [];
-		requestLoading = false;
-		requestError = '';
-	}
 
 	function getAllowedMeasurements(definitionId: string): string[] {
 		if (!definitionId || definitionId === 'custom') return [];
@@ -414,13 +374,6 @@
 		return parts.join(' · ');
 	}
 
-	function toggleMeasurementRequest(type: string) {
-		if (requestMeasurements.includes(type)) {
-			requestMeasurements = requestMeasurements.filter((m) => m !== type);
-		} else {
-			requestMeasurements = [...requestMeasurements, type];
-		}
-	}
 
 	function translateExerciseName(name: string): string {
 		// Try to get translation from exerciseNames, fallback to original name
@@ -460,10 +413,6 @@
 		</h1>
 		<div class="flex gap-2 shrink-0">
 			{#if currentView === 'exercises'}
-				<button on:click={() => (showRequestForm = !showRequestForm)} class="btn-secondary flex items-center gap-2">
-					<Plus size={18} />
-					<span class="hidden sm:inline">{$t('exercises.requestNew')}</span>
-				</button>
 				<button on:click={() => { if (showForm && !editingExercise) { resetForm(); } else { resetForm(); showForm = true; } }} class="btn-primary flex items-center gap-2">
 					<Plus size={18} />
 					<span class="hidden sm:inline">{$t('exercises.addExercise')}</span>
@@ -494,57 +443,6 @@
 
 	{#if currentView === 'exercises'}
 	<!-- EXERCISES VIEW -->
-	{#if showRequestForm}
-		<form on:submit|preventDefault={submitExerciseRequest} class="card space-y-4">
-			<h2 class="text-lg font-semibold text-[var(--text-primary)]">{$t('exercises.requestExercise')}</h2>
-			{#if requestError}
-				<div class="rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">
-					{requestError}
-				</div>
-			{/if}
-			<div>
-				<label for="requestName" class="label">{$t('exercises.exerciseName')}</label>
-				<input id="requestName" type="text" bind:value={requestName} class="input" required />
-			</div>
-			<div>
-				<label for="requestCategory" class="label">{$t('exercises.category')}</label>
-				<select id="requestCategory" bind:value={requestCategory} class="input">
-					<option value="cardio">{$t('exercises.cardio')}</option>
-					<option value="strength">{$t('exercises.strength')}</option>
-					<option value="sports">{$t('exercises.sports')}</option>
-					<option value="flexibility">{$t('exercises.flexibility')}</option>
-					<option value="general">{$t('exercises.general')}</option>
-				</select>
-			</div>
-			<div>
-				<label for="requestDescription" class="label">{$t('exercises.requestDescription')}</label>
-				<textarea id="requestDescription" bind:value={requestDescription} class="input" rows="2"></textarea>
-			</div>
-			<div>
-				<label class="label">{$t('exercises.suggestedMeasurements')} ({$t('exercises.optional')})</label>
-				<div class="flex flex-wrap gap-2">
-					{#each measurementTypes as type}
-						<button
-							type="button"
-							on:click={() => toggleMeasurementRequest(type)}
-							class="px-3 py-1.5 text-sm rounded-lg border transition-colors {requestMeasurements.includes(type)
-								? 'bg-brand-500 text-white border-brand-500'
-								: 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-brand-500'}"
-						>
-							{$t(`exercises.${type}`)}
-						</button>
-					{/each}
-				</div>
-			</div>
-			<div class="flex gap-3">
-				<button type="submit" class="btn-primary" disabled={requestLoading || !requestName.trim()}>
-					{requestLoading ? $t('common.loading') : $t('common.save')}
-				</button>
-				<button type="button" on:click={resetRequestForm} class="btn-secondary">{$t('common.cancel')}</button>
-			</div>
-		</form>
-	{/if}
-
 	{#if showForm}
 		<form on:submit|preventDefault={saveExerciseLog} class="card space-y-4">
 			<h2 class="text-lg font-semibold text-[var(--text-primary)]">
@@ -885,7 +783,7 @@
 								<div class="mt-3 flex flex-wrap gap-2">
 									{#each exercise.photos as photo}
 										<img
-											src={photoUrl(photo.storage_key)}
+											src={photoUrl(photo.url)}
 											alt={photo.caption || 'Exercise photo'}
 											class="h-20 w-20 rounded-lg object-cover cursor-pointer border border-[var(--border-color)]"
 										/>
