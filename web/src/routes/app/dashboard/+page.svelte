@@ -56,6 +56,9 @@
 		if (title === 'appointment_scheduled') return 'appointment_scheduled';
 		if (title === 'appointment_cancelled') return 'appointment_cancelled';
 		if (title === 'appointment_deleted') return 'appointment_deleted';
+		if (title === 'appointment_booked') return 'appointment_booked';
+		if (title === 'appointment_booked_pro') return 'appointment_booked_pro';
+		if (title === 'appointment_cancelled_by_patient') return 'appointment_cancelled_by_patient';
 		if (title === 'exercise_request_created') return 'exercise_request_created';
 		if (title === 'exercise_request_approved') return 'exercise_request_approved';
 		if (title === 'exercise_request_rejected') return 'exercise_request_rejected';
@@ -96,6 +99,15 @@
 		} else if (type === 'appointment_deleted') {
 			displayTitle = $t('notifications.appointmentDeletedTitle');
 			displayBody = $t('notifications.appointmentDeletedBody').replace('{name}', name).replace('{details}', notif.body || '');
+		} else if (type === 'appointment_booked') {
+			displayTitle = $t('notifications.appointmentBookedTitle');
+			displayBody = $t('notifications.appointmentBookedBody').replace('{name}', name).replace('{details}', notif.body || '');
+		} else if (type === 'appointment_booked_pro') {
+			displayTitle = $t('notifications.appointmentBookedProTitle').replace('{name}', name);
+			displayBody = $t('notifications.appointmentBookedProBody').replace('{details}', notif.body || '');
+		} else if (type === 'appointment_cancelled_by_patient') {
+			displayTitle = $t('notifications.appointmentCancelledByPatientTitle').replace('{name}', name);
+			displayBody = $t('notifications.appointmentCancelledByPatientBody').replace('{details}', notif.body || '');
 		} else if (type === 'exercise_request_created') {
 			displayTitle = $t('notifications.exerciseRequestCreatedTitle').replace('{name}', name);
 			displayBody = $t('notifications.exerciseRequestCreatedBody').replace('{details}', notif.body || '');
