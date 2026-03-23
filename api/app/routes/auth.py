@@ -1,15 +1,26 @@
-from flask import Blueprint, jsonify, request
+import os
+import logging
+
+from flask import Blueprint, jsonify, request, redirect
 from flask_jwt_extended import (
     create_access_token, create_refresh_token, jwt_required,
     get_jwt_identity, current_user,
 )
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
 from app.extensions import db
 from app.models.user import User, Profile, ProfessionalPatient
 from app.models.weigh_in import WeighIn
 from app.services.storage import get_storage
+from app.services.email import generate_verification_token, verify_token, send_verification_email
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import validate_email, validate_password
+
+logger = logging.getLogger(__name__)
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
 def _weight_stats(user_id):
@@ -55,6 +66,15 @@ def _my_professional(user_id):
     }
 
 
+def _build_user_response(user):
+    """Build standard user data dict with weight stats and professional info."""
+    user_data = user.to_dict(include_profile=True)
+    user_data["weight_stats"] = _weight_stats(user.id)
+    if user.role == "patient":
+        user_data["my_professional"] = _my_professional(user.id)
+    return user_data
+
+
 bp = Blueprint("auth", __name__)
 
 
@@ -76,7 +96,17 @@ def register():
     if pw_err:
         return validation_error(pw_err, "password")
 
-    if User.query.filter_by(email=email).first():
+    existing = User.query.filter_by(email=email).first()
+    if existing:
+        if existing.oauth_provider and not existing.password_hash:
+            # Google-only user registering with password — link account
+            existing.set_password(password)
+            existing.first_name = first_name
+            existing.last_name = last_name
+            if gender:
+                existing.gender = gender
+            db.session.commit()
+            return jsonify(message="verification_email_sent"), 201
         return api_error("Email already registered", 409)
 
     user = User(
@@ -85,26 +115,24 @@ def register():
         last_name=last_name,
         gender=gender,
         role="patient",
+        email_verified=False,
     )
     user.set_password(password)
     db.session.add(user)
-    db.session.flush()  # generate user.id before creating profile
+    db.session.flush()
 
     profile = Profile(user_id=user.id)
     db.session.add(profile)
-
     db.session.commit()
 
-    access_token = create_access_token(identity=user)
-    refresh_token = create_refresh_token(identity=user)
-    user_data = user.to_dict(include_profile=True)
-    user_data["weight_stats"] = _weight_stats(user.id)
+    # Send verification email
+    try:
+        token = generate_verification_token(email)
+        send_verification_email(email, first_name, token)
+    except Exception:
+        logger.warning(f"Could not send verification email to {email}")
 
-    return jsonify(
-        user=user_data,
-        access_token=access_token,
-        refresh_token=refresh_token,
-    ), 201
+    return jsonify(message="verification_email_sent"), 201
 
 
 @bp.route("/login", methods=["POST"])
@@ -123,15 +151,133 @@ def login():
     if not user.is_active:
         return api_error("Account is deactivated", 403)
 
+    if not user.email_verified:
+        return jsonify(error="email_not_verified", message="Please verify your email before logging in"), 403
+
     access_token = create_access_token(identity=user)
     refresh_token = create_refresh_token(identity=user)
-    user_data = user.to_dict(include_profile=True)
-    user_data["weight_stats"] = _weight_stats(user.id)
-    if user.role == "patient":
-        user_data["my_professional"] = _my_professional(user.id)
 
     return jsonify(
-        user=user_data,
+        user=_build_user_response(user),
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@bp.route("/verify-email", methods=["GET"])
+def verify_email():
+    token = request.args.get("token", "")
+    if not token:
+        return redirect(f"{FRONTEND_URL}/verify-email?status=error")
+
+    email = verify_token(token)
+    if not email:
+        return redirect(f"{FRONTEND_URL}/verify-email?status=expired")
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return redirect(f"{FRONTEND_URL}/verify-email?status=error")
+
+    if user.email_verified:
+        return redirect(f"{FRONTEND_URL}/verify-email?status=already_verified")
+
+    user.email_verified = True
+    db.session.commit()
+
+    return redirect(f"{FRONTEND_URL}/verify-email?status=success")
+
+
+@bp.route("/resend-verification", methods=["POST"])
+def resend_verification():
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+
+    if not email:
+        return validation_error("Email is required", "email")
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # Don't reveal if user exists
+        return jsonify(message="verification_email_sent"), 200
+
+    if user.email_verified:
+        return jsonify(message="already_verified"), 200
+
+    try:
+        token = generate_verification_token(email)
+        send_verification_email(email, user.first_name, token)
+    except Exception:
+        return api_error("Failed to send verification email", 500)
+
+    return jsonify(message="verification_email_sent"), 200
+
+
+@bp.route("/google", methods=["POST"])
+def google_auth():
+    data = request.get_json(silent=True) or {}
+    credential = data.get("credential", "")
+
+    if not credential:
+        return validation_error("Google credential is required")
+
+    if not GOOGLE_CLIENT_ID:
+        return api_error("Google auth is not configured", 500)
+
+    # Verify the Google ID token
+    try:
+        idinfo = google_id_token.verify_oauth2_token(
+            credential, google_requests.Request(), GOOGLE_CLIENT_ID
+        )
+    except ValueError:
+        return api_error("Invalid Google token", 401)
+
+    google_id = idinfo["sub"]
+    email = idinfo.get("email", "").lower()
+    first_name = idinfo.get("given_name", "")
+    last_name = idinfo.get("family_name", "")
+    email_verified = idinfo.get("email_verified", False)
+
+    if not email or not email_verified:
+        return api_error("Google account email not verified", 400)
+
+    # Check if user exists by OAuth ID or email
+    user = User.query.filter_by(oauth_provider="google", oauth_id=google_id).first()
+
+    if not user:
+        user = User.query.filter_by(email=email).first()
+        if user:
+            # Link existing account with Google
+            user.oauth_provider = "google"
+            user.oauth_id = google_id
+            user.email_verified = True
+        else:
+            # Create new user
+            user = User(
+                email=email,
+                first_name=first_name or "User",
+                last_name=last_name or "",
+                role="patient",
+                email_verified=True,
+                oauth_provider="google",
+                oauth_id=google_id,
+            )
+            db.session.add(user)
+            db.session.flush()
+            profile = Profile(user_id=user.id)
+            db.session.add(profile)
+
+    if not user.is_active:
+        return api_error("Account is deactivated", 403)
+
+    # Ensure verified
+    user.email_verified = True
+    db.session.commit()
+
+    access_token = create_access_token(identity=user)
+    refresh_token = create_refresh_token(identity=user)
+
+    return jsonify(
+        user=_build_user_response(user),
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -147,11 +293,7 @@ def refresh():
 @bp.route("/me", methods=["GET"])
 @jwt_required()
 def me():
-    data = current_user.to_dict(include_profile=True)
-    data["weight_stats"] = _weight_stats(current_user.id)
-    if current_user.role == "patient":
-        data["my_professional"] = _my_professional(current_user.id)
-    return jsonify(user=data)
+    return jsonify(user=_build_user_response(current_user))
 
 
 @bp.route("/me", methods=["PATCH"])
@@ -183,11 +325,7 @@ def update_me():
             setattr(profile, field, data[field])
 
     db.session.commit()
-    data = user.to_dict(include_profile=True)
-    data["weight_stats"] = _weight_stats(user.id)
-    if user.role == "patient":
-        data["my_professional"] = _my_professional(user.id)
-    return jsonify(user=data)
+    return jsonify(user=_build_user_response(user))
 
 
 @bp.route("/me/avatar", methods=["POST"])
@@ -214,8 +352,4 @@ def upload_avatar():
     profile.avatar_storage_key = result["storage_key"]
     db.session.commit()
 
-    data = current_user.to_dict(include_profile=True)
-    data["weight_stats"] = _weight_stats(current_user.id)
-    if current_user.role == "patient":
-        data["my_professional"] = _my_professional(current_user.id)
-    return jsonify(user=data)
+    return jsonify(user=_build_user_response(current_user))

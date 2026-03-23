@@ -3,7 +3,14 @@
 	import { syncStatus, syncPending, syncAll } from '$lib/offline/sync';
 	import { t } from '$i18n/index';
 	import { WifiOff, RefreshCw, Check } from 'lucide-svelte';
+
+	$: showBanner = !$onlineStore || $syncStatus === 'syncing' || $syncStatus === 'complete' || ($syncPending > 0 && $onlineStore);
 </script>
+
+{#if showBanner}
+	<!-- Spacer to push content below the fixed banner -->
+	<div class="h-10"></div>
+{/if}
 
 {#if !$onlineStore}
 	<div class="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-sm font-medium text-white">

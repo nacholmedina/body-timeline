@@ -11,7 +11,10 @@ class User(db.Model):
 
     id = db.Column(GUID, primary_key=True, default=uuid.uuid4)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    oauth_provider = db.Column(db.String(50), nullable=True)
+    oauth_id = db.Column(db.String(255), nullable=True)
     role = db.Column(
         db.Enum("devadmin", "professional", "patient", name="user_role"),
         nullable=False,
@@ -44,6 +47,8 @@ class User(db.Model):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str) -> bool:
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, password)
 
     def to_dict(self, include_profile=False):
@@ -55,6 +60,8 @@ class User(db.Model):
             "last_name": self.last_name,
             "gender": self.gender,
             "is_active": self.is_active,
+            "email_verified": self.email_verified,
+            "oauth_provider": self.oauth_provider,
             "created_at": self.created_at.isoformat(),
         }
         if include_profile and self.profile:
