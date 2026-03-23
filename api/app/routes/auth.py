@@ -1,6 +1,7 @@
 import os
 import logging
 
+import requests as http_requests
 from flask import Blueprint, jsonify, request, redirect
 from flask_jwt_extended import (
     create_access_token, create_refresh_token, jwt_required,
@@ -20,6 +21,7 @@ from app.utils.validators import validate_email, validate_password
 logger = logging.getLogger(__name__)
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
@@ -212,30 +214,70 @@ def resend_verification():
     return jsonify(message="verification_email_sent"), 200
 
 
+def _exchange_google_code(code: str, redirect_uri: str) -> dict:
+    """Exchange an authorization code for user info via Google's token + userinfo endpoints."""
+    # Exchange code for tokens
+    token_resp = http_requests.post("https://oauth2.googleapis.com/token", data={
+        "code": code,
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": redirect_uri,
+        "grant_type": "authorization_code",
+    })
+    if token_resp.status_code != 200:
+        logger.error(f"Google token exchange failed: {token_resp.text}")
+        return {}
+    tokens = token_resp.json()
+    access_token = tokens.get("access_token")
+    if not access_token:
+        return {}
+
+    # Get user info
+    userinfo_resp = http_requests.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if userinfo_resp.status_code != 200:
+        return {}
+    return userinfo_resp.json()
+
+
 @bp.route("/google", methods=["POST"])
 def google_auth():
     data = request.get_json(silent=True) or {}
     credential = data.get("credential", "")
+    code = data.get("code", "")
+    redirect_uri = data.get("redirect_uri", "")
 
-    if not credential:
-        return validation_error("Google credential is required")
+    if not credential and not code:
+        return validation_error("Google credential or code is required")
 
     if not GOOGLE_CLIENT_ID:
         return api_error("Google auth is not configured", 500)
 
-    # Verify the Google ID token
-    try:
-        idinfo = google_id_token.verify_oauth2_token(
-            credential, google_requests.Request(), GOOGLE_CLIENT_ID
-        )
-    except ValueError:
-        return api_error("Invalid Google token", 401)
-
-    google_id = idinfo["sub"]
-    email = idinfo.get("email", "").lower()
-    first_name = idinfo.get("given_name", "")
-    last_name = idinfo.get("family_name", "")
-    email_verified = idinfo.get("email_verified", False)
+    if code:
+        # OAuth 2.0 authorization code flow
+        userinfo = _exchange_google_code(code, redirect_uri)
+        if not userinfo:
+            return api_error("Failed to exchange Google auth code", 401)
+        google_id = userinfo.get("id", "")
+        email = userinfo.get("email", "").lower()
+        first_name = userinfo.get("given_name", "")
+        last_name = userinfo.get("family_name", "")
+        email_verified = userinfo.get("verified_email", False)
+    else:
+        # ID token flow (One Tap / hidden button)
+        try:
+            idinfo = google_id_token.verify_oauth2_token(
+                credential, google_requests.Request(), GOOGLE_CLIENT_ID
+            )
+        except ValueError:
+            return api_error("Invalid Google token", 401)
+        google_id = idinfo["sub"]
+        email = idinfo.get("email", "").lower()
+        first_name = idinfo.get("given_name", "")
+        last_name = idinfo.get("family_name", "")
+        email_verified = idinfo.get("email_verified", False)
 
     if not email or not email_verified:
         return api_error("Google account email not verified", 400)

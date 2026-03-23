@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 	import { t, locale } from '$i18n/index';
 	import { authStore } from '$stores/auth';
 	import { BRANDING } from '$lib/config/branding';
 	import { api, ApiError } from '$lib/api/client';
+	import { googleSignIn } from '$lib/utils/googleAuth';
 	import ThemeToggle from '$components/ThemeToggle.svelte';
 	import LanguageToggle from '$components/LanguageToggle.svelte';
 	import { Mail } from 'lucide-svelte';
-
-	const GOOGLE_CLIENT_ID = '195898924440-jmhmuef02mb8afdioumnhj40bbrgms01.apps.googleusercontent.com';
 
 	const errorMap: Record<string, string> = {
 		'Email already registered': 'auth.emailAlreadyRegistered',
@@ -29,7 +27,6 @@
 	let loading = false;
 	let emailSent = false;
 	let googleLoading = false;
-	let googleReady = false;
 
 	async function handleRegister() {
 		error = '';
@@ -50,47 +47,25 @@
 		}
 	}
 
-	async function handleGoogleCredential(credential: string) {
+	async function handleGoogleClick() {
 		error = '';
 		googleLoading = true;
 		try {
-			const data = await api.post('/auth/google', { credential });
+			const code = await googleSignIn();
+			const redirectUri = window.location.origin + '/auth/google/callback';
+			const data = await api.post('/auth/google', { code, redirect_uri: redirectUri });
 			authStore.login(data.user, data.access_token, data.refresh_token);
 			goto('/app/dashboard');
 		} catch (err) {
-			error = err instanceof ApiError ? translateError(err.message) : $t('auth.googleSignInFailed');
+			if (err instanceof Error && err.message === 'Popup closed') {
+				// User closed popup, not an error
+			} else {
+				error = err instanceof ApiError ? translateError(err.message) : $t('auth.googleSignInFailed');
+			}
 		} finally {
 			googleLoading = false;
 		}
 	}
-
-	function handleGoogleClick() {
-		const hiddenBtn = document.querySelector('#google-hidden-btn div[role="button"]') as HTMLElement;
-		if (hiddenBtn) {
-			hiddenBtn.click();
-		} else if (!googleReady) {
-			error = $t('auth.googleSignInFailed');
-		}
-	}
-
-	onMount(() => {
-		const script = document.createElement('script');
-		script.src = 'https://accounts.google.com/gsi/client';
-		script.async = true;
-		script.onload = () => {
-			const google = (window as any).google;
-			google.accounts.id.initialize({
-				client_id: GOOGLE_CLIENT_ID,
-				callback: (response: any) => handleGoogleCredential(response.credential),
-			});
-			google.accounts.id.renderButton(
-				document.getElementById('google-hidden-btn'),
-				{ type: 'icon', shape: 'square', size: 'small' }
-			);
-			googleReady = true;
-		};
-		document.head.appendChild(script);
-	});
 </script>
 
 <svelte:head>
@@ -194,7 +169,6 @@
 					</svg>
 					{googleLoading ? $t('common.loading') : $t('auth.continueWithGoogle')}
 				</button>
-				<div id="google-hidden-btn" style="position:absolute;width:0;height:0;overflow:hidden;"></div>
 			</div>
 
 			<p class="mt-4 text-center text-sm text-[var(--text-secondary)]">
