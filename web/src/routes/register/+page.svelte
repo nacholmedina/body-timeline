@@ -29,6 +29,7 @@
 	let loading = false;
 	let emailSent = false;
 	let googleLoading = false;
+	let googleReady = false;
 
 	async function handleRegister() {
 		error = '';
@@ -64,17 +65,12 @@
 	}
 
 	function handleGoogleClick() {
-		const google = (window as any).google;
-		if (!google?.accounts?.id) {
-			error = 'Google SDK not loaded yet. Please try again.';
-			return;
+		const hiddenBtn = document.querySelector('#google-hidden-btn div[role="button"]') as HTMLElement;
+		if (hiddenBtn) {
+			hiddenBtn.click();
+		} else if (!googleReady) {
+			error = $t('auth.googleSignInFailed');
 		}
-		google.accounts.id.prompt((notification: any) => {
-			if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-				// Fallback: use popup mode
-				google.accounts.id.prompt();
-			}
-		});
 	}
 
 	onMount(() => {
@@ -86,8 +82,12 @@
 			google.accounts.id.initialize({
 				client_id: GOOGLE_CLIENT_ID,
 				callback: (response: any) => handleGoogleCredential(response.credential),
-				auto_select: false,
 			});
+			google.accounts.id.renderButton(
+				document.getElementById('google-hidden-btn'),
+				{ type: 'icon', shape: 'square', size: 'small' }
+			);
+			googleReady = true;
 		};
 		document.head.appendChild(script);
 	});
@@ -194,6 +194,7 @@
 					</svg>
 					{googleLoading ? $t('common.loading') : $t('auth.continueWithGoogle')}
 				</button>
+				<div id="google-hidden-btn" style="position:absolute;width:0;height:0;overflow:hidden;"></div>
 			</div>
 
 			<p class="mt-4 text-center text-sm text-[var(--text-secondary)]">
