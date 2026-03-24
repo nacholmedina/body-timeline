@@ -260,7 +260,7 @@
 		<!-- ============ PATIENT DASHBOARD ============ -->
 		<!-- Summary Cards -->
 		<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-			<div class="card flex items-center gap-3">
+			<a href="/app/meals" class="card flex items-center gap-3 cursor-pointer hover:shadow-md transition-all">
 				<div class="rounded-lg bg-orange-100 dark:bg-orange-900 p-2.5">
 					<UtensilsCrossed size={20} class="text-orange-600 dark:text-orange-400" />
 				</div>
@@ -268,9 +268,9 @@
 					<p class="text-2xl font-bold text-[var(--text-primary)]">{summary?.meals_this_month ?? 0}</p>
 					<p class="text-xs text-[var(--text-secondary)]">{$t('dashboard.mealsThisMonth')}</p>
 				</div>
-			</div>
+			</a>
 
-			<div class="card flex items-center gap-3">
+			<a href="/app/exercises" class="card flex items-center gap-3 cursor-pointer hover:shadow-md transition-all">
 				<div class="rounded-lg bg-blue-100 dark:bg-blue-900 p-2.5">
 					<Dumbbell size={20} class="text-blue-600 dark:text-blue-400" />
 				</div>
@@ -278,9 +278,9 @@
 					<p class="text-2xl font-bold text-[var(--text-primary)]">{summary?.workouts_this_month ?? 0}</p>
 					<p class="text-xs text-[var(--text-secondary)]">{$t('dashboard.workoutsThisMonth')}</p>
 				</div>
-			</div>
+			</a>
 
-			<div class="card flex items-center gap-3">
+			<a href="/app/goals" class="card flex items-center gap-3 cursor-pointer hover:shadow-md transition-all">
 				<div class="rounded-lg bg-green-100 dark:bg-green-900 p-2.5">
 					<Target size={20} class="text-green-600 dark:text-green-400" />
 				</div>
@@ -290,9 +290,9 @@
 					</p>
 					<p class="text-xs text-[var(--text-secondary)]">{$t('dashboard.goalsCompleted')}</p>
 				</div>
-			</div>
+			</a>
 
-			<div class="card flex items-center gap-3">
+			<a href="/app/notifications" class="card flex items-center gap-3 cursor-pointer hover:shadow-md transition-all">
 				<div class="rounded-lg bg-purple-100 dark:bg-purple-900 p-2.5">
 					<Bell size={20} class="text-purple-600 dark:text-purple-400" />
 				</div>
@@ -300,7 +300,7 @@
 					<p class="text-2xl font-bold text-[var(--text-primary)]">{summary?.unread_notifications ?? 0}</p>
 					<p class="text-xs text-[var(--text-secondary)]">{$t('nav.notifications')}</p>
 				</div>
-			</div>
+			</a>
 		</div>
 
 		<div class="grid gap-6 lg:grid-cols-2">
