@@ -23,7 +23,7 @@ def _compute_slots(professional_id, target_date):
     today = now.date()
 
     if target_date < today:
-        return [], None
+        return [], None, 30
 
     # Get weekly rules for this day of week (supports multiple intervals)
     rules = ProfessionalAvailability.query.filter_by(
@@ -39,7 +39,7 @@ def _compute_slots(professional_id, target_date):
     if rule:
         max_date = today + timedelta(days=rule.booking_window_days)
         if target_date > max_date:
-            return [], rule
+            return [], rule, rule.slot_duration_minutes
 
     # Check overrides for this date
     overrides = AvailabilityOverride.query.filter_by(
@@ -68,7 +68,7 @@ def _compute_slots(professional_id, target_date):
             windows.append((o.start_time, o.end_time))
 
     if not windows:
-        return [], rule
+        return [], rule, rule.slot_duration_minutes if rule else 30
 
     # Determine slot duration from rule or first available rule for this professional
     if rule:
@@ -140,6 +140,127 @@ def _compute_slots(professional_id, target_date):
 
     all_slots.sort()
     return all_slots, rule, slot_duration
+
+
+# --- Public: View Professional Info & Slots (no auth) ---
+
+@bp.route("/<uuid:professional_id>/public", methods=["GET"])
+def get_public_profile(professional_id):
+    """Get a professional's public info for the booking page. No auth required."""
+    user = db.session.get(User, professional_id)
+    if not user or user.role not in ("professional", "devadmin"):
+        return api_error("Professional not found", 404)
+
+    profile = user.profile
+    return jsonify(
+        id=str(user.id),
+        first_name=user.first_name,
+        last_name=user.last_name,
+        bio=profile.bio if profile else None,
+        avatar_url=profile.to_dict().get("avatar_url") if profile else None,
+    )
+
+
+@bp.route("/<uuid:professional_id>/public/slots", methods=["GET"])
+def get_public_slots(professional_id):
+    """Get available time slots for a specific date. No auth required."""
+    user = db.session.get(User, professional_id)
+    if not user or user.role not in ("professional", "devadmin"):
+        return api_error("Professional not found", 404)
+
+    date_str = request.args.get("date")
+    target_date = parse_date(date_str)
+    if not target_date:
+        return validation_error("Valid date parameter is required (YYYY-MM-DD)")
+
+    slots, rule, slot_duration = _compute_slots(professional_id, target_date)
+
+    return jsonify(
+        date=target_date.isoformat(),
+        slots=[s.strftime("%H:%M") for s in slots],
+        slot_duration_minutes=slot_duration,
+    )
+
+
+@bp.route("/<uuid:professional_id>/public/book", methods=["POST"])
+def public_book_appointment(professional_id):
+    """Public booking — anyone can book by providing name, email, and optional phone."""
+    user = db.session.get(User, professional_id)
+    if not user or user.role not in ("professional", "devadmin"):
+        return api_error("Professional not found", 404)
+
+    data = request.get_json(silent=True) or {}
+    guest_name = (data.get("name") or "").strip()
+    guest_email = (data.get("email") or "").strip()
+    guest_phone = (data.get("phone") or "").strip() or None
+    date_str = data.get("date")
+    slot_time = data.get("slot_time")
+    notes = (data.get("notes") or "").strip() or None
+
+    if not guest_name:
+        return validation_error("Name is required")
+    if not guest_email:
+        return validation_error("Email is required")
+    if not date_str or not slot_time:
+        return validation_error("date and slot_time are required")
+
+    target_date = parse_date(date_str)
+    if not target_date:
+        return validation_error("Invalid date format")
+
+    available_slots, rule, slot_duration = _compute_slots(professional_id, target_date)
+
+    try:
+        hour, minute = map(int, slot_time.split(":"))
+        scheduled_at = datetime(
+            target_date.year, target_date.month, target_date.day,
+            hour, minute, tzinfo=timezone.utc
+        )
+    except (ValueError, TypeError):
+        return validation_error("Invalid slot_time format (HH:MM)")
+
+    if scheduled_at not in available_slots:
+        return api_error("This time slot is not available", 409)
+
+    # Build title from guest info
+    title = guest_name
+    appt_notes = f"Email: {guest_email}"
+    if guest_phone:
+        appt_notes += f" | Phone: {guest_phone}"
+    if notes:
+        appt_notes += f"\n{notes}"
+
+    appointment = Appointment(
+        patient_id=None,
+        professional_id=professional_id,
+        scheduled_at=scheduled_at,
+        duration_minutes=slot_duration,
+        title=title,
+        notes=appt_notes,
+        booking_source="public_link",
+    )
+    db.session.add(appointment)
+
+    # Notify professional
+    pro_notif = Notification(
+        author_id=professional_id,
+        title="appointment_booked_public",
+        body=f"{title} - {scheduled_at.strftime('%Y-%m-%d %H:%M')}",
+    )
+    db.session.add(pro_notif)
+    db.session.flush()
+    db.session.add(NotificationRecipient(
+        notification_id=pro_notif.id,
+        patient_id=professional_id,
+    ))
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return api_error("This slot was just taken. Please select another.", 409)
+
+    return jsonify(data=appointment.to_dict()), 201
 
 
 # --- Professional: Manage Schedule ---
