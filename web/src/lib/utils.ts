@@ -99,6 +99,14 @@ export function feetInchesToCm(feet: number, inches: number): number {
 	return (feet * 12 + inches) / CM_TO_INCH;
 }
 
+export function cmToInches(cm: number): number {
+	return cm * CM_TO_INCH;
+}
+
+export function inchesToCm(inches: number): number {
+	return inches / CM_TO_INCH;
+}
+
 export function formatWeight(kg: number | null | undefined, system: UnitSystem): string {
 	if (kg == null) return '—';
 	if (system === 'imperial') {

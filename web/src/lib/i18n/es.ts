@@ -112,10 +112,13 @@ export const es = {
 	weighIns: {
 		title: 'Pesajes',
 		addWeighIn: 'Agregar pesaje',
+		editWeighIn: 'Editar pesaje',
 		weight: 'Peso',
 		recordedAt: 'Registrado el',
 		noWeighIns: 'Aún no hay pesajes',
-		confirmDelete: '¿Estás seguro de que querés eliminar este pesaje?'
+		confirmDelete: '¿Estás seguro de que querés eliminar este pesaje?',
+		bodyOnlineRequired: 'Los valores de composición corporal solo se pueden guardar con conexión.',
+		editOnlineRequired: 'Necesitás estar en línea para editar un pesaje.'
 	},
 	goals: {
 		title: 'Metas',
@@ -491,7 +494,17 @@ export const es = {
 		genderPlaceholder: 'Seleccionar género',
 		initialWeight: 'Peso inicial',
 		currentWeight: 'Peso actual',
-		myProfessional: 'Mi profesional'
+		myProfessional: 'Mi profesional',
+		bodyComposition: {
+			sectionTitle: 'Composición corporal y medidas',
+			entryHint: 'Sumá valores nuevos cuando registres un pesaje.',
+			bodyFat: 'Grasa corporal',
+			muscleMass: 'Masa muscular',
+			waist: 'Cintura',
+			hips: 'Cadera',
+			neck: 'Cuello',
+			outOfRange: 'El valor está fuera del rango permitido'
+		}
 	},
 	settings: {
 		title: 'Configuración',

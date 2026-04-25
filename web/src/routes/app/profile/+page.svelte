@@ -8,6 +8,7 @@
 	import { unitStore } from '$stores/units';
 	import { User, Scale, Stethoscope, Mail, Phone, Camera } from 'lucide-svelte';
 	import { photoUrl } from '$lib/api/client';
+	import { BODY_METRICS, metricToDisplay, unitFor } from '$lib/bodyMetrics';
 
 	let firstName = $authStore.user?.first_name || '';
 	let avatarUrl = $authStore.user?.profile?.avatar_url || '';
@@ -43,6 +44,10 @@
 	let myProfessional: { first_name: string; last_name: string; email: string; phone?: string; bio?: string } | null =
 		$authStore.user?.my_professional || null;
 
+	// Read-only display of the latest body composition value per metric. New entries are
+	// created from the weigh-in flow (see /app/weigh-ins).
+	let bodyStats = $authStore.user?.body_metrics_stats || null;
+
 	let loading = false;
 	let error = '';
 	let success = false;
@@ -55,6 +60,7 @@
 			gender = res.user.gender || '';
 			weightStats = res.user.weight_stats || weightStats;
 			myProfessional = res.user.my_professional || null;
+			bodyStats = res.user.body_metrics_stats || null;
 		} catch (err) {
 			console.error('Profile load error:', err);
 		}
@@ -280,4 +286,31 @@
 			{loading ? $t('common.loading') : $t('common.save')}
 		</button>
 	</form>
+
+	<div class="card space-y-3">
+		<p class="text-sm font-semibold text-[var(--text-primary)]">
+			{$t('profile.bodyComposition.sectionTitle')}
+		</p>
+		<p class="text-xs text-[var(--text-secondary)]">
+			{$t('profile.bodyComposition.entryHint')}
+		</p>
+		<div class="divide-y divide-[var(--border)]">
+			{#each BODY_METRICS as metric (metric.key)}
+				{@const stat = bodyStats?.[metric.key] || null}
+				<div class="flex items-baseline justify-between gap-3 py-2">
+					<span class="text-sm text-[var(--text-primary)]">{$t(metric.labelKey)}</span>
+					{#if stat}
+						<span class="text-sm text-[var(--text-secondary)] text-right">
+							<span class="font-medium text-[var(--text-primary)]">
+								{metricToDisplay(metric.family, $unitStore, stat.value).toFixed(1)} {unitFor(metric.family, $unitStore)}
+							</span>
+							<span class="text-xs"> · {formatDate(stat.recorded_at, $locale)}</span>
+						</span>
+					{:else}
+						<span class="text-sm text-[var(--text-secondary)]">—</span>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</div>
 </div>

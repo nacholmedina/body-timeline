@@ -24,6 +24,13 @@ interface User {
 		current_weight_kg: number | null;
 		current_weight_date: string | null;
 	};
+	body_metrics_stats?: {
+		body_fat_pct: { value: number; recorded_at: string } | null;
+		muscle_mass_kg: { value: number; recorded_at: string } | null;
+		waist_cm: { value: number; recorded_at: string } | null;
+		hips_cm: { value: number; recorded_at: string } | null;
+		neck_cm: { value: number; recorded_at: string } | null;
+	};
 	my_professional?: {
 		first_name: string;
 		last_name: string;

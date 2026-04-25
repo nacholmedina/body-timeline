@@ -13,6 +13,7 @@ from google.auth.transport import requests as google_requests
 from app.extensions import db
 from app.models.user import User, Profile, ProfessionalPatient
 from app.models.weigh_in import WeighIn
+from app.services.body_metrics import METRICS as BODY_METRICS
 from app.services.storage import get_storage
 from app.services.email import generate_verification_token, verify_token, send_verification_email
 from app.utils.errors import validation_error, api_error
@@ -46,6 +47,27 @@ def _weight_stats(user_id):
         "current_weight_date": newest.recorded_at.isoformat() if newest else None,
     }
 
+def _body_metrics_stats(user_id):
+    """Latest entry per body-metric log table for a given user."""
+    stats = {}
+    for spec in BODY_METRICS:
+        latest = (
+            spec.model.query
+            .filter_by(patient_id=user_id)
+            .order_by(spec.model.recorded_at.desc())
+            .first()
+        )
+        stats[spec.column] = (
+            {
+                "value": float(getattr(latest, spec.column)),
+                "recorded_at": latest.recorded_at.isoformat(),
+            }
+            if latest
+            else None
+        )
+    return stats
+
+
 def _my_professional(user_id):
     """Return the assigned professional's public info for a patient."""
     assignment = (
@@ -72,6 +94,7 @@ def _build_user_response(user):
     """Build standard user data dict with weight stats and professional info."""
     user_data = user.to_dict(include_profile=True)
     user_data["weight_stats"] = _weight_stats(user.id)
+    user_data["body_metrics_stats"] = _body_metrics_stats(user.id)
     if user.role == "patient":
         user_data["my_professional"] = _my_professional(user.id)
     return user_data

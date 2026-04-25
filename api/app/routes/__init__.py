@@ -2,6 +2,11 @@ from app.routes.auth import bp as auth_bp
 from app.routes.meals import bp as meals_bp
 from app.routes.weigh_ins import bp as weigh_ins_bp
 from app.routes.goals import bp as goals_bp
+from app.routes.body_fat_logs import bp as body_fat_logs_bp
+from app.routes.muscle_mass_logs import bp as muscle_mass_logs_bp
+from app.routes.waist_measurements import bp as waist_measurements_bp
+from app.routes.hips_measurements import bp as hips_measurements_bp
+from app.routes.neck_measurements import bp as neck_measurements_bp
 # Old routes - commented out to avoid model conflicts
 # from app.routes.exercises import bp as exercises_bp
 # from app.routes.workouts import bp as workouts_bp
@@ -34,6 +39,11 @@ def register_blueprints(app):
     app.register_blueprint(meals_bp, url_prefix=f"{prefix}/meals")
     app.register_blueprint(weigh_ins_bp, url_prefix=f"{prefix}/weigh-ins")
     app.register_blueprint(goals_bp, url_prefix=f"{prefix}/goals")
+    app.register_blueprint(body_fat_logs_bp, url_prefix=f"{prefix}/body-fat-logs")
+    app.register_blueprint(muscle_mass_logs_bp, url_prefix=f"{prefix}/muscle-mass-logs")
+    app.register_blueprint(waist_measurements_bp, url_prefix=f"{prefix}/waist-measurements")
+    app.register_blueprint(hips_measurements_bp, url_prefix=f"{prefix}/hips-measurements")
+    app.register_blueprint(neck_measurements_bp, url_prefix=f"{prefix}/neck-measurements")
     # Old routes - commented out
     # app.register_blueprint(exercises_bp, url_prefix=f"{prefix}/exercises")
     # app.register_blueprint(workouts_bp, url_prefix=f"{prefix}/workouts")

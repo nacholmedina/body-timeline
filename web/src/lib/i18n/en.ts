@@ -112,10 +112,13 @@ export const en = {
 	weighIns: {
 		title: 'Weigh-ins',
 		addWeighIn: 'Add weigh-in',
+		editWeighIn: 'Edit weigh-in',
 		weight: 'Weight',
 		recordedAt: 'Recorded at',
 		noWeighIns: 'No weigh-ins yet',
-		confirmDelete: 'Are you sure you want to delete this weigh-in?'
+		confirmDelete: 'Are you sure you want to delete this weigh-in?',
+		bodyOnlineRequired: 'Body composition values can only be saved while online.',
+		editOnlineRequired: 'You need to be online to edit a weigh-in.'
 	},
 	goals: {
 		title: 'Goals',
@@ -491,7 +494,17 @@ export const en = {
 		genderPlaceholder: 'Select gender',
 		initialWeight: 'Initial weight',
 		currentWeight: 'Current weight',
-		myProfessional: 'My professional'
+		myProfessional: 'My professional',
+		bodyComposition: {
+			sectionTitle: 'Body composition and measurements',
+			entryHint: 'Add new values when you log a weigh-in.',
+			bodyFat: 'Body fat',
+			muscleMass: 'Muscle mass',
+			waist: 'Waist',
+			hips: 'Hips',
+			neck: 'Neck',
+			outOfRange: 'Value is out of the allowed range'
+		}
 	},
 	settings: {
 		title: 'Settings',

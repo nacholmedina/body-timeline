@@ -40,6 +40,11 @@ class User(db.Model):
     meals = db.relationship("Meal", back_populates="patient", cascade="all, delete-orphan")
     weigh_ins = db.relationship("WeighIn", back_populates="patient", cascade="all, delete-orphan")
     goals = db.relationship("Goal", back_populates="patient", cascade="all, delete-orphan")
+    body_fat_logs = db.relationship("BodyFatLog", back_populates="patient", cascade="all, delete-orphan")
+    muscle_mass_logs = db.relationship("MuscleMassLog", back_populates="patient", cascade="all, delete-orphan")
+    waist_measurements = db.relationship("WaistMeasurement", back_populates="patient", cascade="all, delete-orphan")
+    hips_measurements = db.relationship("HipsMeasurement", back_populates="patient", cascade="all, delete-orphan")
+    neck_measurements = db.relationship("NeckMeasurement", back_populates="patient", cascade="all, delete-orphan")
     # Old workout tracking - migrated to exercise logs
     # workouts = db.relationship("Workout", back_populates="patient", cascade="all, delete-orphan")
 
