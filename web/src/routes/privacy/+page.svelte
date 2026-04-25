@@ -4,7 +4,7 @@
 	import ThemeToggle from '$components/ThemeToggle.svelte';
 	import LanguageToggle from '$components/LanguageToggle.svelte';
 
-	const CONTACT_EMAIL = 'nacholmedina@gmail.com';
+	const CONTACT_EMAIL = 'help@wellvio.com.ar';
 	const EFFECTIVE_DATE = '2026-04-25';
 	const JURISDICTION_ES = 'Río Cuarto, Provincia de Córdoba, Argentina';
 	const JURISDICTION_EN = 'Río Cuarto, Province of Córdoba, Argentina';
