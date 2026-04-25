@@ -50,7 +50,7 @@ def _compute_slots(professional_id, target_date):
     block_overrides = [o for o in overrides if o.override_type == "block"]
     extra_overrides = [o for o in overrides if o.override_type == "extra"]
 
-    # Collect time windows
+    # Collect time windows. Each window carries (start, end, is_online_only).
     windows = []
 
     # Full-day block check
@@ -60,12 +60,12 @@ def _compute_slots(professional_id, target_date):
         pass
     elif rules:
         for r in rules:
-            windows.append((r.start_time, r.end_time))
+            windows.append((r.start_time, r.end_time, bool(r.is_online_only)))
 
-    # Add extra override windows
+    # Add extra override windows (overrides do not currently support online-only)
     for o in extra_overrides:
         if o.start_time and o.end_time:
-            windows.append((o.start_time, o.end_time))
+            windows.append((o.start_time, o.end_time, False))
 
     if not windows:
         return [], rule, rule.slot_duration_minutes if rule else 30
@@ -79,11 +79,11 @@ def _compute_slots(professional_id, target_date):
         ).first()
         slot_duration = any_rule.slot_duration_minutes if any_rule else 30
 
-    # Generate slots from windows
+    # Generate slots from windows. Each slot is (datetime, is_online_only).
     duration = timedelta(minutes=slot_duration)
-    all_slots = []
+    all_slots: list[tuple[datetime, bool]] = []
 
-    for win_start_str, win_end_str in windows:
+    for win_start_str, win_end_str, win_online_only in windows:
         win_start_h, win_start_m = map(int, win_start_str.split(":"))
         win_end_h, win_end_m = map(int, win_end_str.split(":"))
 
@@ -99,7 +99,7 @@ def _compute_slots(professional_id, target_date):
         while slot_start + duration <= window_end:
             # Skip past slots
             if slot_start > now:
-                all_slots.append(slot_start)
+                all_slots.append((slot_start, win_online_only))
             slot_start += duration
 
     # Remove partial-day blocked ranges
@@ -115,7 +115,7 @@ def _compute_slots(professional_id, target_date):
                 target_date.year, target_date.month, target_date.day,
                 block_h2, block_m2, tzinfo=timezone.utc
             )
-            all_slots = [s for s in all_slots if not (s >= block_start and s < block_end)]
+            all_slots = [(s, oo) for (s, oo) in all_slots if not (s >= block_start and s < block_end)]
 
     # Remove slots that overlap with existing appointments
     day_start = datetime(
@@ -134,11 +134,11 @@ def _compute_slots(professional_id, target_date):
         appt_start = appt.scheduled_at.replace(tzinfo=timezone.utc) if appt.scheduled_at.tzinfo is None else appt.scheduled_at
         appt_end = appt_start + timedelta(minutes=appt.duration_minutes)
         all_slots = [
-            s for s in all_slots
+            (s, oo) for (s, oo) in all_slots
             if not (s < appt_end and s + duration > appt_start)
         ]
 
-    all_slots.sort()
+    all_slots.sort(key=lambda t: t[0])
     return all_slots, rule, slot_duration
 
 
@@ -177,7 +177,10 @@ def get_public_slots(professional_id):
 
     return jsonify(
         date=target_date.isoformat(),
-        slots=[s.strftime("%H:%M") for s in slots],
+        slots=[
+            {"time": s.strftime("%H:%M"), "is_online_only": oo}
+            for (s, oo) in slots
+        ],
         slot_duration_minutes=slot_duration,
     )
 
@@ -219,7 +222,7 @@ def public_book_appointment(professional_id):
     except (ValueError, TypeError):
         return validation_error("Invalid slot_time format (HH:MM)")
 
-    if scheduled_at not in available_slots:
+    if not any(s == scheduled_at for (s, _oo) in available_slots):
         return api_error("This time slot is not available", 409)
 
     # Build title from guest info
@@ -330,6 +333,7 @@ def update_schedule(professional_id):
             slot_duration_minutes=slot_duration,
             booking_window_days=booking_window,
             is_active=True,
+            is_online_only=bool(rule.get("is_online_only", False)),
         )
         db.session.add(avail)
 
@@ -418,7 +422,10 @@ def get_slots(professional_id):
 
     return jsonify(
         date=target_date.isoformat(),
-        slots=[s.strftime("%H:%M") for s in slots],
+        slots=[
+            {"time": s.strftime("%H:%M"), "is_online_only": oo}
+            for (s, oo) in slots
+        ],
         slot_duration_minutes=slot_duration,
     )
 
@@ -460,7 +467,7 @@ def book_appointment(professional_id):
         return validation_error("Invalid slot_time format (HH:MM)")
 
     # Verify this slot is actually available
-    if scheduled_at not in available_slots:
+    if not any(s == scheduled_at for (s, _oo) in available_slots):
         return api_error("This time slot is not available", 409)
 
     # Create appointment

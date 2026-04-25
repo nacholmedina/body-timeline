@@ -17,6 +17,7 @@ class ProfessionalAvailability(db.Model):
     slot_duration_minutes = db.Column(db.Integer, default=30, nullable=False)
     booking_window_days = db.Column(db.Integer, default=30, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_online_only = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -45,6 +46,7 @@ class ProfessionalAvailability(db.Model):
             "slot_duration_minutes": self.slot_duration_minutes,
             "booking_window_days": self.booking_window_days,
             "is_active": self.is_active,
+            "is_online_only": self.is_online_only,
         }
 
 

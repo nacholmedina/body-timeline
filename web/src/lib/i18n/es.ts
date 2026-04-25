@@ -677,7 +677,9 @@ export const es = {
 		whatsappLabel: 'Solicitar información',
 		whatsappMessage: 'Hola, me interesa Wellvio para mi práctica profesional. Me gustaría recibir más información.',
 		// Footer
-		footerRights: 'Todos los derechos reservados.'
+		footerRights: 'Todos los derechos reservados.',
+		privacy: 'Privacidad',
+		terms: 'Términos'
 	},
 	availability: {
 		title: 'Configurar Disponibilidad',
@@ -723,6 +725,8 @@ export const es = {
 		appointmentBookedBody: '{name} reservó un turno: {details}',
 		appointmentCancelledByPatientTitle: '{name} canceló su turno',
 		appointmentCancelledByPatientBody: '{details}',
+		onlineOnly: 'Solo online',
+		onlineOnlyHint: 'Este horario es solo para turnos online',
 	},
 	share: {
 		shareLink: 'Compartir Link',

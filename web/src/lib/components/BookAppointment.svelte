@@ -2,17 +2,23 @@
 	import { onMount } from 'svelte';
 	import { t, locale } from '$i18n/index';
 	import { api } from '$lib/api/client';
-	import { Calendar, Clock, X, Check } from 'lucide-svelte';
+	import { Calendar, Clock, X, Check, Wifi } from 'lucide-svelte';
 
 	export let professionalId: string;
 	export let professionalName: string = '';
 	export let onBooked: () => void = () => {};
 
+	interface Slot {
+		time: string;
+		is_online_only: boolean;
+	}
+
 	let showModal = false;
 	let selectedDate = '';
-	let slots: string[] = [];
+	let slots: Slot[] = [];
 	let slotDuration = 30;
 	let selectedSlot: string | null = null;
+	let selectedSlotOnlineOnly = false;
 	let notes = '';
 	let loadingSlots = false;
 	let booking = false;
@@ -43,6 +49,7 @@
 		selectedDate = '';
 		slots = [];
 		selectedSlot = null;
+		selectedSlotOnlineOnly = false;
 		notes = '';
 		error = '';
 		successMessage = '';
@@ -53,9 +60,14 @@
 		loadingSlots = true;
 		error = '';
 		selectedSlot = null;
+		selectedSlotOnlineOnly = false;
 		try {
 			const res = await api.get(`/availability/${professionalId}/slots`, { date: selectedDate });
-			slots = res.slots || [];
+			slots = (res.slots || []).map((s: any) =>
+				typeof s === 'string'
+					? { time: s, is_online_only: false }
+					: { time: s.time, is_online_only: !!s.is_online_only }
+			);
 			slotDuration = res.slot_duration_minutes || 30;
 		} catch (err: any) {
 			console.error('Failed to load slots:', err);
@@ -63,6 +75,11 @@
 		} finally {
 			loadingSlots = false;
 		}
+	}
+
+	function pickSlot(slot: Slot) {
+		selectedSlot = slot.time;
+		selectedSlotOnlineOnly = slot.is_online_only;
 	}
 
 	async function bookSlot() {
@@ -160,18 +177,30 @@
 							<div class="grid grid-cols-3 gap-2">
 								{#each slots as slot}
 									<button
-										on:click={() => (selectedSlot = slot)}
-										class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors {selectedSlot === slot
+										on:click={() => pickSlot(slot)}
+										class="rounded-lg border px-3 py-2 text-sm font-medium transition-colors flex flex-col items-center gap-0.5 {selectedSlot === slot.time
 											? 'border-brand-600 bg-brand-600 text-white'
 											: 'border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'}"
 									>
 										<span class="flex items-center justify-center gap-1">
 											<Clock size={12} />
-											{slot}
+											{slot.time}
 										</span>
+										{#if slot.is_online_only}
+											<span class="flex items-center gap-1 text-[10px] font-medium {selectedSlot === slot.time ? 'text-white/90' : 'text-brand-600 dark:text-brand-400'}">
+												<Wifi size={10} />
+												{$t('availability.onlineOnly')}
+											</span>
+										{/if}
 									</button>
 								{/each}
 							</div>
+							{#if selectedSlot && selectedSlotOnlineOnly}
+								<p class="mt-2 flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400">
+									<Wifi size={12} />
+									{$t('availability.onlineOnlyHint')}
+								</p>
+							{/if}
 						</div>
 					{:else if selectedDate}
 						<p class="text-sm text-[var(--text-secondary)] text-center py-4">{$t('availability.noSlotsAvailable')}</p>

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { t, locale } from '$i18n/index';
 	import { BRANDING } from '$lib/config/branding';
-	import { Calendar, Clock, User, ChevronLeft, ChevronRight, Check } from 'lucide-svelte';
+	import { Calendar, Clock, User, ChevronLeft, ChevronRight, Check, Wifi } from 'lucide-svelte';
 	import ThemeToggle from '$components/ThemeToggle.svelte';
 	import LanguageToggle from '$components/LanguageToggle.svelte';
 
@@ -16,10 +16,15 @@
 	let error = '';
 
 	// Booking form state
+	interface Slot {
+		time: string;
+		is_online_only: boolean;
+	}
 	let step: 'date' | 'time' | 'details' | 'done' = 'date';
 	let selectedDate = '';
 	let selectedSlot = '';
-	let slots: string[] = [];
+	let selectedSlotOnlineOnly = false;
+	let slots: Slot[] = [];
 	let slotDuration = 30;
 	let loadingSlots = false;
 	let guestName = '';
@@ -107,13 +112,18 @@
 		if (isPast(date)) return;
 		selectedDate = toDateStr(date);
 		selectedSlot = '';
+		selectedSlotOnlineOnly = false;
 		loadingSlots = true;
 
 		try {
 			const res = await fetch(`${BASE}/availability/${professionalId}/public/slots?date=${selectedDate}`);
 			if (!res.ok) throw new Error('failed');
 			const data = await res.json();
-			slots = data.slots || [];
+			slots = (data.slots || []).map((s: any) =>
+				typeof s === 'string'
+					? { time: s, is_online_only: false }
+					: { time: s.time, is_online_only: !!s.is_online_only }
+			);
 			slotDuration = data.slot_duration_minutes || 30;
 		} catch {
 			slots = [];
@@ -124,8 +134,9 @@
 		step = 'time';
 	}
 
-	function selectSlot(slot: string) {
-		selectedSlot = slot;
+	function selectSlot(slot: Slot) {
+		selectedSlot = slot.time;
+		selectedSlotOnlineOnly = slot.is_online_only;
 		step = 'details';
 	}
 
@@ -311,12 +322,18 @@
 							{#each slots as slot}
 								<button
 									on:click={() => selectSlot(slot)}
-									class="rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors
-										{selectedSlot === slot
+									class="rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors flex flex-col items-center gap-0.5
+										{selectedSlot === slot.time
 											? 'border-brand-500 bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400'
 											: 'border-[var(--border-color)] text-[var(--text-primary)] hover:border-brand-300 hover:bg-brand-50/50 dark:hover:bg-brand-950/50'}"
 								>
-									{slot}
+									<span>{slot.time}</span>
+									{#if slot.is_online_only}
+										<span class="flex items-center gap-1 text-[10px] font-medium text-brand-600 dark:text-brand-400">
+											<Wifi size={10} />
+											{$t('availability.onlineOnly')}
+										</span>
+									{/if}
 								</button>
 							{/each}
 						</div>
@@ -334,15 +351,23 @@
 						{$t('publicBooking.changeTime')}
 					</button>
 
-					<div class="flex items-center gap-4 mb-6 p-3 rounded-lg bg-[var(--bg-primary)]">
-						<div class="flex items-center gap-2 text-sm text-[var(--text-primary)]">
-							<Calendar size={14} class="text-[var(--text-secondary)]" />
-							<span class="capitalize">{formatSelectedDate()}</span>
+					<div class="mb-6 p-3 rounded-lg bg-[var(--bg-primary)]">
+						<div class="flex items-center gap-4">
+							<div class="flex items-center gap-2 text-sm text-[var(--text-primary)]">
+								<Calendar size={14} class="text-[var(--text-secondary)]" />
+								<span class="capitalize">{formatSelectedDate()}</span>
+							</div>
+							<div class="flex items-center gap-2 text-sm text-[var(--text-primary)]">
+								<Clock size={14} class="text-[var(--text-secondary)]" />
+								<span>{selectedSlot} ({slotDuration} min)</span>
+							</div>
 						</div>
-						<div class="flex items-center gap-2 text-sm text-[var(--text-primary)]">
-							<Clock size={14} class="text-[var(--text-secondary)]" />
-							<span>{selectedSlot} ({slotDuration} min)</span>
-						</div>
+						{#if selectedSlotOnlineOnly}
+							<div class="mt-2 flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400">
+								<Wifi size={12} />
+								{$t('availability.onlineOnlyHint')}
+							</div>
+						{/if}
 					</div>
 
 					<div class="space-y-4">
@@ -389,15 +414,23 @@
 					<h2 class="text-xl font-bold text-[var(--text-primary)] mb-2">{$t('publicBooking.confirmed')}</h2>
 					<p class="text-sm text-[var(--text-secondary)] mb-4">{$t('publicBooking.confirmedDesc')}</p>
 
-					<div class="inline-flex items-center gap-4 rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-primary)]">
-						<span class="flex items-center gap-1">
-							<Calendar size={14} class="text-[var(--text-secondary)]" />
-							<span class="capitalize">{formatSelectedDate()}</span>
-						</span>
-						<span class="flex items-center gap-1">
-							<Clock size={14} class="text-[var(--text-secondary)]" />
-							{selectedSlot}
-						</span>
+					<div class="inline-flex flex-col items-center gap-2 rounded-lg bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-primary)]">
+						<div class="flex items-center gap-4">
+							<span class="flex items-center gap-1">
+								<Calendar size={14} class="text-[var(--text-secondary)]" />
+								<span class="capitalize">{formatSelectedDate()}</span>
+							</span>
+							<span class="flex items-center gap-1">
+								<Clock size={14} class="text-[var(--text-secondary)]" />
+								{selectedSlot}
+							</span>
+						</div>
+						{#if selectedSlotOnlineOnly}
+							<div class="flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400">
+								<Wifi size={12} />
+								{$t('availability.onlineOnlyHint')}
+							</div>
+						{/if}
 					</div>
 
 					<p class="mt-6 text-xs text-[var(--text-secondary)]">

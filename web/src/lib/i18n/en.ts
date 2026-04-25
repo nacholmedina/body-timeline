@@ -677,7 +677,9 @@ export const en = {
 		whatsappLabel: 'Request information',
 		whatsappMessage: 'Hi, I\'m interested in Wellvio for my professional practice. I\'d like to get more information.',
 		// Footer
-		footerRights: 'All rights reserved.'
+		footerRights: 'All rights reserved.',
+		privacy: 'Privacy',
+		terms: 'Terms'
 	},
 	availability: {
 		title: 'Availability Settings',
@@ -723,6 +725,8 @@ export const en = {
 		appointmentBookedBody: '{name} booked an appointment: {details}',
 		appointmentCancelledByPatientTitle: '{name} cancelled their appointment',
 		appointmentCancelledByPatientBody: '{details}',
+		onlineOnly: 'Online only',
+		onlineOnlyHint: 'This time is for online appointments only',
 	},
 	share: {
 		shareLink: 'Share Link',

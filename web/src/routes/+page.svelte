@@ -341,9 +341,16 @@
 					</a>
 				</div>
 
-				<p class="text-sm text-[var(--text-secondary)] sm:w-1/3 sm:text-right">
-					&copy; {new Date().getFullYear()} {BRANDING.appName}. {$t('landing.footerRights')}
-				</p>
+				<div class="text-sm text-[var(--text-secondary)] sm:w-1/3 sm:text-right space-y-1">
+					<p>
+						&copy; {new Date().getFullYear()} {BRANDING.appName}. {$t('landing.footerRights')}
+					</p>
+					<p class="space-x-3">
+						<a href="/privacy" class="hover:text-[var(--text-primary)] hover:underline">{$t('landing.privacy')}</a>
+						<span aria-hidden="true">·</span>
+						<a href="/terms" class="hover:text-[var(--text-primary)] hover:underline">{$t('landing.terms')}</a>
+					</p>
+				</div>
 			</div>
 		</div>
 	</footer>

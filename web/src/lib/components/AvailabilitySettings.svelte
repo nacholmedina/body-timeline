@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from '$i18n/index';
 	import { api } from '$lib/api/client';
-	import { Save, Plus, Trash2, X, ShieldOff, Clock } from 'lucide-svelte';
+	import { Save, Plus, Trash2, X, ShieldOff, Clock, Wifi } from 'lucide-svelte';
 
 	export let professionalId: string;
 
@@ -11,6 +11,7 @@
 	interface TimeInterval {
 		start_time: string;
 		end_time: string;
+		is_online_only: boolean;
 	}
 
 	interface DaySchedule {
@@ -28,7 +29,7 @@
 
 	let schedule: DaySchedule[] = Array.from({ length: 7 }, () => ({
 		enabled: false,
-		intervals: [{ start_time: '09:00', end_time: '17:00' }],
+		intervals: [{ start_time: '09:00', end_time: '17:00', is_online_only: false }],
 	}));
 	let slotDuration = 30;
 	let bookingWindow = 30;
@@ -60,6 +61,7 @@
 				dayMap[rule.day_of_week].push({
 					start_time: rule.start_time,
 					end_time: rule.end_time,
+					is_online_only: !!rule.is_online_only,
 				});
 			}
 
@@ -86,7 +88,7 @@
 	function addInterval(dayIndex: number) {
 		schedule[dayIndex].intervals = [
 			...schedule[dayIndex].intervals,
-			{ start_time: '14:00', end_time: '18:00' },
+			{ start_time: '14:00', end_time: '18:00', is_online_only: false },
 		];
 	}
 
@@ -94,7 +96,7 @@
 		schedule[dayIndex].intervals = schedule[dayIndex].intervals.filter((_, idx) => idx !== intervalIndex);
 		if (schedule[dayIndex].intervals.length === 0) {
 			schedule[dayIndex].enabled = false;
-			schedule[dayIndex].intervals = [{ start_time: '09:00', end_time: '17:00' }];
+			schedule[dayIndex].intervals = [{ start_time: '09:00', end_time: '17:00', is_online_only: false }];
 		}
 	}
 
@@ -103,7 +105,7 @@
 		saveMessage = '';
 		saveError = false;
 		try {
-			const rules: { day_of_week: number; start_time: string; end_time: string }[] = [];
+			const rules: { day_of_week: number; start_time: string; end_time: string; is_online_only: boolean }[] = [];
 			for (let i = 0; i < 7; i++) {
 				if (schedule[i].enabled) {
 					for (const interval of schedule[i].intervals) {
@@ -111,6 +113,7 @@
 							day_of_week: i,
 							start_time: interval.start_time,
 							end_time: interval.end_time,
+							is_online_only: interval.is_online_only,
 						});
 					}
 				}
@@ -201,6 +204,18 @@
 										<input type="time" bind:value={interval.start_time} class="input text-sm date-input flex-1 min-w-0" />
 										<span class="text-[var(--text-secondary)] text-sm">-</span>
 										<input type="time" bind:value={interval.end_time} class="input text-sm date-input flex-1 min-w-0" />
+										<button
+											type="button"
+											on:click={() => (interval.is_online_only = !interval.is_online_only)}
+											class="p-1 rounded shrink-0 transition-colors {interval.is_online_only
+												? 'text-brand-600 bg-brand-50 dark:bg-brand-950 hover:bg-brand-100 dark:hover:bg-brand-900'
+												: 'text-[var(--text-secondary)] hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950'}"
+											title={$t('availability.onlineOnly')}
+											aria-label={$t('availability.onlineOnly')}
+											aria-pressed={interval.is_online_only}
+										>
+											<Wifi size={14} />
+										</button>
 										{#if schedule[i].intervals.length > 1}
 											<button
 												on:click={() => removeInterval(i, j)}
@@ -211,6 +226,12 @@
 											</button>
 										{/if}
 									</div>
+									{#if interval.is_online_only}
+										<p class="pl-1 text-xs text-brand-600 dark:text-brand-400 flex items-center gap-1">
+											<Wifi size={10} />
+											{$t('availability.onlineOnly')}
+										</p>
+									{/if}
 								{/each}
 								<button
 									on:click={() => addInterval(i)}
