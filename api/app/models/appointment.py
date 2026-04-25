@@ -24,6 +24,7 @@ class Appointment(db.Model):
         default="scheduled",
     )
     booking_source = db.Column(db.String(20), nullable=False, default="professional")
+    google_event_id = db.Column(db.String(255), nullable=True, index=True)
     created_at = db.Column(
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -60,6 +61,7 @@ class Appointment(db.Model):
             "notes": self.notes,
             "status": self.status,
             "booking_source": self.booking_source,
+            "google_event_id": self.google_event_id,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }

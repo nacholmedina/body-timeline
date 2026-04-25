@@ -7,6 +7,7 @@
 	import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, X, Clock, User, Trash2, XCircle, RefreshCw, Settings, Share2, Copy, Check as CheckIcon } from 'lucide-svelte';
 	import ConfirmModal from '$components/ConfirmModal.svelte';
 	import AvailabilitySettings from '$components/AvailabilitySettings.svelte';
+	import GoogleCalendarConnect from '$components/GoogleCalendarConnect.svelte';
 	import { authStore } from '$lib/stores/auth';
 
 	type ViewMode = 'day' | 'week' | 'month' | 'availability';
@@ -581,7 +582,10 @@
 			</div>
 		{:else if view === 'availability'}
 			{#if $authStore.user?.id}
-				<AvailabilitySettings professionalId={$authStore.user.id} />
+				<div class="space-y-6">
+					<AvailabilitySettings professionalId={$authStore.user.id} />
+					<GoogleCalendarConnect />
+				</div>
 			{/if}
 		{/if}
 	{/if}

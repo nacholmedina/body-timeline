@@ -9,6 +9,7 @@ from app.models.appointment import Appointment
 from app.models.notification import Notification, NotificationRecipient
 from app.models.user import User
 from app.services.rbac import is_assigned_professional
+from app.services import google_calendar as gcal
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import parse_date
 
@@ -263,6 +264,11 @@ def public_book_appointment(professional_id):
         db.session.rollback()
         return api_error("This slot was just taken. Please select another.", 409)
 
+    event_id = gcal.create_event(appointment)
+    if event_id:
+        appointment.google_event_id = event_id
+        db.session.commit()
+
     return jsonify(data=appointment.to_dict()), 201
 
 
@@ -514,5 +520,10 @@ def book_appointment(professional_id):
     except Exception:
         db.session.rollback()
         return api_error("This slot was just taken. Please select another.", 409)
+
+    event_id = gcal.create_event(appointment)
+    if event_id:
+        appointment.google_event_id = event_id
+        db.session.commit()
 
     return jsonify(data=appointment.to_dict()), 201

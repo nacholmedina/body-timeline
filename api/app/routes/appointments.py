@@ -5,6 +5,7 @@ from app.extensions import db
 from app.models.appointment import Appointment
 from app.models.notification import Notification, NotificationRecipient
 from app.services.rbac import can_access_patient_data, get_accessible_patient_ids
+from app.services import google_calendar as gcal
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import parse_datetime, get_pagination_params
 
@@ -97,6 +98,12 @@ def create_appointment():
         db.session.add(recipient)
 
     db.session.commit()
+
+    event_id = gcal.create_event(appointment)
+    if event_id:
+        appointment.google_event_id = event_id
+        db.session.commit()
+
     return jsonify(data=appointment.to_dict()), 201
 
 
@@ -160,6 +167,9 @@ def update_appointment(appointment_id):
         ))
 
         db.session.commit()
+        if gcal.delete_event(appt):
+            appt.google_event_id = None
+            db.session.commit()
         return jsonify(data=appt.to_dict())
 
     if current_user.role == "professional" and str(current_user.id) != str(appt.professional_id):
@@ -167,17 +177,22 @@ def update_appointment(appointment_id):
 
     data = request.get_json(silent=True) or {}
     status_changed_to_cancelled = False
+    schedule_or_content_changed = False
 
     if "scheduled_at" in data:
         dt = parse_datetime(data["scheduled_at"])
         if dt:
             appt.scheduled_at = dt
+            schedule_or_content_changed = True
     if "duration_minutes" in data:
         appt.duration_minutes = int(data["duration_minutes"])
+        schedule_or_content_changed = True
     if "title" in data:
         appt.title = data["title"].strip()
+        schedule_or_content_changed = True
     if "notes" in data:
         appt.notes = data["notes"]
+        schedule_or_content_changed = True
     if "status" in data and data["status"] in ("scheduled", "completed", "cancelled"):
         if data["status"] == "cancelled" and appt.status != "cancelled":
             status_changed_to_cancelled = True
@@ -199,6 +214,14 @@ def update_appointment(appointment_id):
         db.session.add(recipient)
 
     db.session.commit()
+
+    if status_changed_to_cancelled:
+        if gcal.delete_event(appt):
+            appt.google_event_id = None
+            db.session.commit()
+    elif appt.status == "scheduled" and schedule_or_content_changed and appt.google_event_id:
+        gcal.update_event(appt)
+
     return jsonify(data=appt.to_dict())
 
 
@@ -228,6 +251,9 @@ def delete_appointment(appointment_id):
             patient_id=appt.patient_id
         )
         db.session.add(recipient)
+
+    # Best-effort delete the Google Calendar event before removing the row.
+    gcal.delete_event(appt)
 
     db.session.delete(appt)
     db.session.commit()

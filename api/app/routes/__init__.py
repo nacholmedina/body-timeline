@@ -21,6 +21,9 @@ from app.routes.exercise_logs import bp as exercise_logs_bp
 # from app.routes.exercise_requests_new import bp as exercise_requests_new_bp
 from app.routes.exercise_routines import bp as exercise_routines_bp
 
+# Google Calendar integration
+from app.routes.google_calendar import bp as google_calendar_bp
+
 # Temporary migration endpoint
 from app.routes.migration import bp as migration_bp
 
@@ -48,6 +51,9 @@ def register_blueprints(app):
     app.register_blueprint(exercise_logs_bp, url_prefix=f"{prefix}/exercise-logs")
     # app.register_blueprint(exercise_requests_new_bp, url_prefix=f"{prefix}/exercise-requests")
     app.register_blueprint(exercise_routines_bp, url_prefix=f"{prefix}/exercise-routines")
+
+    # Google Calendar OAuth + sync
+    app.register_blueprint(google_calendar_bp, url_prefix=f"{prefix}/auth/google/calendar")
 
     # Temporary migration endpoint (DELETE AFTER USE!)
     app.register_blueprint(migration_bp, url_prefix=f"{prefix}/migration")

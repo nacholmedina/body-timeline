@@ -14,6 +14,9 @@ from app.models.exercise_definition import ExerciseDefinition
 from app.models.exercise_log import ExerciseLog, ExercisePhoto
 from app.models.exercise_request import ExerciseRequest
 
+# Google Calendar integration
+from app.models.google_calendar_token import GoogleCalendarToken
+
 __all__ = [
     "User", "Profile", "ProfessionalPatient",
     "Meal", "MealPhoto",
@@ -29,4 +32,6 @@ __all__ = [
     "ExerciseDefinition",
     "ExerciseLog", "ExercisePhoto",
     "ExerciseRequest",
+    # Google Calendar
+    "GoogleCalendarToken",
 ]
