@@ -4,8 +4,14 @@
 	import { authStore } from '$stores/auth';
 	import { api } from '$lib/api/client';
 	import { BRANDING } from '$lib/config/branding';
-	import { formatDateTime, formatDate, formatWeight, displayWeight, weightUnit } from '$lib/utils';
+	import { formatDateTime, formatDate, displayWeight, weightUnit } from '$lib/utils';
 	import { unitStore } from '$stores/units';
+	import {
+		BODY_METRICS,
+		metricToDisplay,
+		unitFor,
+		type BodyMetricKey
+	} from '$lib/bodyMetrics';
 	import {
 		UtensilsCrossed, Dumbbell, Target, Calendar,
 		Bell, TrendingUp, Newspaper, BarChart3, List,
@@ -30,13 +36,49 @@
 
 	// Patient dashboard state
 	let summary: any = null;
-	let weightData: any[] = [];
+	let weightData: { date: string; weight_kg: number }[] = [];
+	let bodyMetricsSeries: Record<BodyMetricKey, { date: string; value: number }[]> = {} as Record<BodyMetricKey, { date: string; value: number }[]>;
 	let activityData: any[] = [];
 	let notifications: any[] = [];
 	let loading = true;
 
+	type ChartMetric = 'weight' | BodyMetricKey;
+	let selectedMetric: ChartMetric = 'weight';
 	let weightView: 'chart' | 'list' = 'chart';
 	let activityView: 'chart' | 'list' = 'chart';
+
+	// Reactive helpers for the metric switcher: turn `selectedMetric` into the
+	// data points the chart plots, the unit label, the card title key, and the
+	// per-row formatter used in the list view. Centralizing here keeps the chart
+	// + list + axis labels in lock-step regardless of which metric is active.
+	$: activeMetricSpec =
+		selectedMetric === 'weight'
+			? null
+			: BODY_METRICS.find((m) => m.key === selectedMetric) || null;
+
+	$: activeData = (selectedMetric === 'weight'
+		? weightData.map((p) => ({ date: p.date, value: displayWeight(p.weight_kg, $unitStore) }))
+		: (bodyMetricsSeries[selectedMetric as BodyMetricKey] || []).map((p) => ({
+				date: p.date,
+				value: activeMetricSpec
+					? metricToDisplay(activeMetricSpec.family, $unitStore, p.value)
+					: p.value
+			}))
+	) as { date: string; value: number }[];
+
+	$: activeUnit =
+		selectedMetric === 'weight'
+			? weightUnit($unitStore)
+			: activeMetricSpec
+				? unitFor(activeMetricSpec.family, $unitStore)
+				: '';
+
+	$: activeTitle =
+		selectedMetric === 'weight'
+			? $t('dashboard.weightOverTime')
+			: activeMetricSpec
+				? $t(activeMetricSpec.labelKey)
+				: '';
 
 	// Professional dashboard state
 	let proSummary: any = null;
@@ -130,11 +172,11 @@
 	$: isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
 	$: weightChartData = {
-		labels: weightData.map((p) => formatDate(p.date, $locale)),
+		labels: activeData.map((p) => formatDate(p.date, $locale)),
 		datasets: [
 			{
-				label: $t('dashboard.weightOverTime'),
-				data: weightData.map((p) => displayWeight(p.weight_kg, $unitStore)),
+				label: activeTitle,
+				data: activeData.map((p) => p.value),
 				borderColor: '#6366f1',
 				backgroundColor: 'rgba(99, 102, 241, 0.1)',
 				fill: true,
@@ -154,7 +196,7 @@
 			legend: { display: false },
 			tooltip: {
 				callbacks: {
-					label: (ctx: any) => `${ctx.parsed.y} ${weightUnit($unitStore)}`
+					label: (ctx: any) => `${ctx.parsed.y} ${activeUnit}`
 				}
 			}
 		},
@@ -166,7 +208,7 @@
 			y: {
 				ticks: {
 					color: isDark ? '#9ca3af' : '#6b7280',
-					callback: (v: any) => `${v} ${weightUnit($unitStore)}`,
+					callback: (v: any) => `${v} ${activeUnit}`,
 					maxTicksLimit: 7
 				},
 				grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }
@@ -214,17 +256,20 @@
 		try {
 			const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 			if (isPatient) {
-				const params = { patient_id: $authStore.user!.id, tz };
-				const [summaryRes, weightRes, activityRes, notifsRes] = await Promise.all([
-					api.get('/dashboard/summary', params),
-					api.get('/dashboard/weight-series', { ...params, days: '365' }),
-					api.get('/dashboard/activity-series', { ...params, weeks: '12' }),
-					api.get('/notifications', { limit: '5' }).catch(() => ({ data: [] })),
-				]);
-				summary = summaryRes;
-				weightData = weightRes.data;
-				activityData = activityRes.data;
-				notifications = notifsRes.data;
+				// One bundle call returns summary + weight series + activity series + recent
+				// notifications. Replaces 4 parallel roundtrips with 1.
+				const res = await api.get('/dashboard/init', {
+					patient_id: $authStore.user!.id,
+					tz,
+					days: '365',
+					weeks: '12',
+					notifications_limit: '5'
+				});
+				summary = res.summary;
+				weightData = res.weight_series;
+				bodyMetricsSeries = res.body_metrics_series || ({} as any);
+				activityData = res.activity_series;
+				notifications = res.notifications;
 			} else {
 				const res = await api.get('/dashboard/professional-summary', { tz });
 				proSummary = res;
@@ -304,15 +349,27 @@
 		</div>
 
 		<div class="grid gap-6 lg:grid-cols-2">
-			<!-- Weight Chart -->
+			<!-- Trend Chart (weight or any body composition metric) -->
 			<div class="card">
-				<div class="mb-4 flex items-center justify-between">
-					<div class="flex items-center gap-2">
-						<TrendingUp size={18} class="text-brand-600" />
-						<h3 class="font-semibold text-[var(--text-primary)]">{$t('dashboard.weightOverTime')}</h3>
+				<div class="mb-4 flex items-center justify-between gap-2">
+					<div class="flex items-center gap-2 min-w-0">
+						<TrendingUp size={18} class="text-brand-600 shrink-0" />
+						<select
+							bind:value={selectedMetric}
+							class="bg-transparent font-semibold text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-brand-500 rounded px-1 py-0.5 -mx-1 cursor-pointer truncate"
+						>
+							<!-- Explicit bg/color on each <option>: Firefox honors per-option
+							     styling, where it would otherwise render white-on-white in
+							     dark mode. Chromium picks up the right colors from the global
+							     color-scheme: dark declared in app.css. -->
+							<option value="weight" class="bg-[var(--bg-card)] text-[var(--text-primary)]">{$t('dashboard.weightOverTime')}</option>
+							{#each BODY_METRICS as m (m.key)}
+								<option value={m.key} class="bg-[var(--bg-card)] text-[var(--text-primary)]">{$t(m.labelKey)}</option>
+							{/each}
+						</select>
 					</div>
-					{#if weightData.length > 0}
-						<div class="flex rounded-lg border border-[var(--border-color)] overflow-hidden">
+					{#if activeData.length > 0}
+						<div class="flex rounded-lg border border-[var(--border-color)] overflow-hidden shrink-0">
 							<button
 								on:click={() => (weightView = 'chart')}
 								class="p-1.5 transition-colors {weightView === 'chart'
@@ -332,17 +389,17 @@
 						</div>
 					{/if}
 				</div>
-				{#if weightData.length > 0}
+				{#if activeData.length > 0}
 					{#if weightView === 'chart'}
 						<div class="h-56">
 							<Line data={weightChartData} options={weightChartOptions} />
 						</div>
 					{:else}
 						<div class="space-y-2 max-h-56 overflow-y-auto">
-							{#each [...weightData].reverse().slice(0, 10) as point}
+							{#each [...activeData].reverse().slice(0, 10) as point}
 								<div class="flex items-center justify-between text-sm">
 									<span class="text-[var(--text-secondary)]">{formatDate(point.date, $locale)}</span>
-									<span class="font-medium text-[var(--text-primary)]">{formatWeight(point.weight_kg, $unitStore)}</span>
+									<span class="font-medium text-[var(--text-primary)]">{point.value.toFixed(1)} {activeUnit}</span>
 								</div>
 							{/each}
 						</div>

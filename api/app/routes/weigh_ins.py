@@ -3,11 +3,22 @@ from flask_jwt_extended import jwt_required, current_user
 
 from app.extensions import db
 from app.models.weigh_in import WeighIn
+from app.services.body_metrics import (
+    apply_body_metrics,
+    serialize_body_metrics,
+)
 from app.services.rbac import can_access_patient_data, get_accessible_patient_ids
 from app.utils.errors import validation_error, api_error
 from app.utils.validators import parse_datetime, get_pagination_params
 
 bp = Blueprint("weigh_ins", __name__)
+
+
+def _serialize(wi, *, with_body_metrics=False):
+    data = wi.to_dict()
+    if with_body_metrics:
+        data["body_metrics"] = serialize_body_metrics(wi.patient_id, wi.recorded_at)
+    return data
 
 
 @bp.route("", methods=["GET"])
@@ -75,8 +86,18 @@ def create_weigh_in():
         notes=data.get("notes"),
     )
     db.session.add(weigh_in)
+
+    # Optional bulk body-metrics payload — handled in the same transaction.
+    body_payload = data.get("body_metrics")
+    if isinstance(body_payload, dict):
+        db.session.flush()  # need patient_id resolved before metric inserts (it already is here, but flush keeps order obvious)
+        err, field = apply_body_metrics(patient_id, body_payload, recorded_at)
+        if err:
+            db.session.rollback()
+            return validation_error(err, field)
+
     db.session.commit()
-    return jsonify(data=weigh_in.to_dict()), 201
+    return jsonify(data=_serialize(weigh_in, with_body_metrics=True)), 201
 
 
 @bp.route("/<uuid:weigh_in_id>", methods=["GET"])
@@ -87,7 +108,8 @@ def get_weigh_in(weigh_in_id):
         return api_error("Weigh-in not found", 404)
     if not can_access_patient_data(current_user, wi.patient_id):
         return api_error("Forbidden", 403)
-    return jsonify(data=wi.to_dict())
+    include_body = request.args.get("include") == "body_metrics"
+    return jsonify(data=_serialize(wi, with_body_metrics=include_body))
 
 
 @bp.route("/<uuid:weigh_in_id>", methods=["PATCH"])
@@ -100,17 +122,37 @@ def update_weigh_in(weigh_in_id):
         return api_error("Forbidden", 403)
 
     data = request.get_json(silent=True) or {}
+    old_recorded_at = wi.recorded_at
+
     if "weight_kg" in data:
-        wi.weight_kg = float(data["weight_kg"])
+        try:
+            wi.weight_kg = float(data["weight_kg"])
+        except (ValueError, TypeError):
+            return validation_error("weight_kg must be a number", "weight_kg")
     if "recorded_at" in data:
         dt = parse_datetime(data["recorded_at"])
-        if dt:
-            wi.recorded_at = dt
+        if not dt:
+            return validation_error("Valid recorded_at datetime is required", "recorded_at")
+        wi.recorded_at = dt
     if "notes" in data:
         wi.notes = data["notes"]
 
+    raw_body = data.get("body_metrics")
+    body_payload = raw_body if isinstance(raw_body, dict) else {}
+    moved = old_recorded_at != wi.recorded_at
+
+    # Run the helper if either the client sent metric instructions OR the
+    # weigh-in's recorded_at moved (so existing linked rows follow along).
+    if body_payload or moved:
+        err, field = apply_body_metrics(
+            wi.patient_id, body_payload, wi.recorded_at, old_recorded_at=old_recorded_at
+        )
+        if err:
+            db.session.rollback()
+            return validation_error(err, field)
+
     db.session.commit()
-    return jsonify(data=wi.to_dict())
+    return jsonify(data=_serialize(wi, with_body_metrics=True))
 
 
 @bp.route("/<uuid:weigh_in_id>", methods=["DELETE"])

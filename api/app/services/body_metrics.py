@@ -73,3 +73,68 @@ def clean_notes(raw):
     if len(raw) > NOTES_MAX_LENGTH:
         return None, f"notes must be {NOTES_MAX_LENGTH} characters or fewer"
     return raw, None
+
+
+def _find_metric_entry(spec: MetricSpec, patient_id, recorded_at):
+    return spec.model.query.filter_by(
+        patient_id=patient_id, recorded_at=recorded_at
+    ).first()
+
+
+def apply_body_metrics(patient_id, payload, new_recorded_at, old_recorded_at=None):
+    """Sync body-metric rows alongside a weigh-in within the current session.
+
+    payload: dict mapping a metric's column → number | None.
+        - number  → upsert the metric at new_recorded_at
+        - None    → delete the existing entry (if any) at old_recorded_at
+        - absent  → leave alone, but follow the weigh-in's recorded_at if it changed
+
+    Returns (error_message, field_column) on validation failure (caller should
+    rollback), or (None, None) on success (caller should commit).
+    """
+    if old_recorded_at is None:
+        old_recorded_at = new_recorded_at
+    moved = old_recorded_at != new_recorded_at
+
+    for spec in METRICS:
+        if spec.column not in payload:
+            if moved:
+                existing = _find_metric_entry(spec, patient_id, old_recorded_at)
+                if existing:
+                    existing.recorded_at = new_recorded_at
+            continue
+
+        raw = payload[spec.column]
+        existing = _find_metric_entry(spec, patient_id, old_recorded_at)
+
+        if raw is None:
+            if existing:
+                db.session.delete(existing)
+            continue
+
+        value, err = validate_value_in_range(raw, spec)
+        if err:
+            return err, spec.column
+
+        if existing:
+            setattr(existing, spec.column, value)
+            if moved:
+                existing.recorded_at = new_recorded_at
+        else:
+            entry = spec.model(
+                patient_id=patient_id,
+                recorded_at=new_recorded_at,
+            )
+            setattr(entry, spec.column, value)
+            db.session.add(entry)
+
+    return None, None
+
+
+def serialize_body_metrics(patient_id, recorded_at):
+    """Return {column → entry.to_dict() | None} for the metrics linked to a weigh-in."""
+    out = {}
+    for spec in METRICS:
+        entry = _find_metric_entry(spec, patient_id, recorded_at)
+        out[spec.column] = entry.to_dict() if entry else None
+    return out

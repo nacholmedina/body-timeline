@@ -4,6 +4,9 @@
 
 @layer base {
 	:root {
+		/* Tells the browser to render native form controls (select dropdowns,
+		   date pickers, scrollbars) with light-theme colors. */
+		color-scheme: light;
 		--bg-primary: #f6f8fa;
 		--bg-secondary: #eef1f5;
 		--bg-card: #ffffff;
@@ -21,6 +24,7 @@
 	}
 
 	.dark {
+		color-scheme: dark;
 		--bg-primary: #0f172a;
 		--bg-secondary: #1e293b;
 		--bg-card: #1e293b;

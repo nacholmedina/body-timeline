@@ -33,7 +33,6 @@
 	// existing records. editingBodyIds tracks which body-metric log entries already exist
 	// for the current recorded_at so we know whether to PATCH/DELETE/POST per metric.
 	let editingId: string | null = null;
-	let editingOriginalRecordedAt: string | null = null;
 	let editingBodyIds: Record<BodyMetricKey, string | null> = {} as Record<BodyMetricKey, string | null>;
 
 	// Svelte coerces <input type="number"> bindings to number | '' | null, so values here
@@ -77,32 +76,26 @@
 		if (!$onlineStore || wi.id?.startsWith('draft-')) return;
 		formError = '';
 		editingId = wi.id;
-		editingOriginalRecordedAt = wi.recorded_at;
 		weightKg = weightToDisplay(wi.weight_kg);
 		recordedAt = (wi.recorded_at || '').slice(0, 10);
 		bodyValues = blankBodyValues();
 		editingBodyIds = blankBodyIds();
 		showForm = true;
 
-		// Pull body-comp entries that share the exact recorded_at — those were logged with
-		// this weigh-in and are conceptually part of it. Failures here are non-fatal.
+		// One roundtrip: server returns body-comp entries linked to this weigh-in
+		// (matched by patient_id + recorded_at) inside `body_metrics`.
 		try {
-			await Promise.all(
-				BODY_METRICS.map(async (m) => {
-					try {
-						const res = await api.get(m.endpoint, { from: wi.recorded_at, to: wi.recorded_at });
-						const match = (res.data || []).find((row: any) => row.recorded_at === wi.recorded_at);
-						if (match) {
-							editingBodyIds[m.key] = match.id;
-							bodyValues[m.key] = metricToDisplay(m.family, $unitStore, match[m.key]).toFixed(1);
-						}
-					} catch (err) {
-						console.warn(`enterEdit: failed to fetch ${m.endpoint}`, err);
-					}
-				})
-			);
+			const res = await api.get(`/weigh-ins/${wi.id}`, { include: 'body_metrics' });
+			const body = res.data?.body_metrics || {};
+			for (const m of BODY_METRICS) {
+				const entry = body[m.key];
+				if (entry) {
+					editingBodyIds[m.key] = entry.id;
+					bodyValues[m.key] = metricToDisplay(m.family, $unitStore, entry[m.key]).toFixed(1);
+				}
+			}
 		} catch (err) {
-			console.error('enterEdit: body-comp lookup failed', err);
+			console.warn('enterEdit: body-comp lookup failed', err);
 		}
 		bodyValues = bodyValues;
 		editingBodyIds = editingBodyIds;
@@ -155,12 +148,28 @@
 		}
 	}
 
+	// Build the body_metrics dict for the bulk endpoint: filled values become numbers,
+	// every other key becomes null (which the server treats as "delete if exists, else
+	// no-op"). This is a full-sync contract — one shot covers create / update / delete.
+	function buildBodyMetricsPayload(): Record<string, number | null> {
+		const out: Record<string, number | null> = {};
+		for (const m of BODY_METRICS) {
+			if (isFilled(bodyValues[m.key])) {
+				const metricValue = displayToMetric(m.family, $unitStore, Number(bodyValues[m.key]));
+				out[m.key] = parseFloat(metricValue.toFixed(2));
+			} else {
+				out[m.key] = null;
+			}
+		}
+		return out;
+	}
+
 	async function saveCreate(
 		weightMetric: number,
 		recordedAtIso: string,
 		filledMetrics: typeof BODY_METRICS
 	) {
-		const payload = { weight_kg: weightMetric, recorded_at: recordedAtIso };
+		const offlinePayload = { weight_kg: weightMetric, recorded_at: recordedAtIso };
 
 		if (!$onlineStore) {
 			if (filledMetrics.length > 0) {
@@ -168,44 +177,26 @@
 				formLoading = false;
 				return;
 			}
-			await addToSyncQueue({ type: 'weighIn', action: 'create', payload });
-			weighIns = [{ ...payload, id: `draft-${Date.now()}`, created_at: new Date().toISOString() }, ...weighIns];
+			await addToSyncQueue({ type: 'weighIn', action: 'create', payload: offlinePayload });
+			weighIns = [
+				{ ...offlinePayload, id: `draft-${Date.now()}`, created_at: new Date().toISOString() },
+				...weighIns
+			];
 			resetForm();
 			return;
 		}
 
 		try {
-			await api.post('/weigh-ins', payload);
+			const res = await api.post('/weigh-ins', {
+				weight_kg: weightMetric,
+				recorded_at: recordedAtIso,
+				body_metrics: buildBodyMetricsPayload()
+			});
+			weighIns = [res.data, ...weighIns];
+			resetForm();
 		} catch (err) {
 			formError = err instanceof ApiError ? err.message : 'Failed';
 			formLoading = false;
-			return;
-		}
-
-		// Body composition entries are independent — surface per-metric failures so the user
-		// can retry just those without re-creating the weigh-in.
-		const failures: { label: string; message: string }[] = [];
-		for (const m of filledMetrics) {
-			const metricValue = displayToMetric(m.family, $unitStore, Number(bodyValues[m.key]));
-			try {
-				await api.post(m.endpoint, {
-					[m.key]: parseFloat(metricValue.toFixed(2)),
-					recorded_at: recordedAtIso,
-					notes: null
-				});
-				bodyValues[m.key] = '';
-				bodyValues = bodyValues;
-			} catch (err) {
-				const message = err instanceof ApiError ? err.message : 'Failed';
-				failures.push({ label: $t(m.labelKey), message });
-			}
-		}
-
-		await loadWeighIns();
-		if (failures.length === 0) {
-			resetForm();
-		} else {
-			formError = failures.map((f) => `${f.label}: ${f.message}`).join(' · ');
 		}
 	}
 
@@ -221,48 +212,17 @@
 		}
 
 		try {
-			await api.patch(`/weigh-ins/${editingId}`, {
+			const res = await api.patch(`/weigh-ins/${editingId}`, {
 				weight_kg: weightMetric,
-				recorded_at: recordedAtIso
+				recorded_at: recordedAtIso,
+				body_metrics: buildBodyMetricsPayload()
 			});
+			// Replace the edited row in-place; avoids an extra GET /weigh-ins.
+			weighIns = weighIns.map((w) => (w.id === editingId ? res.data : w));
+			resetForm();
 		} catch (err) {
 			formError = err instanceof ApiError ? err.message : 'Failed';
 			formLoading = false;
-			return;
-		}
-
-		const failures: { label: string; message: string }[] = [];
-		for (const m of BODY_METRICS) {
-			const existingId = editingBodyIds[m.key];
-			const filled = isFilled(bodyValues[m.key]);
-			try {
-				if (existingId && !filled) {
-					await api.delete(`${m.endpoint}/${existingId}`);
-				} else if (existingId) {
-					const metricValue = displayToMetric(m.family, $unitStore, Number(bodyValues[m.key]));
-					await api.patch(`${m.endpoint}/${existingId}`, {
-						[m.key]: parseFloat(metricValue.toFixed(2)),
-						recorded_at: recordedAtIso
-					});
-				} else if (filled) {
-					const metricValue = displayToMetric(m.family, $unitStore, Number(bodyValues[m.key]));
-					await api.post(m.endpoint, {
-						[m.key]: parseFloat(metricValue.toFixed(2)),
-						recorded_at: recordedAtIso,
-						notes: null
-					});
-				}
-			} catch (err) {
-				const message = err instanceof ApiError ? err.message : 'Failed';
-				failures.push({ label: $t(m.labelKey), message });
-			}
-		}
-
-		await loadWeighIns();
-		if (failures.length === 0) {
-			resetForm();
-		} else {
-			formError = failures.map((f) => `${f.label}: ${f.message}`).join(' · ');
 		}
 	}
 
@@ -294,7 +254,6 @@
 		formError = '';
 		bodyValues = blankBodyValues();
 		editingId = null;
-		editingOriginalRecordedAt = null;
 		editingBodyIds = blankBodyIds();
 	}
 
