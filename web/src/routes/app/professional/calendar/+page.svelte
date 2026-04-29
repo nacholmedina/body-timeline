@@ -184,12 +184,14 @@
 		currentDate = new Date();
 	}
 
+	function localDateKey(d: Date): string {
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+	}
+
 	function getAppointmentsForDay(date: Date): any[] {
-		const dateStr = date.toISOString().split('T')[0];
-		return appointments.filter((appt) => {
-			const apptDate = new Date(appt.scheduled_at).toISOString().split('T')[0];
-			return apptDate === dateStr;
-		});
+		const dateStr = localDateKey(date);
+		return appointments.filter((appt) => localDateKey(new Date(appt.scheduled_at)) === dateStr);
 	}
 
 	function selectDay(date: Date) {
@@ -240,8 +242,9 @@
 	function openReschedule(appt: any) {
 		rescheduleAppt = appt;
 		const d = new Date(appt.scheduled_at);
-		rescheduleDate = d.toISOString().split('T')[0];
-		rescheduleTime = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+		const pad = (n: number) => String(n).padStart(2, '0');
+		rescheduleDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+		rescheduleTime = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 		rescheduleError = '';
 		showRescheduleModal = true;
 	}
@@ -254,7 +257,7 @@
 		rescheduling = true;
 		rescheduleError = '';
 		try {
-			const scheduled_at = `${rescheduleDate}T${rescheduleTime}:00`;
+			const scheduled_at = new Date(`${rescheduleDate}T${rescheduleTime}:00`).toISOString();
 			const res = await api.patch(`/appointments/${rescheduleAppt.id}`, { scheduled_at });
 			appointments = appointments.map(a => a.id === rescheduleAppt.id ? res.data : a);
 			showRescheduleModal = false;
@@ -277,8 +280,7 @@
 			creating = true;
 			createError = '';
 
-			const scheduled_at = `${appointmentDate}T${appointmentTime}:00`;
-			const scheduledDate = new Date(scheduled_at);
+			const scheduledDate = new Date(`${appointmentDate}T${appointmentTime}:00`);
 			const now = new Date();
 
 			if (scheduledDate < now && !forceCreate) {
@@ -308,7 +310,7 @@
 			await api.post('/appointments', {
 				patient_id: selectedPatientId === 'other' ? null : selectedPatientId,
 				title: appointmentTitle,
-				scheduled_at,
+				scheduled_at: scheduledDate.toISOString(),
 				duration_minutes: appointmentDuration,
 				notes: appointmentNotes || undefined
 			});
