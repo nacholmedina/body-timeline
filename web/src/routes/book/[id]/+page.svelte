@@ -91,11 +91,15 @@
 		return date.getDate() === t.getDate() && date.getMonth() === t.getMonth() && date.getFullYear() === t.getFullYear();
 	}
 
-	function isPast(date: Date): boolean {
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-		return date < today;
-	}
+	// Compare against the server's "today" so the calendar doesn't disable
+	// real future dates when the user's clock is wrong or in an aggressive
+	// timezone. Reactive so the grid re-renders once the profile loads.
+	$: todayStr = professional?.today || (() => {
+		const d = new Date();
+		d.setHours(0, 0, 0, 0);
+		return toDateStr(d);
+	})();
+	$: isPast = (date: Date) => toDateStr(date) < todayStr;
 
 	function isSelected(date: Date): boolean {
 		return selectedDate === toDateStr(date);

@@ -147,12 +147,14 @@ def get_public_profile(professional_id):
         return api_error("Professional not found", 404)
 
     profile = user.profile
+    today_local = datetime.now(timezone.utc).astimezone(LOCAL_TZ).date()
     return jsonify(
         id=str(user.id),
         first_name=user.first_name,
         last_name=user.last_name,
         bio=profile.bio if profile else None,
         avatar_url=profile.to_dict().get("avatar_url") if profile else None,
+        today=today_local.isoformat(),
     )
 
 
