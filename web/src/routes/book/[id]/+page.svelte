@@ -57,22 +57,22 @@
 		}
 	}
 
-	function getCalendarDays(): (Date | null)[] {
-		const year = currentMonth.getFullYear();
-		const month = currentMonth.getMonth();
-		const firstDay = new Date(year, month, 1);
-		const lastDay = new Date(year, month + 1, 0);
+	function getCalendarDays(month: Date): (Date | null)[] {
+		const year = month.getFullYear();
+		const m = month.getMonth();
+		const firstDay = new Date(year, m, 1);
+		const lastDay = new Date(year, m + 1, 0);
 		const startDow = firstDay.getDay();
 
 		const days: (Date | null)[] = [];
 		for (let i = 0; i < startDow; i++) days.push(null);
 		for (let d = 1; d <= lastDay.getDate(); d++) {
-			days.push(new Date(year, month, d));
+			days.push(new Date(year, m, d));
 		}
 		return days;
 	}
 
-	$: calendarDays = getCalendarDays();
+	$: calendarDays = getCalendarDays(currentMonth);
 
 	function prevMonth() {
 		const d = new Date(currentMonth);
@@ -93,13 +93,13 @@
 
 	// Compare against the server's "today" so the calendar doesn't disable
 	// real future dates when the user's clock is wrong or in an aggressive
-	// timezone. Reactive so the grid re-renders once the profile loads.
-	$: todayStr = professional?.today || (() => {
+	// timezone.
+	function browserTodayStr(): string {
 		const d = new Date();
 		d.setHours(0, 0, 0, 0);
 		return toDateStr(d);
-	})();
-	$: isPast = (date: Date) => toDateStr(date) < todayStr;
+	}
+	$: todayStr = (professional?.today as string | undefined) || browserTodayStr();
 
 	function isSelected(date: Date): boolean {
 		return selectedDate === toDateStr(date);
@@ -113,7 +113,7 @@
 	}
 
 	async function selectDate(date: Date) {
-		if (isPast(date)) return;
+		if (toDateStr(date) < todayStr) return;
 		selectedDate = toDateStr(date);
 		selectedSlot = '';
 		selectedSlotOnlineOnly = false;
@@ -288,9 +288,9 @@
 							{:else}
 								<button
 									on:click={() => selectDate(day)}
-									disabled={isPast(day)}
+									disabled={toDateStr(day) < todayStr}
 									class="aspect-square rounded-lg text-sm font-medium transition-colors
-										{isPast(day) ? 'text-[var(--text-secondary)] opacity-30 cursor-not-allowed' :
+										{toDateStr(day) < todayStr ? 'text-[var(--text-secondary)] opacity-30 cursor-not-allowed' :
 										 isSelected(day) ? 'bg-brand-600 text-white' :
 										 isToday(day) ? 'bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-400 hover:bg-brand-200 dark:hover:bg-brand-800' :
 										 'text-[var(--text-primary)] hover:bg-[var(--bg-primary)]'}"
