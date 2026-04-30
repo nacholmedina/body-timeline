@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta, date
+from zoneinfo import ZoneInfo
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, current_user
@@ -15,15 +16,24 @@ from app.utils.validators import parse_date
 
 bp = Blueprint("availability", __name__)
 
+# Wall-clock times in the availability schedule are interpreted as local time
+# in this zone — the app is AR-only today.
+LOCAL_TZ = ZoneInfo("America/Argentina/Buenos_Aires")
+
+
+def _local_dt(target_date, time_str):
+    h, m = map(int, time_str.split(":"))
+    return datetime(target_date.year, target_date.month, target_date.day, h, m, tzinfo=LOCAL_TZ)
+
 
 # --- Helpers ---
 
 def _compute_slots(professional_id, target_date):
     """Compute available time slots for a professional on a given date."""
-    now = datetime.now(timezone.utc)
-    today = now.date()
+    now_utc = datetime.now(timezone.utc)
+    today_local = now_utc.astimezone(LOCAL_TZ).date()
 
-    if target_date < today:
+    if target_date < today_local:
         return [], None, 30
 
     # Get weekly rules for this day of week (supports multiple intervals)
@@ -38,7 +48,7 @@ def _compute_slots(professional_id, target_date):
 
     # Check booking window
     if rule:
-        max_date = today + timedelta(days=rule.booking_window_days)
+        max_date = today_local + timedelta(days=rule.booking_window_days)
         if target_date > max_date:
             return [], rule, rule.slot_duration_minutes
 
@@ -85,42 +95,26 @@ def _compute_slots(professional_id, target_date):
     all_slots: list[tuple[datetime, bool]] = []
 
     for win_start_str, win_end_str, win_online_only in windows:
-        win_start_h, win_start_m = map(int, win_start_str.split(":"))
-        win_end_h, win_end_m = map(int, win_end_str.split(":"))
-
-        slot_start = datetime(
-            target_date.year, target_date.month, target_date.day,
-            win_start_h, win_start_m, tzinfo=timezone.utc
-        )
-        window_end = datetime(
-            target_date.year, target_date.month, target_date.day,
-            win_end_h, win_end_m, tzinfo=timezone.utc
-        )
+        slot_start = _local_dt(target_date, win_start_str)
+        window_end = _local_dt(target_date, win_end_str)
 
         while slot_start + duration <= window_end:
             # Skip past slots
-            if slot_start > now:
+            if slot_start > now_utc:
                 all_slots.append((slot_start, win_online_only))
             slot_start += duration
 
     # Remove partial-day blocked ranges
     for o in block_overrides:
         if o.start_time and o.end_time:
-            block_h1, block_m1 = map(int, o.start_time.split(":"))
-            block_h2, block_m2 = map(int, o.end_time.split(":"))
-            block_start = datetime(
-                target_date.year, target_date.month, target_date.day,
-                block_h1, block_m1, tzinfo=timezone.utc
-            )
-            block_end = datetime(
-                target_date.year, target_date.month, target_date.day,
-                block_h2, block_m2, tzinfo=timezone.utc
-            )
+            block_start = _local_dt(target_date, o.start_time)
+            block_end = _local_dt(target_date, o.end_time)
             all_slots = [(s, oo) for (s, oo) in all_slots if not (s >= block_start and s < block_end)]
 
-    # Remove slots that overlap with existing appointments
+    # Remove slots that overlap with existing appointments. Anchor the day
+    # in local time so the UTC range matches what the user considers "today".
     day_start = datetime(
-        target_date.year, target_date.month, target_date.day, tzinfo=timezone.utc
+        target_date.year, target_date.month, target_date.day, tzinfo=LOCAL_TZ
     )
     day_end = day_start + timedelta(days=1)
 
@@ -215,11 +209,7 @@ def public_book_appointment(professional_id):
     available_slots, rule, slot_duration = _compute_slots(professional_id, target_date)
 
     try:
-        hour, minute = map(int, slot_time.split(":"))
-        scheduled_at = datetime(
-            target_date.year, target_date.month, target_date.day,
-            hour, minute, tzinfo=timezone.utc
-        )
+        scheduled_at = _local_dt(target_date, slot_time)
     except (ValueError, TypeError):
         return validation_error("Invalid slot_time format (HH:MM)")
 
@@ -464,11 +454,7 @@ def book_appointment(professional_id):
 
     # Parse requested time
     try:
-        hour, minute = map(int, slot_time.split(":"))
-        scheduled_at = datetime(
-            target_date.year, target_date.month, target_date.day,
-            hour, minute, tzinfo=timezone.utc
-        )
+        scheduled_at = _local_dt(target_date, slot_time)
     except (ValueError, TypeError):
         return validation_error("Invalid slot_time format (HH:MM)")
 
