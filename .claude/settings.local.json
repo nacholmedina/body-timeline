@@ -41,7 +41,11 @@
       "Bash(grep:*)",
       "Bash(timeout:*)",
       "WebFetch(domain:lucide.dev)",
-      "Bash(./venv/Scripts/python:*)"
+      "Bash(./venv/Scripts/python:*)",
+      "Bash(brew services:*)",
+      "Read(//opt/homebrew/opt/**)",
+      "Bash(/opt/homebrew/opt/postgresql@15/bin/psql -h localhost -U mac -d body_timeline -f /Users/mac/body-timeline/api/migrations/add_email_verification.sql)",
+      "Bash(/opt/homebrew/opt/postgresql@15/bin/psql -h localhost -U mac -d body_timeline -f /Users/mac/body-timeline/api/migrations/add_availability.sql)"
     ]
   }
 }
